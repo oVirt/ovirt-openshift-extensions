@@ -15,17 +15,12 @@
 package internal
 
 import (
-	"bytes"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"github.com/ovirt/ovirt-flexdriver/cmd/internal/model"
-	"github.com/ovirt/ovirt-flexdriver/internal"
-	"gopkg.in/gcfg.v1"
 	"io"
 	"io/ioutil"
-	"k8s.io/kubernetes/pkg/kubelet/client"
 	"net/http"
 	"net/url"
 	"os"
@@ -36,8 +31,6 @@ import (
 const caUrl = "ovirt-engine/services/pki-resource?resource=ca-certificate&format=X509-PEM-CA"
 const tokenUrl = "/ovirt-engine/sso/oauth/token"
 const tokenPayload = "grant_type=password&scope=ovirt-app-api&username=%s&password=%s"
-
-var driverConfig = "ovirt-flexdriver.conf"
 
 type Api struct {
 	Connection Connection
@@ -55,36 +48,19 @@ type Connection struct {
 
 type Token struct {
 	Value          string `json:"access_token"`
-	ExpireIn       int64  `json:"expires_in,string"`
+	ExpireIn       int64  `json:"exp,string"`
 	Type           string `json:"token_type"`
 	ExpirationTime time.Time
 }
 
-// TODO move this to cmd, this is not ovirt mini api related
-func InitDriver() (string, error) {
-	value, exist := os.LookupEnv("OVIRT_FLEXDRIVER_CONF")
-	if exist {
-		driverConfig = value
-	}
-	var api Api
-	if err := api.authenticate(); err != nil {
-		return internal.FailedResponseJson, err
-	}
-	return internal.SuccesfullResonseJson, nil
-}
-
-func (api *Api) authenticate() error {
-	err := gcfg.ReadFileInto(&api.Connection, driverConfig)
-	if err != nil {
-		return err
-	}
+func (api *Api) Authenticate() error {
 
 	ovirtEngineUrl, err := url.Parse(api.Connection.Url)
 	if err != nil {
 		return err
 	}
 
-	if api.Connection.Insecure {
+	if api.Connection.Insecure || ovirtEngineUrl.Scheme == "http" {
 		api.Client = http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -92,8 +68,8 @@ func (api *Api) authenticate() error {
 		}
 	} else {
 		// fetch ca if its not in the config
-		if api.Connection.CAFile == "" && strings.HasPrefix(ovirtEngineUrl.Scheme, "https") {
-			fetchCafile(api, ovirtEngineUrl.Host)
+		if api.Connection.CAFile == "" && ovirtEngineUrl.Scheme == "https" {
+			fetchCafile(api, ovirtEngineUrl.Hostname(), ovirtEngineUrl.Port())
 		}
 		rootCa, err := readCaCertPool(api)
 		if err != nil {
@@ -123,20 +99,20 @@ func (api *Api) authenticate() error {
 // nodeName is ovirt's vm name
 // jsonParams is the volume info
 // Response will include the device path according to the disk interface type
-func (api *Api) Attach(params internal.AttachRequest, nodeName string) (internal.Response, error) {
-	err := api.authenticate()
+func (api *Api) Attach(params AttachRequest, nodeName string) (Response, error) {
+	err := api.Authenticate()
 	// TODO validate params
 	if err != nil {
-		return internal.FailedResponse, err
+		return FailedResponse, err
 	}
 
 	// convert params to json
 	requestJson, err := json.Marshal(
-		model.DiskAttachment{
+		DiskAttachment{
 			Bootable:    true,
 			PassDiscard: true,
 			Active:      true,
-			Disk: model.Disk{
+			Disk: Disk{
 				Name: params.VolumeName,
 				// TODO not in the spec, raise that
 				ProvisionedSize: "1gb",
@@ -144,7 +120,7 @@ func (api *Api) Attach(params internal.AttachRequest, nodeName string) (internal
 		})
 
 	if err != nil {
-		return internal.FailedResponse, err
+		return FailedResponse, err
 	}
 
 	// ovirt API call
@@ -153,14 +129,14 @@ func (api *Api) Attach(params internal.AttachRequest, nodeName string) (internal
 	defer resp.Body.Close()
 
 	if err != nil {
-		return internal.FailedResponse, err
+		return FailedResponse, err
 	}
 
-	diskAttachment := model.DiskAttachment{}
+	diskAttachment := DiskAttachment{}
 	jsonResponse, err := ioutil.ReadAll(resp.Body)
 	json.Unmarshal(jsonResponse, &diskAttachment)
 
-	attachResponse := internal.SuccessfulResponse
+	attachResponse := SuccessfulResponse
 	shortDiskId := diskAttachment.Id[:16]
 	switch diskAttachment.Interface {
 	case "virtio":
@@ -174,35 +150,6 @@ func (api *Api) Attach(params internal.AttachRequest, nodeName string) (internal
 	return attachResponse, err
 }
 
-func (api *Api) GetVolumeByName(vmName, volName string) (string, error) {
-	err := api.authenticate()
-	if err != nil {
-		return "", err
-	}
-
-	r, err := getRequest(fmt.Sprintf(api.Connection.Url+"/disks?search=name=/%s/diskattachments?search", volName))
-	response, err := api.Client.Do(r)
-
-	if err != nil {
-		return "", err
-	}
-
-	if response.StatusCode == 200 {
-		dec := json.NewDecoder(response.Body)
-		var m map[string]interface{}
-		for {
-			if err := dec.Decode(&m); err == io.EOF {
-				break
-			} else if err != nil {
-				return "", err
-			}
-		}
-		for k, v := range m {
-			if k == ""
-		}
-	}
-}
-
 func readCaCertPool(api *Api) (*x509.CertPool, error) {
 	caCert, err := ioutil.ReadFile(api.Connection.CAFile)
 	if err != nil {
@@ -213,8 +160,12 @@ func readCaCertPool(api *Api) (*x509.CertPool, error) {
 	return caCertPool, nil
 }
 
-func fetchCafile(api *Api, host string) error {
-	resp, err := http.Get("http://" + host + caUrl)
+func fetchCafile(api *Api, hostname string, origPort string) error {
+	port := "80"
+	if origPort == "8443" {
+		port = "8080"
+	}
+	resp, err := http.Get(fmt.Sprintf("http://%s:%s/%s", hostname, port, caUrl))
 	if err != nil {
 		fmt.Println("Error while downloading CA", err)
 		return err
@@ -242,7 +193,7 @@ func fetchCafile(api *Api, host string) error {
 func fetchToken(ovirtEngineUrl *url.URL, username string, password string, client *http.Client) (token Token, err error) {
 	req, err := http.NewRequest(
 		"POST",
-		fmt.Sprintf("%s/%s", ovirtEngineUrl, tokenUrl),
+		fmt.Sprintf("%s://%s/%s", ovirtEngineUrl.Scheme, ovirtEngineUrl.Host, tokenUrl),
 		strings.NewReader(fmt.Sprintf(tokenPayload, username, password)),
 	)
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")

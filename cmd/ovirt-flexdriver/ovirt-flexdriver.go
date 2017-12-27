@@ -18,13 +18,13 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/ovirt/ovirt-flexdriver/internal"
+	"gopkg.in/gcfg.v1"
 	"os"
-	"pkg/Response"
 )
 
 const usage = `Usage:
 	ovirt-flexdriver init
-	ovirt-flexdriver getvolumename
 	ovirt-flexdriver attach <json params> <nodename>
 	ovirt-flexdriver detach <mount device> <nodename>
 	ovirt-flexdriver waitforattach <mount device> <json params>
@@ -33,10 +33,13 @@ const usage = `Usage:
 	ovirt-flexdriver isattached <json params> <nodename>
 `
 
+var driverConfig = "ovirt-flexdriver.conf"
+
 func main() {
 	flag.Parse()
 	args := flag.Args()
-	var result Response
+
+	var result internal.Response
 
 	if len(args) == 0 {
 		fmt.Print(usage)
@@ -51,25 +54,40 @@ func main() {
 	case "detach":
 		detach(args[1], args[2])
 	default:
-
 	}
 
-	fmt.Println(args)
-	b, _ := json.Marshal(result)
-
+	b, err := json.Marshal(result)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed json marshalling the result %s", err)
+	}
 	fmt.Println(string(b))
-
 }
 
-func initialize() Response {
-	fmt.Println("initializing")
-	return Response{Status: "success", Capabilities: struct{ Attach string }{"true"}}
+func initialize() internal.Response {
+	value, exist := os.LookupEnv("OVIRT_FLEXDRIVER_CONF")
+	if exist {
+		driverConfig = value
+	}
+
+	api := internal.Api{}
+	err := gcfg.ReadFileInto(&api, driverConfig)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed reading the configuration file %s", err)
+		os.Exit(1)
+	}
+
+	err = api.Authenticate()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s", err)
+	}
+
+	return internal.Response{Status: "success", Capabilities: struct{ Attach string }{"true"}}
 }
 
-func attach(jsonOpts string, nodeName string) Response {
+func attach(jsonOpts string, nodeName string) internal.Response {
 	fmt.Printf("attaching %s %s \n", jsonOpts, nodeName)
 
-	return Response{Status: "success", Capabilities: struct{ Attach string }{"true"}}
+	return internal.Response{Status: "success", Capabilities: struct{ Attach string }{"true"}}
 }
 func isattached(jsonOpts string, nodeName string) {
 	fmt.Printf("isattached %s %s \n", jsonOpts, nodeName)

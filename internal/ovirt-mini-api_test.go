@@ -17,7 +17,6 @@ package internal
 import (
 	"errors"
 	"fmt"
-	"github.com/ovirt/ovirt-flexdriver/internal"
 	"gopkg.in/gcfg.v1"
 	"net/http"
 	"net/http/httptest"
@@ -37,16 +36,10 @@ func TestLoadConf(t *testing.T) {
 	}
 }
 
-func TestInit(t *testing.T) {
-	r, err := InitDriver()
-	t.Log(r, err)
-
-}
-
 // TestAuthenticateWithUnexpiredToken makes sure we reuse the auth token
 func TestAuthenticateWithUnexpiredToken(t *testing.T) {
 	api := prepareApi(tokenHandlerFunc(10000000))
-	err := api.authenticate()
+	err := api.Authenticate()
 	if err != nil {
 		t.Fatalf("failed authentication %s", err)
 	}
@@ -56,7 +49,7 @@ func TestFetchToken(t *testing.T) {
 	// create test server with handler
 	api := prepareApi(tokenHandlerFunc(200))
 
-	err := api.authenticate()
+	err := api.Authenticate()
 
 	if err != nil {
 		t.Fatalf("failed authentication %s", err)
@@ -101,13 +94,12 @@ func prepareApi(handler http.HandlerFunc) Api {
 	api := getApi(http.DefaultClient)
 	api.Connection.Url = ts.URL
 	api.Connection.Insecure = true
-	driverConfig = "/dev/null"
 	return api
 }
 
 func tokenHandlerFunc(expireIn int) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, `{ "access_token": "1234567890", "expires_in": "%v", "token_type": "Bearer"}`, expireIn)
+		fmt.Fprintf(w, `{ "access_token": "1234567890", "exp": "%v", "token_type": "Bearer"}`, expireIn)
 	}
 }
 
