@@ -1,5 +1,7 @@
 # ovirt-flexdriver
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/rgolangh/ovirt-flexdriver)](https://goreportcard.com/report/github.com/rgolangh/ovirt-flexdriver)
+
 Implementation of flexvolume driver for [oVirt](https://ovirt.org).
 
 This is WIP 
