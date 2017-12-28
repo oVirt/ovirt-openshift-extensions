@@ -60,7 +60,7 @@ func TestFetchToken(t *testing.T) {
 	}
 
 	if api.Token.ExpirationTime.Before(time.Now()) {
-		t.Fatalf("token should expire only withing 200 sec, but expires on %s", api.Token.ExpirationTime)
+		t.Fatalf("token should expire only within 200 sec, but expires on %s", api.Token.ExpirationTime)
 	}
 }
 

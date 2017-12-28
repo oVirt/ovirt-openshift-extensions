@@ -188,7 +188,7 @@ func fetchCafile(api *Api, hostname string, origPort string) error {
 	return nil
 }
 
-// fetchToken will perform oauth password login to the engine will retrieve the token respones
+// fetchToken will perform oauth password login to the engine will retrieve the token response
 // TODO write the token back to the config file so we don't need to perform login for every request
 func fetchToken(ovirtEngineUrl *url.URL, username string, password string, client *http.Client) (token Token, err error) {
 	req, err := http.NewRequest(
