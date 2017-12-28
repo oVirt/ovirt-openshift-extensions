@@ -26,5 +26,5 @@ type DiskAttachment struct {
 type Disk struct {
 	Id              string `json:"id"`
 	Name            string `json:"name"`
-	ProvisionedSize string `json:"provisioned_size`
+	ProvisionedSize string `json:"provisioned_size"`
 }

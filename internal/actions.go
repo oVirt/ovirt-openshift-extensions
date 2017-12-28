@@ -50,7 +50,7 @@ type AttachRequest struct {
 	StorageDomain string `json:"oVirtStorageDomain"`
 	VolumeName    string `json:"oVirtVolumeName"`
 	FsType        string `json:"kubernetes.io/fsType"`
-	Mode          string `json:""kubernetes.io/readwrite"`
+	Mode          string `json:"kubernetes.io/readwrite"`
 	// TODO use k8s secret?
-	Secret string `json:""kubernetes.io/secret"`
+	Secret string `json:"kubernetes.io/secret"`
 }

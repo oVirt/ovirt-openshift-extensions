@@ -126,11 +126,11 @@ func (api *Api) Attach(params AttachRequest, nodeName string) (Response, error) 
 	// ovirt API call
 	req, err := postWithJsonData(api, "/vms/"+nodeName+"/diskattachments", requestJson)
 	resp, err := api.Client.Do(req)
-	defer resp.Body.Close()
 
 	if err != nil {
 		return FailedResponse, err
 	}
+	defer resp.Body.Close()
 
 	diskAttachment := DiskAttachment{}
 	jsonResponse, err := ioutil.ReadAll(resp.Body)
@@ -144,7 +144,7 @@ func (api *Api) Attach(params AttachRequest, nodeName string) (Response, error) 
 	case "virtio_iscsi":
 		attachResponse.Device = "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_" + shortDiskId
 	default:
-		fmt.Errorf("device type is unsupported")
+		attachResponse.Message = "device type is unsupported"
 	}
 
 	return attachResponse, err
@@ -174,13 +174,11 @@ func fetchCafile(api *Api, hostname string, origPort string) error {
 
 	output, err := os.Create("ovirt.ca")
 	if err != nil {
-		fmt.Errorf("error %s", err)
 		return err
 	}
 
 	_, err = io.Copy(output, resp.Body)
 	if err != nil {
-		fmt.Errorf("error %s", err)
 		return err
 	}
 
