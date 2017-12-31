@@ -79,6 +79,7 @@ func initialize() internal.Response {
 	err = api.Authenticate()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s", err)
+		os.Exit(1)
 	}
 
 	return internal.Response{Status: "success", Capabilities: struct{ Attach string }{"true"}}
