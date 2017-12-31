@@ -54,7 +54,6 @@ type Token struct {
 }
 
 func (api *Api) Authenticate() error {
-
 	ovirtEngineUrl, err := url.Parse(api.Connection.Url)
 	if err != nil {
 		return err
@@ -84,13 +83,10 @@ func (api *Api) Authenticate() error {
 
 	// get the token and store it
 	if api.Token.Value == "" || time.Now().After(api.Token.ExpirationTime) {
-		token, err := fetchToken(ovirtEngineUrl, api.Connection.Username, api.Connection.Password, &api.Client)
+		api.Token, err = fetchToken(*ovirtEngineUrl, api.Connection.Username, api.Connection.Password, &api.Client)
 		if err != nil {
 			return err
 		}
-		// authenticated successfully
-		api.Token = token
-		api.Token.ExpirationTime = time.Now().Add(time.Second * time.Duration(api.Token.ExpireIn))
 	}
 	return nil
 }
@@ -186,9 +182,9 @@ func fetchCafile(api *Api, hostname string, origPort string) error {
 	return nil
 }
 
-// fetchToken will perform oauth password login to the engine will retrieve the token response
+// fetchToken will perform oauth password login to the engine to retrieve the token
 // TODO write the token back to the config file so we don't need to perform login for every request
-func fetchToken(ovirtEngineUrl *url.URL, username string, password string, client *http.Client) (token Token, err error) {
+func fetchToken(ovirtEngineUrl url.URL, username string, password string, client *http.Client) (Token, error) {
 	req, err := http.NewRequest(
 		"POST",
 		fmt.Sprintf("%s://%s/%s", ovirtEngineUrl.Scheme, ovirtEngineUrl.Host, tokenUrl),
@@ -214,6 +210,8 @@ func fetchToken(ovirtEngineUrl *url.URL, username string, password string, clien
 	if err != nil {
 		return Token{}, err
 	}
+	// TODO ovirt bug - ovirt always set the exp to Long.MAX_VALUE, nanosecs from epoch
+	t.ExpirationTime = time.Unix(0, t.ExpireIn)
 	return t, nil
 }
 
