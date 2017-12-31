@@ -22,11 +22,18 @@ const (
 	NotSupported Status = "Not supported"
 )
 
-var FailedResponse = Response{Status: Failure}
-var SuccessfulResponse = Response{Status: Success}
-var NotSupportedResponse = Response{Status: NotSupported}
-var SuccesfullResonseJson = `{ "status": "Success", "message": ""}`
-var FailedResponseJson = `{ "status": "Failure", "message": ""}`
+var (
+	FailedResponse         = Response{Status: Failure}
+	SuccessfulResponse     = Response{Status: Success}
+	NotSupportedResponse   = Response{Status: NotSupported}
+	SuccessfulResponseJson = `{ "status": "Success", "message": ""}`
+	FailedResponseJson     = `{ "status": "Failure", "message": ""}`
+)
+
+type OvirtApi interface {
+	Authenticate() error
+	Attach(params AttachRequest, nodeName string) (Response, error)
+}
 
 type Response struct {
 	Status     Status //`json:"status"`     //"status": "<Success/Failure/Not supported>",

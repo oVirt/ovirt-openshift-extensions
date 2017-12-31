@@ -32,10 +32,11 @@ const caUrl = "ovirt-engine/services/pki-resource?resource=ca-certificate&format
 const tokenUrl = "/ovirt-engine/sso/oauth/token"
 const tokenPayload = "grant_type=password&scope=ovirt-app-api&username=%s&password=%s"
 
-type Api struct {
-	Connection Connection
-	Client     http.Client
-	Token      Token
+type Ovirt struct {
+	connection Connection
+	client     http.Client
+	token      Token
+	api        OvirtApi
 }
 
 type Connection struct {
@@ -53,28 +54,28 @@ type Token struct {
 	ExpirationTime time.Time
 }
 
-func (api *Api) Authenticate() error {
-	ovirtEngineUrl, err := url.Parse(api.Connection.Url)
+func (ovirt *Ovirt) Authenticate() error {
+	ovirtEngineUrl, err := url.Parse(ovirt.connection.Url)
 	if err != nil {
 		return err
 	}
 
-	if api.Connection.Insecure || ovirtEngineUrl.Scheme == "http" {
-		api.Client = http.Client{
+	if ovirt.connection.Insecure || ovirtEngineUrl.Scheme == "http" {
+		ovirt.client = http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			},
 		}
 	} else {
 		// fetch ca if its not in the config
-		if api.Connection.CAFile == "" && ovirtEngineUrl.Scheme == "https" {
-			fetchCafile(api, ovirtEngineUrl.Hostname(), ovirtEngineUrl.Port())
+		if ovirt.connection.CAFile == "" && ovirtEngineUrl.Scheme == "https" {
+			fetchCafile(ovirt, ovirtEngineUrl.Hostname(), ovirtEngineUrl.Port())
 		}
-		rootCa, err := readCaCertPool(api)
+		rootCa, err := readCaCertPool(ovirt)
 		if err != nil {
 			return err
 		}
-		api.Client = http.Client{
+		ovirt.client = http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{RootCAs: rootCa},
 			},
@@ -82,8 +83,8 @@ func (api *Api) Authenticate() error {
 	}
 
 	// get the token and store it
-	if api.Token.Value == "" || time.Now().After(api.Token.ExpirationTime) {
-		api.Token, err = fetchToken(*ovirtEngineUrl, api.Connection.Username, api.Connection.Password, &api.Client)
+	if ovirt.token.Value == "" || time.Now().After(ovirt.token.ExpirationTime) {
+		ovirt.token, err = fetchToken(*ovirtEngineUrl, ovirt.connection.Username, ovirt.connection.Password, &ovirt.client)
 		if err != nil {
 			return err
 		}
@@ -95,8 +96,8 @@ func (api *Api) Authenticate() error {
 // nodeName is ovirt's vm name
 // jsonParams is the volume info
 // Response will include the device path according to the disk interface type
-func (api *Api) Attach(params AttachRequest, nodeName string) (Response, error) {
-	err := api.Authenticate()
+func (ovirt *Ovirt) Attach(params AttachRequest, nodeName string) (Response, error) {
+	err := ovirt.Authenticate()
 	// TODO validate params
 	if err != nil {
 		return FailedResponse, err
@@ -120,8 +121,8 @@ func (api *Api) Attach(params AttachRequest, nodeName string) (Response, error) 
 	}
 
 	// ovirt API call
-	req, err := postWithJsonData(api, "/vms/"+nodeName+"/diskattachments", requestJson)
-	resp, err := api.Client.Do(req)
+	req, err := postWithJsonData(ovirt, "/vms/"+nodeName+"/diskattachments", requestJson)
+	resp, err := ovirt.client.Do(req)
 
 	if err != nil {
 		return FailedResponse, err
@@ -146,8 +147,8 @@ func (api *Api) Attach(params AttachRequest, nodeName string) (Response, error) 
 	return attachResponse, err
 }
 
-func readCaCertPool(api *Api) (*x509.CertPool, error) {
-	caCert, err := ioutil.ReadFile(api.Connection.CAFile)
+func readCaCertPool(ovirt *Ovirt) (*x509.CertPool, error) {
+	caCert, err := ioutil.ReadFile(ovirt.connection.CAFile)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +157,7 @@ func readCaCertPool(api *Api) (*x509.CertPool, error) {
 	return caCertPool, nil
 }
 
-func fetchCafile(api *Api, hostname string, origPort string) error {
+func fetchCafile(ovirt *Ovirt, hostname string, origPort string) error {
 	port := "80"
 	if origPort == "8443" {
 		port = "8080"
@@ -178,7 +179,7 @@ func fetchCafile(api *Api, hostname string, origPort string) error {
 		return err
 	}
 
-	api.Connection.CAFile = output.Name()
+	ovirt.connection.CAFile = output.Name()
 	return nil
 }
 
@@ -221,10 +222,10 @@ func getRequest(endpoint string) (*http.Request, error) {
 	return r, err
 }
 
-func postWithJsonData(api *Api, endpoint string, json []byte) (*http.Request, error) {
+func postWithJsonData(ovirt *Ovirt, endpoint string, json []byte) (*http.Request, error) {
 	r, err := http.NewRequest(
 		"POST",
-		api.Connection.Url+endpoint,
+		ovirt.connection.Url+endpoint,
 		strings.NewReader(string(json)),
 	)
 	r.Header.Set("Content-Type", "application/json")

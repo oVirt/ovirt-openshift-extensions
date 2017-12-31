@@ -25,13 +25,13 @@ import (
 )
 
 func TestLoadConf(t *testing.T) {
-	api := Api{}
+	api := Ovirt{}
 	err := gcfg.ReadFileInto(&api, driverConfig)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// sanity check the config is loaded
-	if api.Connection.Url == "" {
+	if api.connection.Url == "" {
 		t.Fatal("empty connection url")
 	}
 }
@@ -55,12 +55,12 @@ func TestFetchToken(t *testing.T) {
 		t.Fatalf("failed authentication %s", err)
 	}
 
-	if api.Token.ExpireIn != 200 {
-		t.Fatalf("token expiration expected: 200, got: %v", api.Token.ExpireIn)
+	if api.token.ExpireIn != 200 {
+		t.Fatalf("token expiration expected: 200, got: %v", api.token.ExpireIn)
 	}
 
-	if api.Token.ExpirationTime.Before(time.Now()) {
-		t.Fatalf("token should expire only within 200 sec, but expires on %s", api.Token.ExpirationTime)
+	if api.token.ExpirationTime.Before(time.Now()) {
+		t.Fatalf("token should expire only within 200 sec, but expires on %s", api.token.ExpirationTime)
 	}
 }
 
@@ -89,11 +89,11 @@ func TestAttach(t *testing.T) {
 	t.Log(response)
 }
 
-func prepareApi(handler http.HandlerFunc) Api {
+func prepareApi(handler http.HandlerFunc) Ovirt {
 	ts := httptest.NewServer(handler)
 	api := getApi(http.DefaultClient)
-	api.Connection.Url = ts.URL
-	api.Connection.Insecure = true
+	api.connection.Url = ts.URL
+	api.connection.Insecure = true
 	return api
 }
 
@@ -103,8 +103,8 @@ func tokenHandlerFunc(expireIn int) http.HandlerFunc {
 	}
 }
 
-func getApi(client *http.Client) Api {
-	return Api{
+func getApi(client *http.Client) Ovirt {
+	return Ovirt{
 		Connection{},
 		*client,
 		Token{"token_123", 0, "Bearer", time.Now()},
