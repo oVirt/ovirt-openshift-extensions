@@ -31,9 +31,10 @@ import (
 const caUrl = "ovirt-engine/services/pki-resource?resource=ca-certificate&format=X509-PEM-CA"
 const tokenUrl = "/ovirt-engine/sso/oauth/token"
 const tokenPayload = "grant_type=password&scope=ovirt-app-api&username=%s&password=%s"
+const tokenStore = "/var/tmp/ovirt-flexdriver.token"
 
 type Ovirt struct {
-	connection Connection
+	Connection Connection
 	client     http.Client
 	token      Token
 	api        OvirtApi
@@ -55,12 +56,12 @@ type Token struct {
 }
 
 func (ovirt *Ovirt) Authenticate() error {
-	ovirtEngineUrl, err := url.Parse(ovirt.connection.Url)
+	ovirtEngineUrl, err := url.Parse(ovirt.Connection.Url)
 	if err != nil {
 		return err
 	}
 
-	if ovirt.connection.Insecure || ovirtEngineUrl.Scheme == "http" {
+	if ovirt.Connection.Insecure || ovirtEngineUrl.Scheme == "http" {
 		ovirt.client = http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -68,7 +69,7 @@ func (ovirt *Ovirt) Authenticate() error {
 		}
 	} else {
 		// fetch ca if its not in the config
-		if ovirt.connection.CAFile == "" && ovirtEngineUrl.Scheme == "https" {
+		if ovirt.Connection.CAFile == "" && ovirtEngineUrl.Scheme == "https" {
 			fetchCafile(ovirt, ovirtEngineUrl.Hostname(), ovirtEngineUrl.Port())
 		}
 		rootCa, err := readCaCertPool(ovirt)
@@ -82,14 +83,46 @@ func (ovirt *Ovirt) Authenticate() error {
 		}
 	}
 
-	// get the token and store it
-	if ovirt.token.Value == "" || time.Now().After(ovirt.token.ExpirationTime) {
-		ovirt.token, err = fetchToken(*ovirtEngineUrl, ovirt.connection.Username, ovirt.connection.Password, &ovirt.client)
+	savedToken, err := ioutil.ReadFile(tokenStore)
+	if err != nil {
+		// ignore for now
+	} else {
+		json.Unmarshal(savedToken, &ovirt.token)
+	}
+	// get the token and persist if needed
+	if ovirt.token.Value == "" || time.Now().After(ovirt.token.ExpirationTime) || !isTokenValid(ovirt) {
+		ovirt.token, err = fetchToken(*ovirtEngineUrl, ovirt.Connection.Username, ovirt.Connection.Password, &ovirt.client)
 		if err != nil {
 			return err
 		}
+		persistToken(ovirt)
 	}
 	return nil
+}
+
+func persistToken(ovirt *Ovirt) {
+	// store the fetched token
+	j, _ := json.Marshal(ovirt.token)
+	err := ioutil.WriteFile(tokenStore, j, 0600)
+	if err != nil {
+		// this err will be reported to stderr but won't bubble up.
+		fmt.Fprintln(os.Stderr, err)
+	}
+}
+
+// isTokenValid tries a simple GET / with the oauth token
+// returns true for 200 ok, otherwise false
+func isTokenValid(ovirt *Ovirt) bool {
+	req, _ := getRequest(ovirt.Connection.Url, ovirt.token.Value)
+	resp, err := ovirt.client.Do(req)
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode > 200 {
+		return false
+	}
+	return true
 }
 
 // Attach will attach a disk to a VM on ovirt.
@@ -148,7 +181,7 @@ func (ovirt *Ovirt) Attach(params AttachRequest, nodeName string) (Response, err
 }
 
 func readCaCertPool(ovirt *Ovirt) (*x509.CertPool, error) {
-	caCert, err := ioutil.ReadFile(ovirt.connection.CAFile)
+	caCert, err := ioutil.ReadFile(ovirt.Connection.CAFile)
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +212,7 @@ func fetchCafile(ovirt *Ovirt, hostname string, origPort string) error {
 		return err
 	}
 
-	ovirt.connection.CAFile = output.Name()
+	ovirt.Connection.CAFile = output.Name()
 	return nil
 }
 
@@ -216,19 +249,21 @@ func fetchToken(ovirtEngineUrl url.URL, username string, password string, client
 	return t, nil
 }
 
-func getRequest(endpoint string) (*http.Request, error) {
+func getRequest(endpoint string, t string) (*http.Request, error) {
 	r, err := http.NewRequest("GET", endpoint, nil)
 	r.Header.Set("Accept", "application/json")
+	r.Header.Set("Authorization", "Bearer "+t)
 	return r, err
 }
 
 func postWithJsonData(ovirt *Ovirt, endpoint string, json []byte) (*http.Request, error) {
 	r, err := http.NewRequest(
 		"POST",
-		ovirt.connection.Url+endpoint,
+		ovirt.Connection.Url+endpoint,
 		strings.NewReader(string(json)),
 	)
 	r.Header.Set("Content-Type", "application/json")
 	r.Header.Set("Accept", "application/json")
+	r.Header.Set("Authorization", "Bearer "+ovirt.token.Value)
 	return r, err
 }

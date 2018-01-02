@@ -69,10 +69,10 @@ func initialize() internal.Response {
 		driverConfig = value
 	}
 
-	api := internal.Api{}
+	api := internal.Ovirt{}
 	err := gcfg.ReadFileInto(&api, driverConfig)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed reading the configuration file %s", err)
+		fmt.Fprintf(os.Stderr, "Failed reading the configuration file.\n%s", err)
 		os.Exit(1)
 	}
 

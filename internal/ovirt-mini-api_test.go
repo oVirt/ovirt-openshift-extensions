@@ -31,7 +31,7 @@ func TestLoadConf(t *testing.T) {
 		t.Fatal(err)
 	}
 	// sanity check the config is loaded
-	if api.connection.Url == "" {
+	if api.Connection.Url == "" {
 		t.Fatal("empty connection url")
 	}
 }
@@ -92,8 +92,8 @@ func TestAttach(t *testing.T) {
 func prepareApi(handler http.HandlerFunc) Ovirt {
 	ts := httptest.NewServer(handler)
 	api := getApi(http.DefaultClient)
-	api.connection.Url = ts.URL
-	api.connection.Insecure = true
+	api.Connection.Url = ts.URL
+	api.Connection.Insecure = true
 	return api
 }
 
