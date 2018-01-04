@@ -18,7 +18,6 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"github.com/ovirt/ovirt-flexdriver/internal"
 	"gopkg.in/gcfg.v1"
@@ -38,34 +37,37 @@ const usage = `Usage:
 var driverConfig = "ovirt-flexdriver.conf"
 
 func main() {
-	flag.Parse()
-	args := flag.Args()
-
-	var result internal.Response
+	var result string
+	args := os.Args[1:]
 
 	if len(args) == 0 {
-		fmt.Print(usage)
-		os.Exit(1)
+		usageAndExit()
 	}
 
 	switch args[0] {
 	case "init":
 		result = initialize()
+		fmt.Println(result)
 	case "attach":
+		if len(args) < 3 {
+			usageAndExit()
+		}
 		attach(args[1], args[2])
 	case "detach":
+		if len(args) < 3 {
+			usageAndExit()
+		}
 		detach(args[1], args[2])
 	default:
+		usageAndExit()
 	}
-
-	b, err := json.Marshal(result)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed json marshalling the result %s", err)
-	}
-	fmt.Println(string(b))
+}
+func usageAndExit() {
+	fmt.Print(usage)
+	os.Exit(1)
 }
 
-func initialize() internal.Response {
+func initialize() string {
 	value, exist := os.LookupEnv("OVIRT_FLEXDRIVER_CONF")
 	if exist {
 		driverConfig = value
@@ -84,14 +86,28 @@ func initialize() internal.Response {
 		os.Exit(1)
 	}
 
-	return internal.Response{Status: "success", Capabilities: struct{ Attach string }{"true"}}
+	r, err := json.Marshal(internal.Response{Status: "success", Capabilities: struct{ Attach string }{"true"}})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed json marshalling the result %s", err)
+		os.Exit(1)
+	}
+	return string(r)
 }
 
-func attach(jsonOpts string, nodeName string) internal.Response {
-	fmt.Printf("attaching %s %s \n", jsonOpts, nodeName)
+func attach(jsonOpts string, nodeName string) {
 
-	return internal.Response{Status: "success", Capabilities: struct{ Attach string }{"true"}}
+	v, err := json.Marshal(internal.Response{Status: "success", Capabilities: struct{ Attach string }{"true"}})
+	printResultOrErr(v, err)
 }
+
+func printResultOrErr(bytes []byte, e error) {
+	if e != nil {
+		fmt.Fprintf(os.Stderr, "%s", internal.FailedResponseFromError(e))
+		os.Exit(1)
+	}
+	fmt.Fprintf(os.Stdout, string(bytes))
+}
+
 func isattached(jsonOpts string, nodeName string) {
 	fmt.Printf("isattached %s %s \n", jsonOpts, nodeName)
 }

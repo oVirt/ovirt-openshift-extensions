@@ -63,3 +63,9 @@ type AttachRequest struct {
 	// TODO use k8s secret?
 	Secret string `json:"kubernetes.io/secret"`
 }
+
+func FailedResponseFromError(e error) string {
+	r := Response{Status: Failure}
+	r.Message = e.Error()
+	return r
+}
