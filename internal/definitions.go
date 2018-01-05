@@ -16,6 +16,8 @@ limitations under the License.
 
 package internal
 
+import "encoding/json"
+
 type Status string
 
 const (
@@ -56,15 +58,22 @@ type AttchResponse struct {
 }
 
 type AttachRequest struct {
-	StorageDomain string `json:"oVirtStorageDomain"`
-	VolumeName    string `json:"oVirtVolumeName"`
+	StorageDomain string `json:"ovirtStorageDomain"`
+	VolumeName    string `json:"ovirtVolumeName"`
+	Size          string `json:"ovirtVolumeSize", omitempty`
 	FsType        string `json:"kubernetes.io/fsType"`
 	Mode          string `json:"kubernetes.io/readwrite"`
 	// TODO use k8s secret?
-	Secret string `json:"kubernetes.io/secret"`
+	Secret string `json:"kubernetes.io/secret,omitempty"`
 }
 
-func FailedResponseFromError(e error) string {
+func AttachRequestFrom(s string) (AttachRequest, error) {
+	r := AttachRequest{}
+	err := json.Unmarshal([]byte(s), &r)
+	return r, err
+}
+
+func FailedResponseFromError(e error) Response {
 	r := Response{Status: Failure}
 	r.Message = e.Error()
 	return r

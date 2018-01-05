@@ -17,16 +17,43 @@ limitations under the License.
 package internal
 
 type DiskAttachment struct {
-	Id          string `json:"id"`
-	Bootable    bool   `json:"bootable"`
-	PassDiscard bool   `json:"pass_discard"`
-	Interface   string `json:"interface"`
-	Active      bool   `json:"active"`
-	Disk        Disk   `json:"disk"`
+	Id            string        `json:"id"`
+	Bootable      bool          `json:"bootable"`
+	PassDiscard   bool          `json:"pass_discard"`
+	Interface     string        `json:"interface"`
+	Active        bool          `json:"active"`
+	Disk          Disk          `json:"disk"`
+	ReadOnly      bool          `json:"read_only"`
+	StorageDomain StorageDomain `json:"storage_domain"`
 }
 
+type DiskFormat string
+
+const RAW DiskFormat = "raw"
+const COW DiskFormat = "cow"
+
 type Disk struct {
-	Id              string `json:"id"`
-	Name            string `json:"name"`
-	ProvisionedSize string `json:"provisioned_size"`
+	Id              string     `json:"id"`
+	Name            string     `json:"name"`
+	ActualSize      string     `json:"actual_size"`
+	ProvisionedSize string     `json:"provisioned_size"`
+	Status          string     `json:"status"`
+	Format          DiskFormat `json:"format"`
+}
+
+type DiskResult struct {
+	Disks []Disk `json:"disk"`
+}
+
+type StorageDomain struct {
+	Name string `json:"name"`
+}
+
+type VM struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type VMResult struct {
+	Vms []VM `json:"vm"`
 }

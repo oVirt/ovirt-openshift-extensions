@@ -17,6 +17,7 @@ limitations under the License.
 package internal
 
 import (
+	"code.cloudfoundry.org/bytefmt"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
@@ -26,6 +27,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -128,10 +130,10 @@ func isTokenValid(ovirt *Ovirt) bool {
 }
 
 // Attach will attach a disk to a VM on ovirt.
-// nodeName is ovirt's vm name
+// vmName is ovirt's vm name
 // jsonParams is the volume info
 // Response will include the device path according to the disk interface type
-func (ovirt *Ovirt) Attach(params AttachRequest, nodeName string) (Response, error) {
+func (ovirt *Ovirt) Attach(params AttachRequest, vmName string) (Response, error) {
 	err := ovirt.Authenticate()
 	// TODO validate params
 	if err != nil {
@@ -156,7 +158,7 @@ func (ovirt *Ovirt) Attach(params AttachRequest, nodeName string) (Response, err
 	}
 
 	// ovirt API call
-	req, err := postWithJsonData(ovirt, "/vms/"+nodeName+"/diskattachments", requestJson)
+	req, err := postWithJsonData(ovirt, "/vms/"+vmName+"/diskattachments", requestJson)
 	resp, err := ovirt.client.Do(req)
 
 	if err != nil {
@@ -169,17 +171,90 @@ func (ovirt *Ovirt) Attach(params AttachRequest, nodeName string) (Response, err
 	json.Unmarshal(jsonResponse, &diskAttachment)
 
 	attachResponse := SuccessfulResponse
-	shortDiskId := diskAttachment.Id[:16]
-	switch diskAttachment.Interface {
-	case "virtio":
-		attachResponse.Device = "/dev/disk/by-id/virtio-" + shortDiskId
-	case "virtio_iscsi":
-		attachResponse.Device = "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_" + shortDiskId
-	default:
-		attachResponse.Message = "device type is unsupported"
-	}
 
 	return attachResponse, err
+}
+func (ovirt Ovirt) GetDiskByName(diskName string) (DiskResult, error) {
+	var diskResult DiskResult
+	r, err := ovirt.Get(fmt.Sprintf("disks?search=%s", diskName))
+	if err != nil {
+		return diskResult, err
+	}
+	err = json.Unmarshal(r, &diskResult)
+	return diskResult, err
+}
+
+func (ovirt *Ovirt) CreateDisk(
+	diskName string,
+	storageDomainName string,
+	size string,
+	readOnly bool,
+	vmId string) (DiskAttachment, error) {
+	s, _ := bytefmt.ToBytes(size)
+	a := DiskAttachment{
+		Disk:          Disk{Name: diskName, ProvisionedSize: strconv.Itoa(int(s))},
+		ReadOnly:      readOnly,
+		StorageDomain: StorageDomain{storageDomainName},
+	}
+	post, err := ovirt.Post("vms/"+vmId+"/diskattachments", a)
+	if err != nil {
+		return a, err
+	}
+	r := struct {
+		DiskAttachment DiskAttachment `json:"disk_attachment"`
+	}{DiskAttachment{}}
+	err = json.Unmarshal([]byte(post), &r)
+	return r.DiskAttachment, err
+}
+
+func (ovirt Ovirt) Get(path string) ([]byte, error) {
+	request, err := getRequest(fmt.Sprintf("%s/%s", ovirt.Connection.Url, path), ovirt.token.Value)
+	if err != nil {
+		return nil, err
+	}
+	response, err := ovirt.client.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	bytes, err := ioutil.ReadAll(response.Body)
+	return bytes, err
+}
+
+func (ovirt Ovirt) Post(path string, data interface{}) (string, error) {
+	d, err := json.Marshal(data)
+	if err != nil {
+		// failed json conversion
+		return "", err
+	}
+	request, err := postWithJsonData(&ovirt, path, d)
+	if err != nil {
+		return "", err
+	}
+	response, err := ovirt.client.Do(request)
+	if err != nil {
+		return "", err
+	}
+	defer response.Body.Close()
+
+	bytes, err := ioutil.ReadAll(response.Body)
+	return string(bytes), err
+}
+
+func (ovirt *Ovirt) GetVM(name string) (VM, error) {
+	s, err := ovirt.Get("vms?search=name=" + name)
+	vmResult := VMResult{}
+	if err != nil {
+		return vmResult.Vms[0], err
+	}
+	err = json.Unmarshal([]byte(s), &vmResult)
+	var vm VM
+	if len(vmResult.Vms) > 0 {
+		vm = vmResult.Vms[0]
+	}
+	return vm, err
+
 }
 
 func readCaCertPool(ovirt *Ovirt) (*x509.CertPool, error) {
@@ -251,10 +326,10 @@ func fetchToken(ovirtEngineUrl url.URL, username string, password string, client
 	return t, nil
 }
 
-func getRequest(endpoint string, t string) (*http.Request, error) {
+func getRequest(endpoint string, token string) (*http.Request, error) {
 	r, err := http.NewRequest("GET", endpoint, nil)
 	r.Header.Set("Accept", "application/json")
-	r.Header.Set("Authorization", "Bearer "+t)
+	r.Header.Set("Authorization", "Bearer "+token)
 	return r, err
 }
 

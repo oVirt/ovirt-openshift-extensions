@@ -18,6 +18,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/ovirt/ovirt-flexdriver/internal"
 	"gopkg.in/gcfg.v1"
@@ -34,78 +35,117 @@ const usage = `Usage:
 	ovirt-flexdriver isattached <json params> <nodename>
 `
 
-var driverConfig = "ovirt-flexdriver.conf"
+var driverConfigFile = "ovirt-flexdriver.conf"
 
 func main() {
-	var result string
-	args := os.Args[1:]
+	s, e := App(os.Args)
+	if e != nil {
+		fmt.Fprintln(os.Stderr, e.Error())
+	}
+	fmt.Fprintln(os.Stdout, s)
+}
+
+func App(args []string) (string, error) {
 
 	if len(args) == 0 {
-		usageAndExit()
+		return "", errors.New(usage)
 	}
+
+	var result internal.Response
+	var err error
 
 	switch args[0] {
 	case "init":
-		result = initialize()
-		fmt.Println(result)
+		result, err = initialize()
 	case "attach":
 		if len(args) < 3 {
-			usageAndExit()
+			return "", errors.New(usage)
 		}
-		attach(args[1], args[2])
+		result, err = attach(args[1], args[2])
 	case "detach":
 		if len(args) < 3 {
-			usageAndExit()
+			return "", errors.New(usage)
 		}
 		detach(args[1], args[2])
 	default:
-		usageAndExit()
+		return "", errors.New(usage)
 	}
-}
-func usageAndExit() {
-	fmt.Print(usage)
-	os.Exit(1)
+
+	if err != nil {
+		return "", err
+	}
+
+	bytes, err := json.Marshal(result)
+	return string(bytes), err
 }
 
-func initialize() string {
+func initialize() (internal.Response, error) {
 	value, exist := os.LookupEnv("OVIRT_FLEXDRIVER_CONF")
 	if exist {
-		driverConfig = value
+		driverConfigFile = value
 	}
 
-	api := internal.Ovirt{}
-	err := gcfg.ReadFileInto(&api, driverConfig)
+	_, err := newOvirt()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed reading the configuration file.\n%s", err)
-		os.Exit(1)
+		return internal.FailedResponse, err
 	}
-
-	err = api.Authenticate()
+	return internal.Response{Status: "success", Capabilities: struct{ Attach string }{"true"}}, nil
+}
+func newOvirt() (*internal.Ovirt, error) {
+	ovirt := internal.Ovirt{}
+	err := gcfg.ReadFileInto(&ovirt, driverConfigFile)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s", err)
-		os.Exit(1)
+		return nil, err
 	}
-
-	r, err := json.Marshal(internal.Response{Status: "success", Capabilities: struct{ Attach string }{"true"}})
+	err = ovirt.Authenticate()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed json marshalling the result %s", err)
-		os.Exit(1)
+		return nil, err
 	}
-	return string(r)
+	return &ovirt, nil
 }
 
-func attach(jsonOpts string, nodeName string) {
-
-	v, err := json.Marshal(internal.Response{Status: "success", Capabilities: struct{ Attach string }{"true"}})
-	printResultOrErr(v, err)
-}
-
-func printResultOrErr(bytes []byte, e error) {
+func attach(jsonOpts string, nodeName string) (internal.Response, error) {
+	ovirt, err := newOvirt()
+	if err != nil {
+		return internal.FailedResponseFromError(err), err
+	}
+	r, e := internal.AttachRequestFrom(jsonOpts)
 	if e != nil {
-		fmt.Fprintf(os.Stderr, "%s", internal.FailedResponseFromError(e))
-		os.Exit(1)
+		return internal.FailedResponse, e
 	}
-	fmt.Fprintf(os.Stdout, string(bytes))
+
+	vm, err := ovirt.GetVM(nodeName)
+	// 0. validation - Attach size is legal?
+	// 1. query if the disk exists
+	// 2. if it exist, is it already attached to a VM (perhaps a detach is in progress)
+	// 3. if it is attached, is this vm is this node? if not return error.
+	// 4. not? create it and attach to the vm
+
+	if err != nil {
+		return internal.FailedResponseFromError(err), err
+	}
+	// vm exist?
+	if vm.Id == "" {
+		e := errors.New(fmt.Sprintf("VM %s doesn't exist", nodeName))
+		return internal.FailedResponseFromError(e), e
+	}
+	diskResult, err := ovirt.GetDiskByName(r.VolumeName)
+	if err != nil {
+		return internal.FailedResponseFromError(err), err
+	}
+
+	// 1. no such disk, create it on the VM
+	// get vm id by name
+	if len(diskResult.Disks) == 0 {
+		attachment, err := ovirt.CreateDisk(r.VolumeName, r.StorageDomain, r.Size, r.Mode == "ro", vm.Id)
+		return responseFromDiskAttachment(attachment), err
+	} else {
+		attached := internal.SuccessfulResponse
+		attached.Device = diskResult.Disks[0].Id
+		return attached, nil
+	}
+
+	return internal.FailedResponse, err
 }
 
 func isattached(jsonOpts string, nodeName string) {
@@ -126,4 +166,31 @@ func mountDevice(mountDir string, mountDevice string, jsonOpts string) {
 
 func unmountDevice(mountDevice string) {
 	fmt.Printf("mountDevicee %s \n", mountDevice)
+}
+
+func printResultOrErr(bytes []byte, e error) {
+	if e != nil {
+		fmt.Fprintln(os.Stderr, "%s", internal.FailedResponseFromError(e))
+		os.Exit(1)
+	}
+	fmt.Fprintln(os.Stdout, string(bytes))
+}
+
+func responseFromDiskAttachment(d internal.DiskAttachment) internal.Response {
+	r := internal.SuccessfulResponse
+	id, _ := deviceIdFromVmDiskId(d)
+	r.Device = id
+	return r
+}
+
+func deviceIdFromVmDiskId(attachment internal.DiskAttachment) (string, error) {
+	shortDiskId := attachment.Id[:16]
+	switch attachment.Interface {
+	case "virtio":
+		return "/dev/disk/by-id/virtio-" + shortDiskId, nil
+	case "virtio_iscsi":
+		return "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_" + shortDiskId, nil
+	default:
+		return "", errors.New("device type is unsupported")
+	}
 }
