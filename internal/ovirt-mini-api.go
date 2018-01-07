@@ -21,6 +21,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -216,6 +217,9 @@ func (ovirt Ovirt) Get(path string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	if response.StatusCode > 200 {
+		return nil, errors.New(response.Status)
+	}
 	defer response.Body.Close()
 
 	bytes, err := ioutil.ReadAll(response.Body)
@@ -235,6 +239,9 @@ func (ovirt Ovirt) Post(path string, data interface{}) (string, error) {
 	response, err := ovirt.client.Do(request)
 	if err != nil {
 		return "", err
+	}
+	if response.StatusCode > 200 {
+		return "", errors.New(response.Status)
 	}
 	defer response.Body.Close()
 

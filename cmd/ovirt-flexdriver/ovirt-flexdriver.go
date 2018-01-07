@@ -139,6 +139,9 @@ func attach(jsonOpts string, nodeName string) (internal.Response, error) {
 	// get vm id by name
 	if len(diskResult.Disks) == 0 {
 		attachment, err := ovirt.CreateDisk(r.VolumeName, r.StorageDomain, r.Size, r.Mode == "ro", vm.Id)
+		if err != nil {
+			return internal.FailedResponseFromError(err), err
+		}
 		return responseFromDiskAttachment(attachment), err
 	} else {
 		attached := internal.SuccessfulResponse
