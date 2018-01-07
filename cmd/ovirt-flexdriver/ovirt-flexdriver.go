@@ -41,6 +41,7 @@ func main() {
 	s, e := App(os.Args)
 	if e != nil {
 		fmt.Fprintln(os.Stderr, e.Error())
+		os.Exit(1)
 	}
 	fmt.Fprintln(os.Stdout, s)
 }
@@ -166,14 +167,6 @@ func mountDevice(mountDir string, mountDevice string, jsonOpts string) {
 
 func unmountDevice(mountDevice string) {
 	fmt.Printf("mountDevicee %s \n", mountDevice)
-}
-
-func printResultOrErr(bytes []byte, e error) {
-	if e != nil {
-		fmt.Fprintln(os.Stderr, "%s", internal.FailedResponseFromError(e))
-		os.Exit(1)
-	}
-	fmt.Fprintln(os.Stdout, string(bytes))
 }
 
 func responseFromDiskAttachment(d internal.DiskAttachment) internal.Response {
