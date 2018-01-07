@@ -27,13 +27,18 @@ func init() {
 
 func TestInvocations(t *testing.T) {
 	for _, invocation := range invocationTests {
-		t.Logf("arguments %s \n", os.Args)
-		_, e := App(invocation.args)
+		t.Logf("Test spec: %s \n", invocation.description)
+		t.Logf("Test args: arguments %s \n", os.Args)
+		r, e := App(invocation.args)
 		if e != nil && invocation.exitCode == 0 {
-			t.Fatalf("expected a successful invocation with %s but got %s \n", invocation.args, e.Error())
+			t.Errorf("expected a successful invocation with %s but got %s \n", invocation.args, e.Error())
 		}
 		if e == nil && invocation.exitCode > 0 {
-			t.Fatalf("expected a failed invocation with %s ", invocation.args)
+			t.Errorf("expected a failed invocation with %s ", invocation.args)
 		}
+		if r == "" {
+			t.Errorf("expected some output, got none")
+		}
+		t.Logf("Test says: %s\n\n", r)
 	}
 }

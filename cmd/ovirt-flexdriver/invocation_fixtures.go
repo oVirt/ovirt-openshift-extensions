@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 var attachJson = `{
-	"ovirtStorageDomain": "data",
+	"ovirtStorageDomain": "data1",
 	"ovirtVolumeName": "testDisk-100000",
 	"ovirtDiskFormat": "raw",
 	"kubernetes.io/fsType": "ext4",

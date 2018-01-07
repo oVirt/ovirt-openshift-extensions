@@ -16,15 +16,19 @@ limitations under the License.
 
 package internal
 
+//todo make this with json encoder/decoder
+type DiskAttachmentWrapper struct {
+	DiskAttachment DiskAttachment `json:"disk_attachment"`
+}
+
 type DiskAttachment struct {
-	Id            string        `json:"id"`
-	Bootable      bool          `json:"bootable"`
-	PassDiscard   bool          `json:"pass_discard"`
-	Interface     string        `json:"interface"`
-	Active        bool          `json:"active"`
-	Disk          Disk          `json:"disk"`
-	ReadOnly      bool          `json:"read_only"`
-	StorageDomain StorageDomain `json:"storage_domain"`
+	Id          string `json:"id,omitempty"`
+	Bootable    bool   `json:"bootable,string"`
+	PassDiscard bool   `json:"pass_discard,string"`
+	Interface   string `json:"interface"`
+	Active      bool   `json:"active,string"`
+	Disk        Disk   `json:"disk"`
+	ReadOnly    bool   `json:"read_only,string"`
 }
 
 type DiskFormat string
@@ -33,16 +37,21 @@ const RAW DiskFormat = "raw"
 const COW DiskFormat = "cow"
 
 type Disk struct {
-	Id              string     `json:"id"`
-	Name            string     `json:"name"`
-	ActualSize      string     `json:"actual_size"`
-	ProvisionedSize string     `json:"provisioned_size"`
-	Status          string     `json:"status"`
-	Format          DiskFormat `json:"format"`
+	Id              string         `json:"id,omitempty"`
+	Name            string         `json:"name"`
+	ActualSize      uint64         `json:"actual_size"`
+	ProvisionedSize uint64         `json:"provisioned_size"`
+	Status          string         `json:"status,omitempty"`
+	Format          DiskFormat     `json:"format"`
+	StorageDomains  StorageDomains `json:"storage_domains"`
 }
 
 type DiskResult struct {
 	Disks []Disk `json:"disk"`
+}
+
+type StorageDomains struct {
+	Domains []StorageDomain `json:"storage_domain"`
 }
 
 type StorageDomain struct {

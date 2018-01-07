@@ -136,17 +136,19 @@ func attach(jsonOpts string, nodeName string) (internal.Response, error) {
 	}
 
 	// 1. no such disk, create it on the VM
-	// get vm id by name
 	if len(diskResult.Disks) == 0 {
 		attachment, err := ovirt.CreateDisk(r.VolumeName, r.StorageDomain, r.Size, r.Mode == "ro", vm.Id)
 		if err != nil {
 			return internal.FailedResponseFromError(err), err
 		}
-		return responseFromDiskAttachment(attachment), err
+		return responseFromDiskAttachment(attachment.Id, attachment.Interface), err
 	} else {
-		attached := internal.SuccessfulResponse
-		attached.Device = diskResult.Disks[0].Id
-		return attached, nil
+		// 2. The disk - fetch the disk attachment on the VM
+		attachment, err := ovirt.GetDiskAttachment(vm.Id, diskResult.Disks[0].Id)
+		if err != nil {
+			return internal.FailedResponseFromError(err), err
+		}
+		return responseFromDiskAttachment(attachment.Id, attachment.Interface), err
 	}
 
 	return internal.FailedResponse, err
@@ -172,21 +174,16 @@ func unmountDevice(mountDevice string) {
 	fmt.Printf("mountDevicee %s \n", mountDevice)
 }
 
-func responseFromDiskAttachment(d internal.DiskAttachment) internal.Response {
+func responseFromDiskAttachment(diskId string, diskInterface string) internal.Response {
 	r := internal.SuccessfulResponse
-	id, _ := deviceIdFromVmDiskId(d)
-	r.Device = id
-	return r
-}
-
-func deviceIdFromVmDiskId(attachment internal.DiskAttachment) (string, error) {
-	shortDiskId := attachment.Id[:16]
-	switch attachment.Interface {
+	shortDiskId := diskId[:16]
+	switch diskInterface {
 	case "virtio":
-		return "/dev/disk/by-id/virtio-" + shortDiskId, nil
+		r.Device = "/dev/disk/by-id/virtio-" + shortDiskId
 	case "virtio_iscsi":
-		return "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_" + shortDiskId, nil
+		r.Device = "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_" + shortDiskId
 	default:
-		return "", errors.New("device type is unsupported")
+		return internal.FailedResponseFromError(errors.New("device type is unsupported"))
 	}
+	return r
 }

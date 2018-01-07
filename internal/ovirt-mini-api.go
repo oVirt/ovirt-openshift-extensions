@@ -28,7 +28,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -150,7 +149,7 @@ func (ovirt *Ovirt) Attach(params AttachRequest, vmName string) (Response, error
 			Disk: Disk{
 				Name: params.VolumeName,
 				// TODO not in the spec, raise that
-				ProvisionedSize: "1gb",
+				ProvisionedSize: bytefmt.GIGABYTE,
 			},
 		})
 
@@ -193,19 +192,24 @@ func (ovirt *Ovirt) CreateDisk(
 	vmId string) (DiskAttachment, error) {
 	s, _ := bytefmt.ToBytes(size)
 	a := DiskAttachment{
-		Disk:          Disk{Name: diskName, ProvisionedSize: strconv.Itoa(int(s))},
-		ReadOnly:      readOnly,
-		StorageDomain: StorageDomain{storageDomainName},
+		Interface: "virtio",
+		Disk: Disk{
+			Name:            diskName,
+			ProvisionedSize: s,
+			Format:          "raw",
+			StorageDomains: StorageDomains{
+				[]StorageDomain{{Name: storageDomainName}},
+			},
+		},
+		ReadOnly: readOnly,
 	}
-	post, err := ovirt.Post("vms/"+vmId+"/diskattachments", a)
+	post, err := ovirt.Post("/vms/"+vmId+"/diskattachments", a)
 	if err != nil {
 		return a, err
 	}
-	r := struct {
-		DiskAttachment DiskAttachment `json:"disk_attachment"`
-	}{DiskAttachment{}}
+	r := DiskAttachment{}
 	err = json.Unmarshal([]byte(post), &r)
-	return r.DiskAttachment, err
+	return r, err
 }
 
 func (ovirt Ovirt) Get(path string) ([]byte, error) {
@@ -232,6 +236,7 @@ func (ovirt Ovirt) Post(path string, data interface{}) (string, error) {
 		// failed json conversion
 		return "", err
 	}
+	fmt.Println(string(d))
 	request, err := postWithJsonData(&ovirt, path, d)
 	if err != nil {
 		return "", err
@@ -240,7 +245,7 @@ func (ovirt Ovirt) Post(path string, data interface{}) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if response.StatusCode > 200 {
+	if response.StatusCode > 300 {
 		return "", errors.New(response.Status)
 	}
 	defer response.Body.Close()
@@ -262,6 +267,15 @@ func (ovirt *Ovirt) GetVM(name string) (VM, error) {
 	}
 	return vm, err
 
+}
+func (ovirt *Ovirt) GetDiskAttachment(vmId, diskId string) (DiskAttachment, error) {
+	s, err := ovirt.Get("vms/" + vmId + "/diskattachments/" + diskId)
+	d := DiskAttachment{}
+	if err != nil {
+		return d, err
+	}
+	err = json.Unmarshal([]byte(s), &d)
+	return d, err
 }
 
 func readCaCertPool(ovirt *Ovirt) (*x509.CertPool, error) {
