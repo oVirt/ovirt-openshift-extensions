@@ -1,8 +1,13 @@
 ---
-- hosts: k8s-ovirt-nodes:k8s-masters
+- hosts: k8s-ovirt-nodes:k8s-ovirt-masters
   connection: local
   tasks:
-    - name: Copy oVirt flexvolume driver
+    - name: Copy oVirt flexvolume driver binary
       file:
         src: ovirt-flexdriver
+        dest: /usr/libexec/kubernetes/kubelet-plugins/volume/exec/ovirt/ovirt
+
+    - name: Copy oVirt flexvolume driver config
+      file:
+        src: ovirt-flexdriver.conf
         dest: /usr/libexec/kubernetes/kubelet-plugins/volume/exec/ovirt/ovirt
