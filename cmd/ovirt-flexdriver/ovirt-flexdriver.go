@@ -162,8 +162,18 @@ func detach(mountDevice string, nodeName string) {
 	fmt.Printf("detaching %s %s \n", mountDevice, nodeName)
 }
 
-func waitForAttach(mountDevice string, nodeName string) {
-	fmt.Printf("waitForAttach %s %s \n", mountDevice, nodeName)
+// waitForAttach wait for a device disk to be attached to the VM. The disk attachment
+// status expected to be true.
+// deviceName - the full device name as the output of the #attach call i.e /dev/disk/by-id/virtio-abcdef123
+// see 	#responseFromDiskAttachment
+// jsonOpts - json string in the form of
+func waitForAttach(deviceName string, jsonOpts k8sresources.FlexVolumeWaitForAttachRequest) (internal.Response, error) {
+	ovirt, err := newOvirt()
+	if err != nil {
+		return internal.FailedResponseFromError(err), err
+	}
+
+	ovirt.GetDiskAttachment(nodeName, mountDevice)
 }
 
 func mountDevice(mountDir string, mountDevice string, jsonOpts string) {
