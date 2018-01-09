@@ -278,6 +278,16 @@ func (ovirt *Ovirt) GetDiskAttachment(vmId, diskId string) (DiskAttachment, erro
 	return d, err
 }
 
+func (ovirt *Ovirt) GetDiskAttachments(vmId string) ([]DiskAttachment, error) {
+	s, err := ovirt.Get("vms/" + vmId + "/diskattachments/")
+	list := make([]DiskAttachment, 5)
+	if err != nil {
+		return list, err
+	}
+	err = json.Unmarshal([]byte(s), &list)
+	return list, err
+}
+
 func readCaCertPool(ovirt *Ovirt) (*x509.CertPool, error) {
 	caCert, err := ioutil.ReadFile(ovirt.Connection.CAFile)
 	if err != nil {

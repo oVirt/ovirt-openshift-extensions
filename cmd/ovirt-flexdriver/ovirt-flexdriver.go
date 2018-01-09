@@ -23,6 +23,8 @@ import (
 	"github.com/ovirt/ovirt-flexdriver/internal"
 	"gopkg.in/gcfg.v1"
 	"os"
+	"strings"
+	"time"
 )
 
 const usage = `Usage:
@@ -63,6 +65,11 @@ func App(args []string) (string, error) {
 			return "", errors.New(usage)
 		}
 		result, err = attach(args[1], args[2])
+	case "waitforattach":
+		if len(args) < 3 {
+			return "", errors.New(usage)
+		}
+		result, err = waitForAttach(args[1], args[2])
 	case "detach":
 		if len(args) < 3 {
 			return "", errors.New(usage)
@@ -167,13 +174,68 @@ func detach(mountDevice string, nodeName string) {
 // deviceName - the full device name as the output of the #attach call i.e /dev/disk/by-id/virtio-abcdef123
 // see 	#responseFromDiskAttachment
 // jsonOpts - json string in the form of
-func waitForAttach(deviceName string, jsonOpts k8sresources.FlexVolumeWaitForAttachRequest) (internal.Response, error) {
+func waitForAttach(deviceName string, jsonOpts string) (internal.Response, error) {
 	ovirt, err := newOvirt()
 	if err != nil {
 		return internal.FailedResponseFromError(err), err
 	}
 
-	ovirt.GetDiskAttachment(nodeName, mountDevice)
+	nodeName := internal.GetOvirtNodeName()
+	if nodeName == "" {
+		e := errors.New(fmt.Sprintf("Invalid node name '%s'", nodeName))
+		return internal.FailedResponseFromError(e), e
+	}
+
+	//device name is a path on the os - get the id from it
+	id := extractDeviceId(deviceName)
+
+	// FIXME fuzzy get by id since the id is partial
+	diskAttachments, err := ovirt.GetDiskAttachments(nodeName)
+	if err != nil {
+		return internal.FailedResponseFromError(err), err
+	}
+
+	var attachment internal.DiskAttachment
+	for _, d := range diskAttachments {
+		if strings.HasPrefix(d.Disk.Id, id) {
+			attachment = d
+		}
+	}
+	if attachment.Id == "" {
+		err = errors.New(fmt.Sprintf("Disk with id '%s' was not found", id))
+		return internal.FailedResponseFromError(err), err
+	}
+
+	retries := 5
+	timeout := time.Second * 10
+	for retries > 0 {
+		if attachment.Active {
+			break
+		}
+		time.Sleep(timeout)
+		attachment, err = ovirt.GetDiskAttachment(nodeName, attachment.Id)
+		if err != nil {
+			return internal.FailedResponseFromError(err), err
+			break
+		}
+		retries--
+	}
+	return internal.SuccessfulResponse, nil
+}
+
+// extractDeviceId will try to extract the ID of the disk from its path on the OS
+// deviceName should be the device path as returned by the attach call.
+// Basically revering the responseFromDiskAttachment
+func extractDeviceId(deviceName string) string {
+	fieldsFunc := strings.FieldsFunc(deviceName, func(r rune) bool { return '/' == r })
+	id := fieldsFunc[len(fieldsFunc)-1]
+	if strings.HasPrefix(id, "scsi") {
+		return strings.TrimPrefix(id, "scsi-0QEMU_QEMU_HARDDISK_")
+	}
+	if strings.HasPrefix(id, "virtio") {
+		return strings.TrimPrefix(id, "virtio-")
+	}
+	return ""
 }
 
 func mountDevice(mountDir string, mountDevice string, jsonOpts string) {

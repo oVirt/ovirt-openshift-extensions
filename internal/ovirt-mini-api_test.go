@@ -22,9 +22,16 @@ import (
 	"gopkg.in/gcfg.v1"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 )
+
+var driverConfig string
+
+func init() {
+	driverConfig = os.Getenv("OVIRT_FLEXDRIVER_CONF")
+}
 
 func TestLoadConf(t *testing.T) {
 	api := Ovirt{}
@@ -73,14 +80,14 @@ func TestAttach(t *testing.T) {
 	})
 
 	response, e := api.Attach(
-		internal.AttachRequest{"data", "vm_disk_1", "ext4", "rw", ""},
+		AttachRequest{"data", "vm_disk_1", "ext4", "rw", "", ""},
 		"host1")
 
 	if e != nil {
 		t.Fatal(e)
 	}
 
-	if response.Status != internal.Success {
+	if response.Status != Success {
 		t.Error(errors.New("response failure"))
 	}
 
@@ -106,9 +113,5 @@ func tokenHandlerFunc(expireIn int) http.HandlerFunc {
 }
 
 func getApi(client *http.Client) Ovirt {
-	return Ovirt{
-		Connection{},
-		*client,
-		Token{"token_123", 0, "Bearer", time.Now()},
-	}
+	return Ovirt{}
 }
