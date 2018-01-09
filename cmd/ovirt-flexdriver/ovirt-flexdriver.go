@@ -17,12 +17,14 @@ limitations under the License.
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/ovirt/ovirt-flexdriver/internal"
 	"gopkg.in/gcfg.v1"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 )
@@ -75,6 +77,11 @@ func App(args []string) (string, error) {
 			return "", errors.New(usage)
 		}
 		result, err = Detach(args[1], args[2])
+	case "mountdevice":
+		if len(args) < 4 {
+			return "", errors.New(usage)
+		}
+		result, err = MountDevice(args[1], args[2], args[3])
 	default:
 		return "", errors.New(usage)
 	}
@@ -281,8 +288,16 @@ func extractDeviceId(deviceName string) string {
 	return ""
 }
 
-func mountDevice(mountDir string, mountDevice string, jsonOpts string) {
-	fmt.Printf("mountDevicee %s \n", mountDevice)
+// MountDevice mount the mountDevice onto mountDir
+func MountDevice(mountDir string, mountDevice string, jsonOpts string) (internal.Response, error) {
+	cmd := exec.Command("mount", mountDevice, mountDir)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		return internal.FailedResponseFromError(err), err
+	}
+	return internal.SuccessfulResponse, nil
 }
 
 func unmountDevice(mountDevice string) {
