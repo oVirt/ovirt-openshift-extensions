@@ -14,22 +14,28 @@ const ovirtNodeNameLabel = "ovirtNodeNameLabel"
 // This call expects this label to be set on the node: $ovirtNodeNameLabel
 // TODO fragile approach, what happens if the node is not deployed under its `hostname`? This must be
 // communicated as well in the deployment section.
-func GetOvirtNodeName() string {
-	var outa bytes.Buffer
-	hostname := exec.Command("hostname")
-	hostname.Stdout = &outa
-	err := hostname.Run()
-	if err != nil {
-		return err.Error()
+func GetOvirtNodeName(hostname string) string {
+	if hostname == "" {
+		hostname = GetHostName()
 	}
-	h := outa.String()
-
-	cmd := exec.Command("kubectl", "get", "nodes", h, "-o", "jsonpath={.metadata.labels."+ovirtNodeNameLabel+"}")
+	cmd := exec.Command("kubectl", "get", "nodes", hostname, "-o", "jsonpath={.metadata.labels."+ovirtNodeNameLabel+"}")
 	var out bytes.Buffer
 	cmd.Stdout = &out
-	err = cmd.Run()
+	err := cmd.Run()
 	if err != nil {
 		return err.Error()
 	}
 	return strings.TrimSpace(out.String())
+}
+
+// GetHostName will return the hostname as returned by successful hostname command invocation else localhost
+func GetHostName() string {
+	var out bytes.Buffer
+	hostname := exec.Command("hostname")
+	hostname.Stdout = &out
+	err := hostname.Run()
+	if err != nil {
+		return "localhost"
+	}
+	return out.String()
 }

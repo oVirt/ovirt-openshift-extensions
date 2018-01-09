@@ -254,6 +254,24 @@ func (ovirt Ovirt) Post(path string, data interface{}) (string, error) {
 	return string(bytes), err
 }
 
+func (ovirt Ovirt) Delete(path string) ([]byte, error) {
+	request, err := deleteRequest(fmt.Sprintf("%s/%s", ovirt.Connection.Url, path), ovirt.token.Value)
+	if err != nil {
+		return nil, err
+	}
+	response, err := ovirt.client.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	if response.StatusCode > 200 {
+		return nil, errors.New(response.Status)
+	}
+	defer response.Body.Close()
+
+	bytes, err := ioutil.ReadAll(response.Body)
+	return bytes, err
+}
+
 func (ovirt *Ovirt) GetVM(name string) (VM, error) {
 	s, err := ovirt.Get("vms?search=name=" + name)
 	vmResult := VMResult{}
@@ -286,6 +304,11 @@ func (ovirt *Ovirt) GetDiskAttachments(vmId string) ([]DiskAttachment, error) {
 	}
 	err = json.Unmarshal([]byte(s), &list)
 	return list, err
+}
+
+func (ovirt *Ovirt) DetachDiskFromVM(vmId string, diskId string) error {
+	_, err := ovirt.Delete("vms/" + vmId + "/diskattachments/" + diskId)
+	return err
 }
 
 func readCaCertPool(ovirt *Ovirt) (*x509.CertPool, error) {
@@ -373,5 +396,12 @@ func postWithJsonData(ovirt *Ovirt, endpoint string, json []byte) (*http.Request
 	r.Header.Set("Content-Type", "application/json")
 	r.Header.Set("Accept", "application/json")
 	r.Header.Set("Authorization", "Bearer "+ovirt.token.Value)
+	return r, err
+}
+
+func deleteRequest(endpoint string, token string) (*http.Request, error) {
+	r, err := http.NewRequest(http.MethodDelete, endpoint, nil)
+	r.Header.Set("Accept", "application/json")
+	r.Header.Set("Authorization", "Bearer "+token)
 	return r, err
 }

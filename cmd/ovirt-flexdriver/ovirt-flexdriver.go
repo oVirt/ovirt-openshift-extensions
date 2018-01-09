@@ -74,13 +74,9 @@ func App(args []string) (string, error) {
 		if len(args) < 3 {
 			return "", errors.New(usage)
 		}
-		detach(args[1], args[2])
+		result, err = Detach(args[1], args[2])
 	default:
 		return "", errors.New(usage)
-	}
-
-	if err != nil {
-		return "", err
 	}
 
 	bytes, err := json.Marshal(result)
@@ -137,14 +133,14 @@ func attach(jsonOpts string, nodeName string) (internal.Response, error) {
 		e := errors.New(fmt.Sprintf("VM %s doesn't exist", nodeName))
 		return internal.FailedResponseFromError(e), e
 	}
-	diskResult, err := ovirt.GetDiskByName(r.VolumeName)
+	diskResult, err := ovirt.GetDiskByName(fromk8sNameToOvirt(r.VolumeName))
 	if err != nil {
 		return internal.FailedResponseFromError(err), err
 	}
 
 	// 1. no such disk, create it on the VM
 	if len(diskResult.Disks) == 0 {
-		attachment, err := ovirt.CreateDisk(r.VolumeName, r.StorageDomain, r.Size, r.Mode == "ro", vm.Id)
+		attachment, err := ovirt.CreateDisk(fromk8sNameToOvirt(r.VolumeName), r.StorageDomain, r.Size, r.Mode == "ro", vm.Id)
 		if err != nil {
 			return internal.FailedResponseFromError(err), err
 		}
@@ -165,8 +161,50 @@ func isattached(jsonOpts string, nodeName string) {
 	fmt.Printf("isattached %s %s \n", jsonOpts, nodeName)
 }
 
-func detach(mountDevice string, nodeName string) {
-	fmt.Printf("detaching %s %s \n", mountDevice, nodeName)
+// Detach will detach the disk from the VM.
+// volumeName is a cluster wide unique name of the volume and needs to be converted to ovirt's disk name/id
+// nodeName - the hostname with the volume attached. Needs to be converted to ovirt's VM. See #internal.GetOvirtNodeName
+func Detach(volumeName string, nodeName string) (internal.Response, error) {
+	if nodeName == "" {
+		e := errors.New(fmt.Sprintf("Invalid node name '%s'", nodeName))
+		return internal.FailedResponseFromError(e), e
+	}
+	if volumeName == "" {
+		e := errors.New(fmt.Sprintf("Invalid volume name '%s'", volumeName))
+		return internal.FailedResponseFromError(e), e
+	}
+
+	ovirt, err := newOvirt()
+	if err != nil {
+		return internal.FailedResponseFromError(err), err
+	}
+
+	vmName := internal.GetOvirtNodeName(nodeName)
+	ovirtDiskName := fromk8sNameToOvirt(volumeName)
+
+	vm, err := ovirt.GetVM(vmName)
+	if err != nil {
+		return internal.FailedResponseFromError(err), err
+	}
+
+	diskResult, err := ovirt.GetDiskByName(ovirtDiskName)
+	if err != nil {
+		return internal.FailedResponseFromError(err), err
+	}
+
+	if len(diskResult.Disks) == 0 {
+		//TODO is this an error or ok state for detach?
+		err = errors.New(fmt.Sprintf("Disk by name %s does not exist", ovirtDiskName))
+		return internal.FailedResponseFromError(err), err
+	} else {
+		err := ovirt.DetachDiskFromVM(vm.Id, diskResult.Disks[0].Id)
+		if err != nil {
+			return internal.FailedResponseFromError(err), err
+		}
+		return internal.SuccessfulResponse, nil
+	}
+
+	return internal.FailedResponse, err
 }
 
 // waitForAttach wait for a device disk to be attached to the VM. The disk attachment
@@ -180,7 +218,7 @@ func waitForAttach(deviceName string, jsonOpts string) (internal.Response, error
 		return internal.FailedResponseFromError(err), err
 	}
 
-	nodeName := internal.GetOvirtNodeName()
+	nodeName := internal.GetOvirtNodeName("")
 	if nodeName == "" {
 		e := errors.New(fmt.Sprintf("Invalid node name '%s'", nodeName))
 		return internal.FailedResponseFromError(e), e
@@ -258,4 +296,9 @@ func responseFromDiskAttachment(diskId string, diskInterface string) internal.Re
 		return internal.FailedResponseFromError(errors.New("device type is unsupported"))
 	}
 	return r
+}
+
+// fromk8sNameToOvirt takes name with '~' and replaces it with '_'
+func fromk8sNameToOvirt(s string) string {
+	return strings.Replace(s, "~", "_", -1)
 }
