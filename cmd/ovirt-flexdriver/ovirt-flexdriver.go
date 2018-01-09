@@ -82,6 +82,11 @@ func App(args []string) (string, error) {
 			return "", errors.New(usage)
 		}
 		result, err = MountDevice(args[1], args[2], args[3])
+	case "unmountdevice":
+		if len(args) != 2 {
+			return "", errors.New(usage)
+		}
+		result, err = UnmountDevice(args[1])
 	default:
 		return "", errors.New(usage)
 	}
@@ -300,8 +305,16 @@ func MountDevice(mountDir string, mountDevice string, jsonOpts string) (internal
 	return internal.SuccessfulResponse, nil
 }
 
-func unmountDevice(mountDevice string) {
-	fmt.Printf("mountDevicee %s \n", mountDevice)
+// UnmountDevice umounts the directory from this node
+func UnmountDevice(mountDir string) (internal.Response, error) {
+	cmd := exec.Command("umount", mountDir)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		return internal.FailedResponseFromError(err), err
+	}
+	return internal.SuccessfulResponse, nil
 }
 
 func responseFromDiskAttachment(diskId string, diskInterface string) internal.Response {
