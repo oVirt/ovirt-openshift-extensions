@@ -25,6 +25,7 @@ import (
 	"gopkg.in/gcfg.v1"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -72,6 +73,11 @@ func App(args []string) (string, error) {
 			return "", errors.New(usage)
 		}
 		result, err = waitForAttach(args[1], args[2])
+	case "isattached":
+		if len(args) < 3 {
+			return "", errors.New(usage)
+		}
+		result, err = IsAttached(args[1], args[2])
 	case "detach":
 		if len(args) < 3 {
 			return "", errors.New(usage)
@@ -174,8 +180,43 @@ func Attach(jsonOpts string, nodeName string) (internal.Response, error) {
 	return internal.FailedResponse, err
 }
 
-func isattached(jsonOpts string, nodeName string) {
-	fmt.Printf("isattached %s %s \n", jsonOpts, nodeName)
+// IsAttached will check if the disk exists on the VM attachments collections.
+// it will also reply with false in case the vm or the disk do not exist.
+func IsAttached(jsonOpts string, nodeName string) (internal.Response, error) {
+	ovirt, err := newOvirt()
+	if err != nil {
+		return internal.FailedResponseFromError(err), err
+	}
+	r, e := internal.AttachRequestFrom(jsonOpts)
+	if e != nil {
+		return internal.FailedResponse, e
+	}
+
+	vm, err := ovirt.GetVM(nodeName)
+	if err != nil {
+		return internal.FailedResponseFromError(err), err
+	}
+	// vm exist?
+	if vm.Id == "" {
+		e := errors.New(fmt.Sprintf("VM %s doesn't exist", nodeName))
+		return internal.FailedResponseFromError(e), e
+	}
+
+	// disk exists?
+	diskResult, err := ovirt.GetDiskByName(fromk8sNameToOvirt(r.VolumeName))
+	if err != nil {
+		return internal.FailedResponseFromError(err), err
+	}
+
+	// fetch attachment
+	attachment, err := ovirt.GetDiskAttachment(vm.Id, diskResult.Disks[0].Id)
+	if err != nil {
+		return internal.FailedResponseFromError(err), err
+	}
+
+	result := internal.SuccessfulResponse
+	result.Attached = strconv.FormatBool(attachment.Id != "")
+	return result, nil
 }
 
 // Detach will detach the disk from the VM.
