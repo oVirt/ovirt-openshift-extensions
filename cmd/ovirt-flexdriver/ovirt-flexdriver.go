@@ -64,7 +64,7 @@ func App(args []string) (string, error) {
 		if len(args) < 3 {
 			return "", errors.New(usage)
 		}
-		result, err = attach(args[1], args[2])
+		result, err = Attach(args[1], args[2])
 	case "waitforattach":
 		if len(args) < 3 {
 			return "", errors.New(usage)
@@ -108,7 +108,12 @@ func newOvirt() (*internal.Ovirt, error) {
 	return &ovirt, nil
 }
 
-func attach(jsonOpts string, nodeName string) (internal.Response, error) {
+// Attach will attach the volume to the nodeName.
+// If the volume(ovirt's disk) doesn't exist, create it.
+// If it exist, try to attach it to the VM
+// jsonOpts - contains the volume spec, like name, size etc
+// nodeName - k8s nodeName, needs conversion into ovirt's VM
+func Attach(jsonOpts string, nodeName string) (internal.Response, error) {
 	ovirt, err := newOvirt()
 	if err != nil {
 		return internal.FailedResponseFromError(err), err
