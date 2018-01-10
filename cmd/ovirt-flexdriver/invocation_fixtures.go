@@ -16,6 +16,8 @@ limitations under the License.
 
 package main
 
+import "fmt"
+
 var attachJson = `{
 	"ovirtStorageDomain": "data1",
 	"ovirtVolumeName": "testDisk-100000",
@@ -28,30 +30,42 @@ var invocationTests = []struct {
 	description string
 	args        []string
 	exitCode    int
+	onSuccess   func(s string)
 }{
 	{
 		"init",
 		[]string{"init"},
 		0,
+		nil,
 	},
 	{
 		"init - don't fail if more args sent",
 		[]string{"init", "{}"},
 		0,
+		nil,
 	},
 	{
 		"attach",
 		[]string{"attach"},
 		1,
+		nil,
 	},
 	{
 		"attach to non existing vm",
 		[]string{"attach", attachJson, "NON_EXISTING_VM"},
 		1,
+		nil,
 	},
 	{
 		"attach to a vm",
 		[]string{"attach", attachJson, "test_vm"},
 		0,
+		func(s string) { fmt.Printf("On Sucess call with return value %s\n", s) },
+	},
+	{
+		"wait for attach",
+		[]string{"waitforattach", "get_from_previous_attach_call", "{}"},
+		0,
+		nil,
 	},
 }

@@ -97,7 +97,10 @@ func App(args []string) (string, error) {
 		return "", errors.New(usage)
 	}
 
-	bytes, err := json.Marshal(result)
+	bytes, marshalingErr := json.Marshal(result)
+	if marshalingErr != nil {
+		return "", marshalingErr
+	}
 	return string(bytes), err
 }
 
@@ -111,7 +114,7 @@ func initialize() (internal.Response, error) {
 	if err != nil {
 		return internal.FailedResponse, err
 	}
-	return internal.Response{Status: "success", Capabilities: struct{ Attach string }{"true"}}, nil
+	return internal.Response{Status: "success", Capabilities: internal.Capabilities{"true"}}, nil
 }
 func newOvirt() (*internal.Ovirt, error) {
 	ovirt := internal.Ovirt{}
