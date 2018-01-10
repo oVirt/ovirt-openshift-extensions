@@ -26,8 +26,13 @@ func init() {
 }
 
 func TestInvocations(t *testing.T) {
+	previousResult := ""
 	for _, invocation := range invocationTests {
 		passed := true
+		if invocation.usePreviousResult != nil {
+			invocation.usePreviousResult(previousResult, &invocation)
+		}
+
 		t.Logf("Test spec: %s \n", invocation.description)
 		t.Logf("Test args: %s \n", invocation.args)
 
@@ -48,11 +53,8 @@ func TestInvocations(t *testing.T) {
 
 		t.Logf("Test response: %v error: %v\n", r, e)
 
-		if invocation.onSuccess != nil {
-			invocation.onSuccess(r)
-		}
-
 		t.Logf("Test passed: %v", passed)
 		t.Logf("\n")
+		previousResult = r
 	}
 }

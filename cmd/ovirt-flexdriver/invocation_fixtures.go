@@ -16,7 +16,10 @@ limitations under the License.
 
 package main
 
-import "fmt"
+import (
+	"encoding/json"
+	"github.com/ovirt/ovirt-flexdriver/internal"
+)
 
 var attachJson = `{
 	"ovirtStorageDomain": "data1",
@@ -26,12 +29,14 @@ var attachJson = `{
 	"kubernetes.io/readwrite": "rw"
 }`
 
-var invocationTests = []struct {
-	description string
-	args        []string
-	exitCode    int
-	onSuccess   func(s string)
-}{
+type Invocation struct {
+	description       string
+	args              []string
+	exitCode          int
+	usePreviousResult func(result string, invocation *Invocation)
+}
+
+var invocationTests = []Invocation{
 	{
 		"init",
 		[]string{"init"},
@@ -60,12 +65,16 @@ var invocationTests = []struct {
 		"attach to a vm",
 		[]string{"attach", attachJson, "test_vm"},
 		0,
-		func(s string) { fmt.Printf("On Sucess call with return value %s\n", s) },
+		nil,
 	},
 	{
 		"wait for attach",
-		[]string{"waitforattach", "get_from_previous_attach_call", "{}"},
+		[]string{"waitforattach", "PREV_RESULT", "{}"},
 		0,
-		nil,
+		func(result string, invocation *Invocation) {
+			r := internal.Response{}
+			json.Unmarshal([]byte(result), &r)
+			invocation.args[1] = r.Device
+		},
 	},
 }
