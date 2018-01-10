@@ -329,6 +329,9 @@ func waitForAttach(deviceName string, jsonOpts string) (internal.Response, error
 // deviceName should be the device path as returned by the attach call.
 // Basically revering the responseFromDiskAttachment
 func extractDeviceId(deviceName string) string {
+	if deviceName == "" {
+		return ""
+	}
 	fieldsFunc := strings.FieldsFunc(deviceName, func(r rune) bool { return '/' == r })
 	id := fieldsFunc[len(fieldsFunc)-1]
 	if strings.HasPrefix(id, "scsi") {
