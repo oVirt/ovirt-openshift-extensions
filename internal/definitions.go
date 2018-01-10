@@ -16,7 +16,10 @@ limitations under the License.
 
 package internal
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"strings"
+)
 
 type Status string
 
@@ -73,8 +76,8 @@ func AttachRequestFrom(s string) (AttachRequest, error) {
 	return r, err
 }
 
-func FailedResponseFromError(e error) Response {
+func FailedResponseFromError(e error, more ...string) Response {
 	r := Response{Status: Failure}
-	r.Message = e.Error()
+	r.Message = e.Error() + strings.Join(more, " ")
 	return r
 }
