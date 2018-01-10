@@ -112,14 +112,6 @@ func App(args []string) (string, error) {
 }
 
 func initialize() (internal.Response, error) {
-	value, exist := os.LookupEnv("OVIRT_FLEXDRIVER_CONF")
-	if exist {
-		driverConfigFile = value
-	} else {
-		dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-		driverConfigFile = dir + "/ovirt-flexdriver.conf"
-	}
-
 	_, err := newOvirt()
 	if err != nil {
 		return internal.FailedResponse, err
@@ -128,10 +120,19 @@ func initialize() (internal.Response, error) {
 	r.Capabilities = internal.Capabilities{Attach: "true"}
 	return r, nil
 }
+
 func newOvirt() (*internal.Ovirt, error) {
+	value, exist := os.LookupEnv("OVIRT_FLEXDRIVER_CONF")
+	if exist {
+		driverConfigFile = value
+	} else {
+		dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+		driverConfigFile = dir + "/ovirt-flexdriver.conf"
+	}
 	ovirt := internal.Ovirt{}
 	err := gcfg.ReadFileInto(&ovirt, driverConfigFile)
 	if err != nil {
+		err = errors.New(err.Error() + " file is " + driverConfigFile)
 		return nil, err
 	}
 	err = ovirt.Authenticate()
