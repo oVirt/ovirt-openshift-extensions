@@ -25,6 +25,7 @@ import (
 	"gopkg.in/gcfg.v1"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -40,10 +41,10 @@ const usage = `Usage:
 	ovirt-flexdriver isattached <json params> <nodename>
 `
 
-var driverConfigFile = "ovirt-flexdriver.conf"
+var driverConfigFile string
 
 func main() {
-	s, e := App(os.Args)
+	s, e := App(os.Args[1:])
 	if e != nil {
 		fmt.Fprintln(os.Stderr, e.Error())
 		os.Exit(1)
@@ -108,13 +109,18 @@ func initialize() (internal.Response, error) {
 	value, exist := os.LookupEnv("OVIRT_FLEXDRIVER_CONF")
 	if exist {
 		driverConfigFile = value
+	} else {
+		dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+		driverConfigFile = dir + "/ovirt-flexdriver.conf"
 	}
 
 	_, err := newOvirt()
 	if err != nil {
 		return internal.FailedResponse, err
 	}
-	return internal.Response{Status: "success", Capabilities: internal.Capabilities{"true"}}, nil
+	r := internal.SuccessfulResponse
+	r.Capabilities = internal.Capabilities{Attach: "true"}
+	return r, nil
 }
 func newOvirt() (*internal.Ovirt, error) {
 	ovirt := internal.Ovirt{}
