@@ -72,7 +72,7 @@ func App(args []string) (string, error) {
 		if len(args) < 3 {
 			return "", errors.New(usage)
 		}
-		result, err = waitForAttach(args[1], args[2])
+		result, err = WaitForAttach(args[1], args[2])
 	case "isattached":
 		if len(args) < 3 {
 			return "", errors.New(usage)
@@ -271,12 +271,12 @@ func Detach(volumeName string, nodeName string) (internal.Response, error) {
 	return internal.FailedResponse, err
 }
 
-// waitForAttach wait for a device disk to be attached to the VM. The disk attachment
+// WaitForAttach wait for a device disk to be attached to the VM. The disk attachment
 // status expected to be true.
 // deviceName - the full device name as the output of the #attach call i.e /dev/disk/by-id/virtio-abcdef123
 // see 	#responseFromDiskAttachment
 // jsonOpts - json string in the form of
-func waitForAttach(deviceName string, jsonOpts string) (internal.Response, error) {
+func WaitForAttach(deviceName string, jsonOpts string) (internal.Response, error) {
 	ovirt, err := newOvirt()
 	if err != nil {
 		return internal.FailedResponseFromError(err), err
