@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 func TestExtractDeviceIdForVIRTIO(t *testing.T) {
 	ut := "/dev/disk/by-id/virtio-8deb6495-9121-44b9-a"

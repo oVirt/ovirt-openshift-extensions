@@ -77,4 +77,10 @@ var invocationTests = []Invocation{
 			invocation.args[1] = r.Device
 		},
 	},
+	{
+		"Get volume name",
+		[]string{"getvolumename", attachJson},
+		0,
+		nil,
+	},
 }

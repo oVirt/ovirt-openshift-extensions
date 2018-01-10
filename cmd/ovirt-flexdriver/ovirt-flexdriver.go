@@ -39,6 +39,7 @@ const usage = `Usage:
 	ovirt-flexdriver mountdevice <mount dir> <mount device> <json params>
 	ovirt-flexdriver unmountdevice <mount dir>
 	ovirt-flexdriver isattached <json params> <nodename>
+	ovirt-flexdriver getvolumename <json params>
 `
 
 var driverConfigFile string
@@ -94,6 +95,11 @@ func App(args []string) (string, error) {
 			return "", errors.New(usage)
 		}
 		result, err = UnmountDevice(args[1])
+	case "getvolumename":
+		if len(args) != 2 {
+			return "", errors.New(usage)
+		}
+		result, err = GetVolumeName(args[1])
 	default:
 		return "", errors.New(usage)
 	}
@@ -385,6 +391,49 @@ func responseFromDiskAttachment(diskId string, diskInterface string) internal.Re
 		return internal.FailedResponseFromError(errors.New("device type is unsupported"))
 	}
 	return r
+}
+
+func GetVolumeName(jsonOpts string) (internal.Response, error) {
+	ovirt, err := newOvirt()
+	if err != nil {
+		return internal.FailedResponseFromError(err), err
+	}
+	jsonArgs, e := internal.AttachRequestFrom(jsonOpts)
+	if e != nil {
+		return internal.FailedResponse, e
+	}
+
+	nodeName, noNodeNameErr := internal.GetOvirtNodeName("")
+	if noNodeNameErr != nil {
+		return internal.FailedResponseFromError(noNodeNameErr, "failed getting ovirt vm name"), noNodeNameErr
+	}
+
+	vm, err := ovirt.GetVM(nodeName)
+	if err != nil {
+		return internal.FailedResponseFromError(err), err
+	}
+	// vm exist?
+	if vm.Id == "" {
+		e := errors.New(fmt.Sprintf("VM %s doesn't exist", nodeName))
+		return internal.FailedResponseFromError(e), e
+	}
+	diskResult, err := ovirt.GetDiskByName(fromk8sNameToOvirt(jsonArgs.VolumeName))
+	if err != nil {
+		return internal.FailedResponseFromError(err), err
+	}
+
+	if len(diskResult.Disks) == 0 {
+		noDisk := errors.New(fmt.Sprintf("Volume with name %s doesn't exist in ovirt", jsonArgs.VolumeName))
+		return internal.FailedResponseFromError(noDisk), noDisk
+	} else {
+		// fetch the disk attachment on the VM
+		attachment, err := ovirt.GetDiskAttachment(vm.Id, diskResult.Disks[0].Id)
+		if err != nil {
+			err = errors.New(fmt.Sprintf("The volume %s is not attched to the node %s", jsonArgs.VolumeName, nodeName))
+			return internal.FailedResponseFromError(err), err
+		}
+		return responseFromDiskAttachment(attachment.Id, attachment.Interface), err
+	}
 }
 
 // fromk8sNameToOvirt takes name with '~' and replaces it with '_'
