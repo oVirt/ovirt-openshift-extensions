@@ -240,7 +240,10 @@ func Detach(volumeName string, nodeName string) (internal.Response, error) {
 		return internal.FailedResponseFromError(err), err
 	}
 
-	vmName := internal.GetOvirtNodeName(nodeName)
+	vmName, err := internal.GetOvirtNodeName(nodeName)
+	if err != nil {
+		return internal.FailedResponseFromError(err), err
+	}
 	ovirtDiskName := fromk8sNameToOvirt(volumeName)
 
 	vm, err := ovirt.GetVM(vmName)
@@ -279,8 +282,8 @@ func waitForAttach(deviceName string, jsonOpts string) (internal.Response, error
 		return internal.FailedResponseFromError(err), err
 	}
 
-	nodeName := internal.GetOvirtNodeName("")
-	if nodeName == "" {
+	nodeName, err := internal.GetOvirtNodeName("")
+	if nodeName == "" || err != nil {
 		e := errors.New(fmt.Sprintf("Invalid node name '%s'", nodeName))
 		return internal.FailedResponseFromError(e), e
 	}
