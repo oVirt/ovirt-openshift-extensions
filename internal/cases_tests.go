@@ -36,7 +36,7 @@ var apiCases = []struct {
 				"5a7b2687-07aa-4a7a-b589-4d4f847b9c29",
 				"vol1",
 				"attached",
-				Capabilities{""},
+				Capabilities{},
 			},
 		},
 	},

@@ -118,7 +118,7 @@ func initialize() (internal.Response, error) {
 		return internal.FailedResponse, err
 	}
 	r := internal.SuccessfulResponse
-	r.Capabilities = internal.Capabilities{Attach: "true"}
+	r.Capabilities = internal.Capabilities{Attach: true}
 	return r, nil
 }
 

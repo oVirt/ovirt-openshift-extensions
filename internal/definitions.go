@@ -43,17 +43,17 @@ type OvirtApi interface {
 }
 
 type Response struct {
-	Status     Status `json:"status"`               //"status": "<Success/Failure/Not supported>",
-	Message    string `json:"message"`              //"message": "<Reason for success/failure>",
-	Device     string `json:"device,omitempty"`     //"device": "<Path to the device attached. This field is valid only for attach & waitforattach call-outs>"
-	VolumeName string `json:"volumeName,omitempty"` //"volumeName": "<Cluster wide unique name of the volume. Valid only for getvolumename call-out>"
-	Attached   string `json:"attached,omitempty"`   //"attached": <True/False (Return true if volume is attached on the node. Valid only for isattached call-out)>
-	Capabilities
+	Status       Status       `json:"status"`               //"status": "<Success/Failure/Not supported>",
+	Message      string       `json:"message"`              //"message": "<Reason for success/failure>",
+	Device       string       `json:"device,omitempty"`     //"device": "<Path to the device attached. This field is valid only for attach & waitforattach call-outs>"
+	VolumeName   string       `json:"volumeName,omitempty"` //"volumeName": "<Cluster wide unique name of the volume. Valid only for getvolumename call-out>"
+	Attached     string       `json:"attached,omitempty"`   //"attached": <True/False (Return true if volume is attached on the node. Valid only for isattached call-out)>
+	Capabilities Capabilities `json:"capabilities,omitempty"`
 }
 
 type Capabilities struct {
 	//"capabilities": <Only included as part of the Init response>
-	Attach string `json:"attach,omitempty"` //: <True/False (Return true if the driver implements attach and detach)>
+	Attach bool `json:"attach,omitempty"` //: <True/False (Return true if the driver implements attach and detach)>
 }
 
 type AttchResponse struct {
