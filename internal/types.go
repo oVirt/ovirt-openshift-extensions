@@ -16,11 +16,6 @@ limitations under the License.
 
 package internal
 
-//todo make this with json encoder/decoder
-type DiskAttachmentWrapper struct {
-	DiskAttachment DiskAttachment `json:"disk_attachment"`
-}
-
 type DiskAttachment struct {
 	Id          string `json:"id,omitempty"`
 	Bootable    bool   `json:"bootable,string"`
@@ -29,6 +24,10 @@ type DiskAttachment struct {
 	Active      bool   `json:"active,string"`
 	Disk        Disk   `json:"disk"`
 	ReadOnly    bool   `json:"read_only,string"`
+}
+
+type DiskAttachmentResult struct {
+	DiskAttachments []DiskAttachment `json:"disk_attachment"`
 }
 
 type DiskFormat string

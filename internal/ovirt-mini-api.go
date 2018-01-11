@@ -298,12 +298,12 @@ func (ovirt *Ovirt) GetDiskAttachment(vmId, diskId string) (DiskAttachment, erro
 
 func (ovirt *Ovirt) GetDiskAttachments(vmId string) ([]DiskAttachment, error) {
 	s, err := ovirt.Get("vms/" + vmId + "/diskattachments/")
-	list := make([]DiskAttachment, 5)
+	result := DiskAttachmentResult{}
 	if err != nil {
-		return list, err
+		return result.DiskAttachments, err
 	}
-	err = json.Unmarshal([]byte(s), &list)
-	return list, err
+	err = json.Unmarshal([]byte(s), &result)
+	return result.DiskAttachments, err
 }
 
 func (ovirt *Ovirt) DetachDiskFromVM(vmId string, diskId string) error {
