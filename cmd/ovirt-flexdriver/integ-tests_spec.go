@@ -79,9 +79,15 @@ var testSpecs = []testSpec{
 		},
 	},
 	{
-		"Get volume name",
+		"get volume name",
 		[]string{"getvolumename", attachJson},
 		0,
+		nil,
+	},
+	{
+		"get volume name - non existing volume",
+		[]string{"getvolumename", `{"ovirtVolumeName":"non-existing"}`},
+		1,
 		nil,
 	},
 }
