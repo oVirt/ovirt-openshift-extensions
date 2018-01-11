@@ -25,36 +25,31 @@ func init() {
 	os.Setenv("OVIRT_FLEXDRIVER_CONF", "../../ovirt-flexdriver.conf")
 }
 
-func TestInvocations(t *testing.T) {
+func TestIntegration(t *testing.T) {
 	previousResult := ""
-	for _, invocation := range invocationTests {
-		passed := true
-		if invocation.usePreviousResult != nil {
-			invocation.usePreviousResult(previousResult, &invocation)
-		}
+	for _, spec := range testSpecs {
+		t.Run(spec.description, func(t *testing.T) {
+			if spec.usePreviousResult != nil {
+				spec.usePreviousResult(previousResult, &spec)
+			}
 
-		t.Logf("Test spec: %s \n", invocation.description)
-		t.Logf("Test args: %s \n", invocation.args)
+			t.Logf("testSpec args: %s \n", spec.args)
 
-		r, e := App(invocation.args)
+			r, e := App(spec.args)
 
-		if e != nil && invocation.exitCode == 0 {
-			t.Errorf("expected a successful invocation with %s but got %s \n", invocation.args, e.Error())
-			passed = false
-		}
-		if e == nil && invocation.exitCode > 0 {
-			t.Errorf("expected a failed invocation")
-			passed = false
-		}
-		if r == "" && e == nil {
-			t.Errorf("expected some output, got none")
-			passed = false
-		}
+			if e != nil && spec.exitCode == 0 {
+				t.Errorf("expected a successful spec with %s but got %s \n", spec.args, e.Error())
+			}
+			if e == nil && spec.exitCode > 0 {
+				t.Errorf("expected a failed spec")
+			}
+			if r == "" && e == nil {
+				t.Errorf("expected some output, got none")
+			}
 
-		t.Logf("Test response: %v error: %v\n", r, e)
+			t.Logf("testSpec response: %v error: %v\n", r, e)
 
-		t.Logf("Test passed: %v", passed)
-		t.Logf("\n")
-		previousResult = r
+			previousResult = r
+		})
 	}
 }

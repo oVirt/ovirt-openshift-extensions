@@ -29,14 +29,14 @@ var attachJson = `{
 	"kubernetes.io/readwrite": "rw"
 }`
 
-type Invocation struct {
+type testSpec struct {
 	description       string
 	args              []string
 	exitCode          int
-	usePreviousResult func(result string, invocation *Invocation)
+	usePreviousResult func(result string, invocation *testSpec)
 }
 
-var invocationTests = []Invocation{
+var testSpecs = []testSpec{
 	{
 		"init",
 		[]string{"init"},
@@ -71,7 +71,7 @@ var invocationTests = []Invocation{
 		"wait for attach",
 		[]string{"waitforattach", "PREV_RESULT", "{}"},
 		0,
-		func(result string, invocation *Invocation) {
+		func(result string, invocation *testSpec) {
 			r := internal.Response{}
 			json.Unmarshal([]byte(result), &r)
 			invocation.args[1] = r.Device
