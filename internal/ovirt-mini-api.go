@@ -176,7 +176,7 @@ func (ovirt *Ovirt) Attach(params AttachRequest, vmName string) (Response, error
 }
 func (ovirt Ovirt) GetDiskByName(diskName string) (DiskResult, error) {
 	var diskResult DiskResult
-	r, err := ovirt.Get(fmt.Sprintf("disks?search=%s", diskName))
+	r, err := ovirt.Get(fmt.Sprintf("disks?search=name=%s", diskName))
 	if err != nil {
 		return diskResult, err
 	}
@@ -193,6 +193,7 @@ func (ovirt *Ovirt) CreateDisk(
 	s, _ := bytefmt.ToBytes(size)
 	a := DiskAttachment{
 		Interface: "virtio",
+		Active:    true,
 		Disk: Disk{
 			Name:            diskName,
 			ProvisionedSize: s,

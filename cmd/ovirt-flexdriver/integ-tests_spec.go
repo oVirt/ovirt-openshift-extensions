@@ -26,7 +26,8 @@ var attachJson = `{
 	"ovirtVolumeName": "testDisk-100000",
 	"ovirtDiskFormat": "raw",
 	"kubernetes.io/fsType": "ext4",
-	"kubernetes.io/readwrite": "rw"
+	"kubernetes.io/readwrite": "rw",
+	"capacity": "1Gi"
 }`
 
 type testSpec struct {
