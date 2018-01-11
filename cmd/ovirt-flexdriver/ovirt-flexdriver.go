@@ -199,8 +199,6 @@ func Attach(jsonOpts string, nodeName string) (internal.Response, error) {
 		}
 		return responseFromDiskAttachment(attachment.Id, attachment.Interface), err
 	}
-
-	return internal.FailedResponse, err
 }
 
 // IsAttached will check if the disk exists on the VM attachments collections.
@@ -287,8 +285,6 @@ func Detach(volumeName string, nodeName string) (internal.Response, error) {
 		}
 		return internal.SuccessfulResponse, nil
 	}
-
-	return internal.FailedResponse, err
 }
 
 // WaitForAttach wait for a device disk to be attached to the VM. The disk attachment
@@ -328,17 +324,18 @@ func WaitForAttach(deviceName string, jsonOpts string) (internal.Response, error
 
 	retries := 5
 	timeout := time.Second * 10
-	for retries > 0 {
-		if attachment.Active {
-			break
-		}
+	for retries > 0 && !attachment.Active {
 		time.Sleep(timeout)
 		attachment, err = ovirt.GetDiskAttachment(ovirtVmName, attachment.Id)
 		if err != nil {
 			return internal.FailedResponseFromError(err), err
-			break
 		}
 		retries--
+	}
+
+	if !attachment.Active {
+		err = errors.New("disk is not active yet")
+		return internal.FailedResponseFromError(err), err
 	}
 	return internal.SuccessfulResponse, nil
 }
