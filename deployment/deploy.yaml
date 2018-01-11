@@ -10,10 +10,7 @@
         force: yes
 
     - name: Copy oVirt flexvolume driver config
-      copy:
-        src: ovirt-flexdriver.conf
-        dest: /usr/libexec/kubernetes/kubelet-plugins/volume/exec/ovirt~ovirt-flexdriver/
+      template:
+        src: ovirt-flexdriver.conf.j2
+        dest: /usr/libexec/kubernetes/kubelet-plugins/volume/exec/ovirt~ovirt-flexdriver/ovirt-flexdriver.conf
         force: yes
-
-    - name: Add a label to the node to identify the VM name. The inventory must specify vm_name
-      command: kubectl label node {{ inventory_hostname }} ovirtNodeNameLabel={{ vm_name }} --overwrite

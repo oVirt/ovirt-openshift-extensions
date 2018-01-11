@@ -43,6 +43,7 @@ const usage = `Usage:
 `
 
 var driverConfigFile string
+var ovirtVmName string
 
 func main() {
 	s, e := App(os.Args[1:])
@@ -129,17 +130,23 @@ func newOvirt() (*internal.Ovirt, error) {
 		dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 		driverConfigFile = dir + "/ovirt-flexdriver.conf"
 	}
-	ovirt := internal.Ovirt{}
-	err := gcfg.ReadFileInto(&ovirt, driverConfigFile)
+	driver := struct {
+		internal.Ovirt
+		General struct {
+			OvirtVmName string `gcfg:"ovirtVmName"`
+		}
+	}{}
+	err := gcfg.ReadFileInto(&driver, driverConfigFile)
 	if err != nil {
 		err = errors.New(err.Error() + " file is " + driverConfigFile)
 		return nil, err
 	}
-	err = ovirt.Authenticate()
+	err = driver.Authenticate()
 	if err != nil {
 		return nil, err
 	}
-	return &ovirt, nil
+	ovirtVmName = driver.General.OvirtVmName
+	return &driver.Ovirt, nil
 }
 
 // Attach will attach the volume to the nodeName.
@@ -295,17 +302,15 @@ func WaitForAttach(deviceName string, jsonOpts string) (internal.Response, error
 		return internal.FailedResponseFromError(err), err
 	}
 
-	nodeName, err := internal.GetOvirtNodeName("")
-	if nodeName == "" || err != nil {
-		e := errors.New(fmt.Sprintf("Invalid node name '%s'", nodeName))
-		return internal.FailedResponseFromError(e), e
-	}
-
 	//device name is a path on the os - get the id from it
 	id := extractDeviceId(deviceName)
 
+	vm, e := ovirt.GetVM(ovirtVmName)
+	if e != nil {
+		return internal.FailedResponseFromError(e), e
+	}
 	// FIXME fuzzy get by id since the id is partial
-	diskAttachments, err := ovirt.GetDiskAttachments(nodeName)
+	diskAttachments, err := ovirt.GetDiskAttachments(vm.Id)
 	if err != nil {
 		return internal.FailedResponseFromError(err), err
 	}
@@ -328,7 +333,7 @@ func WaitForAttach(deviceName string, jsonOpts string) (internal.Response, error
 			break
 		}
 		time.Sleep(timeout)
-		attachment, err = ovirt.GetDiskAttachment(nodeName, attachment.Id)
+		attachment, err = ovirt.GetDiskAttachment(ovirtVmName, attachment.Id)
 		if err != nil {
 			return internal.FailedResponseFromError(err), err
 			break
@@ -404,18 +409,13 @@ func GetVolumeName(jsonOpts string) (internal.Response, error) {
 		return internal.FailedResponse, e
 	}
 
-	nodeName, noNodeNameErr := internal.GetOvirtNodeName("")
-	if noNodeNameErr != nil {
-		return internal.FailedResponseFromError(noNodeNameErr, "failed getting ovirt vm name"), noNodeNameErr
-	}
-
-	vm, err := ovirt.GetVM(nodeName)
+	vm, err := ovirt.GetVM(ovirtVmName)
 	if err != nil {
 		return internal.FailedResponseFromError(err), err
 	}
 	// vm exist?
 	if vm.Id == "" {
-		e := errors.New(fmt.Sprintf("VM %s doesn't exist", nodeName))
+		e := errors.New(fmt.Sprintf("VM %s doesn't exist", ovirtVmName))
 		return internal.FailedResponseFromError(e), e
 	}
 	diskResult, err := ovirt.GetDiskByName(fromk8sNameToOvirt(jsonArgs.VolumeName))
@@ -430,7 +430,7 @@ func GetVolumeName(jsonOpts string) (internal.Response, error) {
 		// fetch the disk attachment on the VM
 		attachment, err := ovirt.GetDiskAttachment(vm.Id, diskResult.Disks[0].Id)
 		if err != nil {
-			err = errors.New(fmt.Sprintf("The volume %s is not attched to the node %s", jsonArgs.VolumeName, nodeName))
+			err = errors.New(fmt.Sprintf("The volume %s is not attched to the node %s", jsonArgs.VolumeName, ovirtVmName))
 			return internal.FailedResponseFromError(err), err
 		}
 		return responseFromDiskAttachment(attachment.Id, attachment.Interface), err
