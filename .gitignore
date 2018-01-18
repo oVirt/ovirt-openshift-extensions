@@ -1,5 +1,6 @@
 *.ca
 *.retry
+deployment/*.retry
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Go template
