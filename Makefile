@@ -13,7 +13,7 @@ BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 
 all: clean deps build test
 build:
-	$(GOBUILD) -o $(BINARY_NAME) -v cmd/$(BINARY_NAME)/*.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) -a -ldflags '-extldflags "-static"' -o $(BINARY_NAME) -v cmd/$(BINARY_NAME)/*.go
 test:
 	$(GOTEST) -v ./...
 clean:
@@ -24,7 +24,8 @@ run:
 	./$(BINARY_NAME)
 deps:
 	$(GOGET) github.com/cloudfoundry/bytefmt
+	$(GOGET) github.com/op/go-logging
 
 # Cross compilation
 build-linux:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) -o $(BINARY_NAME) -v
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) -a -ldflags '-extldflags "-static"' -o $(BINARY_NAME) -v
