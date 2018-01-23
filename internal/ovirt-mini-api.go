@@ -134,12 +134,7 @@ func isTokenValid(ovirt *Ovirt) bool {
 // jsonParams is the volume info
 // Response will include the device path according to the disk interface type
 func (ovirt *Ovirt) Attach(params AttachRequest, vmName string) (Response, error) {
-	err := ovirt.Authenticate()
 	// TODO validate params
-	if err != nil {
-		return FailedResponse, err
-	}
-
 	// convert params to json
 	requestJson, err := json.Marshal(
 		DiskAttachment{
@@ -189,10 +184,12 @@ func (ovirt *Ovirt) CreateDisk(
 	storageDomainName string,
 	size string,
 	readOnly bool,
-	vmId string) (DiskAttachment, error) {
+	vmId string,
+	diskId string,
+	diskInterface string) (DiskAttachment, error) {
 	s, _ := bytefmt.ToBytes(size)
 	a := DiskAttachment{
-		Interface: "virtio",
+		Interface: diskInterface,
 		Active:    true,
 		Disk: Disk{
 			Name:            diskName,
@@ -204,6 +201,10 @@ func (ovirt *Ovirt) CreateDisk(
 		},
 		ReadOnly: readOnly,
 	}
+	if diskId != "" {
+		a.Disk.Id = diskId
+	}
+
 	post, err := ovirt.Post("/vms/"+vmId+"/diskattachments", a)
 	if err != nil {
 		return a, err
@@ -223,12 +224,28 @@ func (ovirt Ovirt) Get(path string) ([]byte, error) {
 		return nil, err
 	}
 	if response.StatusCode > 200 {
-		return nil, errors.New(response.Status)
+		return nil, translateError(*response)
 	}
 	defer response.Body.Close()
 
 	bytes, err := ioutil.ReadAll(response.Body)
 	return bytes, err
+}
+
+type NotFound struct {
+	response http.Response
+}
+
+func (n NotFound) Error() string {
+	return fmt.Sprintf("No resource at " + n.response.Request.URL.Path)
+}
+
+func translateError(response http.Response) error {
+	switch response.StatusCode {
+	case 404:
+		return NotFound{response: response}
+	}
+	return errors.New(response.Status)
 }
 
 func (ovirt Ovirt) Post(path string, data interface{}) (string, error) {
@@ -277,7 +294,7 @@ func (ovirt *Ovirt) GetVM(name string) (VM, error) {
 	s, err := ovirt.Get("vms?search=name=" + name)
 	vmResult := VMResult{}
 	if err != nil {
-		return vmResult.Vms[0], err
+		return VM{}, err
 	}
 	err = json.Unmarshal([]byte(s), &vmResult)
 	var vm VM

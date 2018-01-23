@@ -192,7 +192,7 @@ func Attach(jsonOpts string, nodeName string) (internal.Response, error) {
 
 	// 1. no such disk, create it on the VM
 	if len(diskResult.Disks) == 0 {
-		attachment, err := ovirt.CreateDisk(fromk8sNameToOvirt(r.VolumeName), r.StorageDomain, r.Size, r.Mode == "ro", vm.Id)
+		attachment, err := ovirt.CreateDisk(fromk8sNameToOvirt(r.VolumeName), r.StorageDomain, r.Size, r.Mode == "ro", vm.Id, "", "")
 		if err != nil {
 			return internal.FailedResponseFromError(err), err
 		}
@@ -201,7 +201,16 @@ func Attach(jsonOpts string, nodeName string) (internal.Response, error) {
 		// 2. The disk - fetch the disk attachment on the VM
 		attachment, err := ovirt.GetDiskAttachment(vm.Id, diskResult.Disks[0].Id)
 		if err != nil {
-			return internal.FailedResponseFromError(err), err
+			_, noAttachment := err.(internal.NotFound)
+			if noAttachment {
+				attachment, err =
+					ovirt.CreateDisk(fromk8sNameToOvirt(r.VolumeName), r.StorageDomain, r.Size, r.Mode == "ro", vm.Id, diskResult.Disks[0].Id, "virtio_scsi")
+				if err != nil {
+					return internal.FailedResponseFromError(err), err
+				}
+			} else {
+				return internal.FailedResponseFromError(err), err
+			}
 		}
 		return responseFromDiskAttachment(attachment.Id, attachment.Interface), err
 	}
@@ -242,7 +251,7 @@ func IsAttached(jsonOpts string, nodeName string) (internal.Response, error) {
 	}
 
 	result := internal.SuccessfulResponse
-	result.Attached = strconv.FormatBool(attachment.Id != "")
+	result.Attached = attachment.Id != ""
 	return result, nil
 }
 
@@ -390,11 +399,11 @@ func UnmountDevice(mountDir string) (internal.Response, error) {
 
 func responseFromDiskAttachment(diskId string, diskInterface string) internal.Response {
 	r := internal.SuccessfulResponse
-	shortDiskId := diskId[:16]
+	shortDiskId := diskId[:20]
 	switch diskInterface {
 	case "virtio":
 		r.Device = "/dev/disk/by-id/virtio-" + shortDiskId
-	case "virtio_iscsi":
+	case "virtio_scsi":
 		r.Device = "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_" + shortDiskId
 	default:
 		return internal.FailedResponseFromError(errors.New("device type is unsupported"))

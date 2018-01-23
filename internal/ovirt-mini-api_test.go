@@ -80,7 +80,7 @@ func TestAttach(t *testing.T) {
 	})
 
 	response, e := api.Attach(
-		AttachRequest{"data", "vm_disk_1", "ext4", "rw", "", ""},
+		AttachRequest{"data", "vm_disk_1", "ext4", "rw", "", "", "", ""},
 		"host1")
 
 	if e != nil {
@@ -114,4 +114,26 @@ func tokenHandlerFunc(expireIn int) http.HandlerFunc {
 
 func getApi(client *http.Client) Ovirt {
 	return Ovirt{}
+}
+
+var testAttachRequest = `
+{
+	"capacity":"1G",
+	"kubernetes.io/fsType":"ext4",
+	"kubernetes.io/pvOrVolumeName":"test",
+	"kubernetes.io/readwrite":"rw",
+	"ovirtStorageDomain":"data1",
+	"size":"1G",
+	"volumeID":"disk123"
+}
+`
+
+func TestAttachRequestFrom(t *testing.T) {
+	request, e := AttachRequestFrom(testAttachRequest)
+	if e != nil {
+		t.Errorf(e.Error())
+	}
+	if request.Size != "1G" {
+		t.Errorf("expected size is %v got %v", "1G", request.Size)
+	}
 }
