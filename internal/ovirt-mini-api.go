@@ -35,7 +35,7 @@ import (
 const caUrl = "ovirt-engine/services/pki-resource?resource=ca-certificate&format=X509-PEM-CA"
 const tokenUrl = "/ovirt-engine/sso/oauth/token"
 const tokenPayload = "grant_type=password&scope=ovirt-app-api&username=%s&password=%s"
-const tokenStore = "/var/tmp/ovirt-flexdriver.token"
+const tokenStore = "/tmp/ovirt-flexdriver.token"
 
 type Ovirt struct {
 	Connection Connection
