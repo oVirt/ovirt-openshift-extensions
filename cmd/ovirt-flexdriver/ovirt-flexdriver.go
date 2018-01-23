@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -27,7 +28,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -384,15 +384,66 @@ func extractDeviceId(deviceName string) string {
 }
 
 // MountDevice mount the mountDevice onto mountDir
-func MountDevice(mountDir string, mountDevice string, jsonOpts string) (internal.Response, error) {
-	cmd := exec.Command("mount", mountDevice, mountDir)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
+// mountDir - should exist already and is not the responsibility of the driver to create
+// _ 		- Currently the 2nd argument is unknown and undocumented
+// jsonOpts - the regular driver options that containes the name of the volume.
+// node - the implementation should use the volume name and to trace the disk device from it in order to mount
+func MountDevice(mountDir string, _ string, jsonOpts string) (internal.Response, error) {
+	r, err := internal.AttachRequestFrom(jsonOpts)
+	if err != nil {
+		return internal.FailedResponse, err
+	}
+
+	// get the underlying device from the volume name (which is the ovirt disk name)
+	response, err := GetVolumeName(jsonOpts)
+	if err != nil {
+		return response, err
+	}
+
+	// Get the real disk device name from device
+	device, err := getDeviceNameFromSerial(response.Device)
 	if err != nil {
 		return internal.FailedResponseFromError(err), err
 	}
-	return internal.SuccessfulResponse, nil
+
+	// is there a filesystem on this device?
+	filesystem, e := getDeviceInfo(device)
+	if e != nil {
+		return internal.FailedResponseFromError(e, device), e
+	}
+	if filesystem == "" {
+		// no filesystem - create it
+		makeFSErr := makeFS(device, r.FsType)
+		if makeFSErr != nil {
+			return internal.FailedResponseFromError(makeFSErr), makeFSErr
+		}
+	}
+
+	cmd := exec.Command("mount", "-t", r.FsType, device, mountDir)
+	out, err := cmd.Output()
+	exitError, incompleteCmd := err.(*exec.ExitError)
+	if err != nil && incompleteCmd {
+		return internal.FailedResponseFromError(err, " mount failed with "+string(exitError.Error())), err
+	}
+	retVal := internal.SuccessfulResponse
+	retVal.Message = string(out)
+	return retVal, nil
+}
+
+func makeFS(device string, fsType string) error {
+	// caution, use -F to force creating the filesystem if it doesn't exit. May not be portable for fs other
+	// than ext family
+	var force string
+	if strings.HasPrefix(fsType, "ext") {
+		force = "-F"
+	}
+	cmd := exec.Command("mkfs", force, "-t", fsType, device)
+	err := cmd.Run()
+	exitError, incompleteCmd := err.(*exec.ExitError)
+	if err != nil && incompleteCmd {
+		return errors.New(err.Error() + " mkfs failed with " + string(exitError.Error()))
+	}
+	return nil
 }
 
 // UnmountDevice umounts the directory from this node
@@ -446,8 +497,10 @@ func GetVolumeName(jsonOpts string) (internal.Response, error) {
 	}
 
 	if len(diskResult.Disks) == 0 {
-		noDisk := errors.New(fmt.Sprintf("Volume with name %s doesn't exist in ovirt", jsonArgs.VolumeName))
-		return internal.FailedResponseFromError(noDisk), noDisk
+		//noDisk := errors.New(fmt.Sprintf("Volume with name %s doesn't exist in ovirt", jsonArgs.VolumeName))
+		//return internal.FailedResponseFromError(noDisk), noDisk
+		// maybe just return the name of the disk as is to indicate it is free?
+		return internal.NotSupportedResponse, nil
 	} else {
 		// fetch the disk attachment on the VM
 		attachment, err := ovirt.GetDiskAttachment(vm.Id, diskResult.Disks[0].Id)
@@ -462,4 +515,22 @@ func GetVolumeName(jsonOpts string) (internal.Response, error) {
 // fromk8sNameToOvirt takes name with '~' and replaces it with '_'
 func fromk8sNameToOvirt(s string) string {
 	return strings.Replace(s, "~", "_", -1)
+}
+
+// getDeviceInfo will return the first Device which is a partition and its filesystem.
+// if the given Device disk has no partition then an empty zero valued device will return
+func getDeviceInfo(device string) (string, error) {
+	cmd := exec.Command("lsblk", "-nro", "FSTYPE", device)
+	out, err := cmd.Output()
+	exitError, incompleteCmd := err.(*exec.ExitError)
+	if err != nil && incompleteCmd {
+		return "", errors.New(err.Error() + "lsblk failed with " + string(exitError.Stderr))
+	}
+
+	reader := bufio.NewReader(bytes.NewReader(out))
+	line, _, err := reader.ReadLine()
+	if err != nil {
+		return "", err
+	}
+	return string(line), nil
 }
