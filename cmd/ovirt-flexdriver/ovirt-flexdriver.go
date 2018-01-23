@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/op/go-logging"
 	"github.com/ovirt/ovirt-flexdriver/internal"
 	"gopkg.in/gcfg.v1"
 	"os"
@@ -47,11 +48,17 @@ var ovirtVmName string
 
 func main() {
 	s, e := App(os.Args[1:])
+	log, err := logging.NewSyslogBackend("")
+	if err == nil && log != nil {
+		// syslog may not be available, i.e in busybox
+		log.Writer.Info("invoking driver ----- " + strings.Join(os.Args, ","))
+		defer log.Writer.Info("invoking driver ----- " + s)
+	}
 	if e != nil {
-		fmt.Fprintln(os.Stderr, e.Error())
+		fmt.Fprint(os.Stderr, e.Error())
 		os.Exit(1)
 	}
-	fmt.Fprintln(os.Stdout, s)
+	fmt.Fprint(os.Stdout, s)
 }
 
 func App(args []string) (string, error) {
