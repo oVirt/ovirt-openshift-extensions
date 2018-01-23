@@ -273,13 +273,9 @@ func Detach(volumeName string, nodeName string) (internal.Response, error) {
 		return internal.FailedResponseFromError(err), err
 	}
 
-	vmName, err := internal.GetOvirtNodeName(nodeName)
-	if err != nil {
-		return internal.FailedResponseFromError(err), err
-	}
 	ovirtDiskName := fromk8sNameToOvirt(volumeName)
 
-	vm, err := ovirt.GetVM(vmName)
+	vm, err := ovirt.GetVM(nodeName)
 	if err != nil {
 		return internal.FailedResponseFromError(err), err
 	}
