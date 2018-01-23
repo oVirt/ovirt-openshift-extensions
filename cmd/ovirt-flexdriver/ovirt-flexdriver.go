@@ -97,10 +97,9 @@ func App(args []string) (string, error) {
 		}
 		result, err = UnmountDevice(args[1])
 	case "getvolumename":
-		if len(args) != 2 {
-			return "", errors.New(usage)
-		}
-		result, err = GetVolumeName(args[1])
+		result, err = internal.NotSupportedResponse, nil
+	case "mount":
+		result, err = internal.NotSupportedResponse, nil
 	default:
 		return "", errors.New(usage)
 	}
