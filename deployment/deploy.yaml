@@ -1,16 +1,29 @@
 ---
 - hosts: k8s-ovirt-nodes:k8s-ovirt-masters
   remote_user: root
+  vars:
+    vendor: ovirt
+    driver: ovirt-flexdriver
+    plugin_dir: "/usr/libexec/kubernetes/kubelet-plugins/volume/exec/{{ vendor }}~{{ driver }}"
   tasks:
-    - name: Copy oVirt flexvolume driver binary
-      copy:
-        src: ovirt-flexdriver
-        dest: /usr/libexec/kubernetes/kubelet-plugins/volume/exec/ovirt~ovirt-flexdriver/
-        mode: o+x
-        force: yes
+
+    - name: Create the plugin directory
+      file:
+        path: "{{ plugin_dir }}"
+        state: directory
 
     - name: Copy oVirt flexvolume driver config
       template:
         src: ovirt-flexdriver.conf.j2
-        dest: /usr/libexec/kubernetes/kubelet-plugins/volume/exec/ovirt~ovirt-flexdriver/ovirt-flexdriver.conf
+        dest: "{{ plugin_dir }}/{{ driver }}.conf"
         force: yes
+
+    - name: Copy oVirt flexvolume driver binary
+      copy:
+        src: ovirt-flexdriver
+        dest: "{{ plugin_dir }}/.{{ driver }}"
+        mode: a+x
+        force: yes
+
+    - name: Atomic move of the file to the real name to avoid plugin init problems
+      command: mv {{ plugin_dir}}/.{{ driver }} {{ plugin_dir}}/{{ driver }}
