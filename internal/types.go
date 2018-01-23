@@ -20,7 +20,7 @@ type DiskAttachment struct {
 	Id          string `json:"id,omitempty"`
 	Bootable    bool   `json:"bootable,string"`
 	PassDiscard bool   `json:"pass_discard,string"`
-	Interface   string `json:"interface"`
+	Interface   string `json:"interface, omitempty"`
 	Active      bool   `json:"active,string"`
 	Disk        Disk   `json:"disk"`
 	ReadOnly    bool   `json:"read_only,string"`
