@@ -348,7 +348,21 @@ func WaitForAttach(deviceName string, jsonOpts string) (internal.Response, error
 		err = errors.New("disk is not active yet")
 		return internal.FailedResponseFromError(err), err
 	}
+	r := internal.SuccessfulResponse
+	r.Device, err = getDeviceNameFromSerial(deviceName)
+	if err != nil {
+		return internal.FailedResponseFromError(err), err
+	}
 	return internal.SuccessfulResponse, nil
+}
+
+// getDeviceNameFromSerial takes the serial of the disk i.e /dev/disk/by-id/... and returns the link to the /dev
+func getDeviceNameFromSerial(deviceSerialIdentifier string) (string, error) {
+	deviceRealPath, err := filepath.EvalSymlinks(deviceSerialIdentifier)
+	if err != nil {
+		return "", err
+	}
+	return deviceRealPath, nil
 }
 
 // extractDeviceId will try to extract the ID of the disk from its path on the OS
