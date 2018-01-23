@@ -30,11 +30,9 @@ const (
 )
 
 var (
-	FailedResponse         = Response{Status: Failure}
-	SuccessfulResponse     = Response{Status: Success}
-	NotSupportedResponse   = Response{Status: NotSupported}
-	SuccessfulResponseJson = `{ "status": "Success", "message": ""}`
-	FailedResponseJson     = `{ "status": "Failure", "message": ""}`
+	FailedResponse       = Response{Status: Failure}
+	SuccessfulResponse   = Response{Status: Success, Message: "success"}
+	NotSupportedResponse = Response{Status: NotSupported}
 )
 
 type OvirtApi interface {
@@ -43,12 +41,12 @@ type OvirtApi interface {
 }
 
 type Response struct {
-	Status       Status       `json:"status"`               //"status": "<Success/Failure/Not supported>",
-	Message      string       `json:"message"`              //"message": "<Reason for success/failure>",
-	Device       string       `json:"device,omitempty"`     //"device": "<Path to the device attached. This field is valid only for attach & waitforattach call-outs>"
-	VolumeName   string       `json:"volumeName,omitempty"` //"volumeName": "<Cluster wide unique name of the volume. Valid only for getvolumename call-out>"
-	Attached     string       `json:"attached,omitempty"`   //"attached": <True/False (Return true if volume is attached on the node. Valid only for isattached call-out)>
-	Capabilities Capabilities `json:"capabilities,omitempty"`
+	Status       Status        `json:"status"`               //"status": "<Success/Failure/Not supported>",
+	Message      string        `json:"message"`              //"message": "<Reason for success/failure>",
+	Device       string        `json:"device,omitempty"`     //"device": "<Path to the device attached. This field is valid only for attach & waitforattach call-outs>"
+	VolumeName   string        `json:"volumeName,omitempty"` //"volumeName": "<Cluster wide unique name of the volume. Valid only for getvolumename call-out>"
+	Attached     bool          `json:"attached,omitempty"`   //"attached": <True/False (Return true if volume is attached on the node. Valid only for isattached call-out)>
+	Capabilities *Capabilities `json:",omitempty"`
 }
 
 type Capabilities struct {
@@ -62,12 +60,14 @@ type AttchResponse struct {
 
 type AttachRequest struct {
 	StorageDomain string `json:"ovirtStorageDomain"`
-	VolumeName    string `json:"ovirtVolumeName,omitempty"`
-	Size          string `json:"capacity", omitempty`
+	VolumeName    string `json:"kubernetes.io/pvOrVolumeName,omitempty"`
+	Size          string `json:"capacity, omitempty"`
 	FsType        string `json:"kubernetes.io/fsType"`
 	Mode          string `json:"kubernetes.io/readwrite"`
 	// TODO use k8s secret?
-	Secret string `json:"kubernetes.io/secret,omitempty"`
+	Secret     string `json:"kubernetes.io/secret,omitempty"`
+	VolumeId   string `json:"volumeID,omitempty"`
+	CustomSize string `json:"size,omitempty"`
 }
 
 func AttachRequestFrom(s string) (AttachRequest, error) {
