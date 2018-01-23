@@ -31,12 +31,11 @@ var apiCases = []struct {
 		},
 		AttchResponse{
 			Response{
-				"success",
-				"attached to vm successfully",
-				"5a7b2687-07aa-4a7a-b589-4d4f847b9c29",
-				"vol1",
-				"attached",
-				Capabilities{},
+				Status:     Success,
+				Message:    "attached to vm successfully",
+				Device:     "5a7b2687-07aa-4a7a-b589-4d4f847b9c29",
+				VolumeName: "vol1",
+				Attached:   true,
 			},
 		},
 	},
