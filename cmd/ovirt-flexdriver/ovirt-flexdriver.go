@@ -98,6 +98,16 @@ func App(args []string) (string, error) {
 			return "", errors.New(usage)
 		}
 		result, err = MountDevice(args[1], args[2], args[3])
+	case "provision":
+		if len(args) < 3 {
+			return "", errors.New(usage)
+		}
+		result, err = Provision(args[1])
+	case "delete":
+		if len(args) < 3 {
+			return "", errors.New(usage)
+		}
+		result, err = Delete(args[1])
 	case "unmountdevice", "unmount":
 		if len(args) != 2 {
 			return "", errors.New(usage)
@@ -525,6 +535,13 @@ func GetVolumeName(jsonOpts string) (internal.Response, error) {
 		}
 		return responseFromDiskAttachment(attachment.Id, attachment.Interface), err
 	}
+}
+
+func Delete(s string) (internal.Response, error) {
+	return internal.SuccessfulResponse, nil
+}
+func Provision(s string) (internal.Response, error) {
+	return internal.SuccessfulResponse, nil
 }
 
 // fromk8sNameToOvirt takes name with '~' and replaces it with '_'
