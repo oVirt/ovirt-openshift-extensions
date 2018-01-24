@@ -98,12 +98,12 @@ func App(args []string) (string, error) {
 			return "", errors.New(usage)
 		}
 		result, err = MountDevice(args[1], args[2], args[3])
-	case "unmountdevice":
+	case "unmountdevice", "unmount":
 		if len(args) != 2 {
 			return "", errors.New(usage)
 		}
 		result, err = UnmountDevice(args[1])
-	case "getvolumename", "mount", "unmount":
+	case "getvolumename", "mount":
 		result, err = internal.NotSupportedResponse, nil
 	default:
 		return "", errors.New(usage)
@@ -444,8 +444,13 @@ func makeFS(device string, fsType string) error {
 	return nil
 }
 
-// UnmountDevice umounts the directory from this node
+// UnmountDevice umounts the directory from this node, if its a real mount-point. Otherwise ignore it.
 func UnmountDevice(mountDir string) (internal.Response, error) {
+	if !isMountpoint(mountDir) {
+		// nothing to do, return.
+		return internal.SuccessfulResponse, nil
+	}
+
 	cmd := exec.Command("umount", mountDir)
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -454,6 +459,18 @@ func UnmountDevice(mountDir string) (internal.Response, error) {
 		return internal.FailedResponseFromError(err), err
 	}
 	return internal.SuccessfulResponse, nil
+}
+
+// isMountpoint find out if a given directory is a real mount point
+func isMountpoint(mountDir string) bool {
+	cmd := exec.Command("findmnt", mountDir)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 func responseFromDiskAttachment(diskId string, diskInterface string) internal.Response {
