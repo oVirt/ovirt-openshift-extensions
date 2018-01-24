@@ -187,10 +187,13 @@ func (ovirt *Ovirt) CreateDisk(
 	vmId string,
 	diskId string,
 	diskInterface string) (DiskAttachment, error) {
-	s, _ := bytefmt.ToBytes(size)
+
+	s, err := bytefmt.ToBytes(size)
+	if err != nil {
+		return DiskAttachment{}, err
+	}
 	a := DiskAttachment{
-		Interface: diskInterface,
-		Active:    true,
+		Active: true,
 		Disk: Disk{
 			Name:            diskName,
 			ProvisionedSize: s,
@@ -200,6 +203,12 @@ func (ovirt *Ovirt) CreateDisk(
 			},
 		},
 		ReadOnly: readOnly,
+	}
+	if diskInterface != "" {
+		a.Interface = diskInterface
+	}
+	if diskInterface == "" {
+		a.Interface = "virtio_scsi"
 	}
 	if diskId != "" {
 		a.Disk.Id = diskId

@@ -17,6 +17,7 @@ limitations under the License.
 package internal
 
 import (
+	"code.cloudfoundry.org/bytefmt"
 	"errors"
 	"fmt"
 	"gopkg.in/gcfg.v1"
@@ -136,4 +137,15 @@ func TestAttachRequestFrom(t *testing.T) {
 	if request.Size != "1G" {
 		t.Errorf("expected size is %v got %v", "1G", request.Size)
 	}
+}
+
+func TestByteSizeFormatting(t *testing.T) {
+	// ovirt api supports bytes. Lets expand with some literals
+
+	// persistent volume style
+	bytes, e := bytefmt.ToBytes("1G")
+	if e != nil {
+		t.Error(e)
+	}
+	t.Log(bytes)
 }
