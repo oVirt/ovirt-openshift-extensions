@@ -4,6 +4,7 @@ GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
+GODEP=dep
 
 BINARY_NAME=ovirt-flexdriver
 
@@ -23,8 +24,8 @@ run:
 	build
 	./$(BINARY_NAME)
 deps:
-	$(GOGET) github.com/cloudfoundry/bytefmt
-	$(GOGET) github.com/op/go-logging
+	$(GOGET) github.com/golang/dep/cmd/dep
+	$(GODEP) ensure
 
 # Cross compilation
 build-linux:
