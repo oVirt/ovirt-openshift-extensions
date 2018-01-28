@@ -1,0 +1,12 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: ovirt-provisioner
+spec:
+  containers:
+    - name: ovirt-provisioner
+      image: rgolan/ovirt-provisioner
+      securityContext:
+      args:
+        - "-provisioner=external/ovirt-provisioner"
+      imagePullPolicy: "IfNotPresent"

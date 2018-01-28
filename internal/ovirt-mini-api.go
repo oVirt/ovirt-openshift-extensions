@@ -179,6 +179,23 @@ func (ovirt Ovirt) GetDiskByName(diskName string) (DiskResult, error) {
 	return diskResult, err
 }
 
+func (ovirt *Ovirt) CreateUnattachedDisk(diskName string, storageDomainName string, sizeIbBytes int, readOnly bool, format string) (Disk, error) {
+	disk := Disk{
+		Name:            diskName,
+		ProvisionedSize: uint64(sizeIbBytes),
+		Format:          "raw",
+		StorageDomains:  StorageDomains{[]StorageDomain{{Name: storageDomainName}}},
+	}
+
+	post, err := ovirt.Post("/disks/", disk)
+	if err != nil {
+		return disk, err
+	}
+	result := Disk{}
+	err = json.Unmarshal([]byte(post), &result)
+	return result, err
+}
+
 func (ovirt *Ovirt) CreateDisk(
 	diskName string,
 	storageDomainName string,
