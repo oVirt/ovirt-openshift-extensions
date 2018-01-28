@@ -2,6 +2,7 @@
 *.retry
 deployment/*.retry
 vendor/*
+_vendor*
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Go template
