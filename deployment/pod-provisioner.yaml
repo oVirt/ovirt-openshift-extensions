@@ -5,7 +5,7 @@ metadata:
 spec:
   containers:
     - name: ovirt-provisioner
-      image: rgolan/ovirt-provisioner
+      image: rgolangh/ovirt-provisioner
       securityContext:
       args:
         - "-provisioner=external/ovirt-provisioner"

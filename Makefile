@@ -9,7 +9,8 @@ GODEP=dep
 FLEX_DRIVER_BINARY_NAME=ovirt-flexdriver
 PROVISIONER_BINARY_NAME=ovirt-provisioner
 
-VERSION?=?
+IMAGE=rgolangh/ovirt-provisioner
+VERSION?=$(shell git describe --tags --always | cut -d "-" -f1)
 COMMIT=$(shell git rev-parse HEAD)
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 
@@ -29,6 +30,18 @@ build-provisioner:
 	$(COMMON_GO_BUILD_FLAGS) \
 	-o $(PROVISIONER_BINARY_NAME) \
 	-v cmd/$(PROVISIONER_BINARY_NAME)/*.go
+
+container:
+	build
+	quick-container
+
+quick-container:
+	cp $(PROVISIONER_BINARY_NAME) deployment/container
+	docker build -t $(IMAGE):$(VERSION) deployment/container/
+
+push:
+    # don't forget docker login. TODO official registry
+	docker push $(IMAGE):$(VERSION)
 
 build: \
 	build-flex \

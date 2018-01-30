@@ -16,9 +16,9 @@ FROM centos:7
 
 MAINTAINER Roy Golan, rgolan@redhat.com
 
-RUN mkdir -p  /opt/storage_drivers
+RUN mkdir -p  /opt/
 
-COPY flex-provisioner /opt/storage_drivers/flex-provisioner
+COPY ovirt-provisioner /opt/ovirt-provisioner
 
-ENTRYPOINT ["/opt/storage_drivers/ovirt-provisioner"]
+ENTRYPOINT ["/opt/ovirt-provisioner"]
 

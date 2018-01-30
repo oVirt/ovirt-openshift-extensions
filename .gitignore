@@ -3,6 +3,10 @@
 deployment/*.retry
 vendor/*
 _vendor*
+/ovirt-flexdriver
+/ovirt-flexdriver.conf
+/ovirt-provisioner
+deployment/container/ovirt-provisioner
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Go template
