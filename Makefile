@@ -45,7 +45,6 @@ run: \
 	./$(FLEX_DRIVER_BINARY_NAME)
 	./$(PROVISIONER_BINARY_NAME)
 deps:
-	$(GOGET) github.com/golang/dep/cmd/dep
-	$(GODEP) ensure
+	glide install --strip-vendor
 
 .PHONY: build-flex build-provisioner
