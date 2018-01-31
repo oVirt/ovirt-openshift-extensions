@@ -17,12 +17,11 @@ limitations under the License.
 package main
 
 import (
-	"errors"
 	"flag"
+	"github.com/go-ini/ini"
 	"github.com/golang/glog"
 	"github.com/kubernetes-incubator/external-storage/lib/controller"
 	"github.com/ovirt/ovirt-flexdriver/internal"
-	"gopkg.in/gcfg.v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
@@ -103,12 +102,18 @@ func newOvirt() (*internal.Ovirt, error) {
 		conf = "/etc/ovirt-api.conf"
 	}
 
-	ovirt := internal.Ovirt{}
-	err := gcfg.ReadFileInto(&ovirt, conf)
+	cfg, err := ini.InsensitiveLoad(conf)
 	if err != nil {
-		err = errors.New(err.Error() + " file is " + conf)
 		return nil, err
 	}
+	connection := internal.Connection{}
+	connection.Url = cfg.Section("").Key("url").String()
+	connection.Username = cfg.Section("").Key("useraname").String()
+	connection.Password = cfg.Section("").Key("password").String()
+	connection.Insecure = cfg.Section("").Key("insecure").MustBool()
+	connection.CAFile = cfg.Section("").Key("cafile").String()
+	ovirt := internal.Ovirt{}
+	ovirt.Connection = connection
 	err = ovirt.Authenticate()
 	if err != nil {
 		return nil, err

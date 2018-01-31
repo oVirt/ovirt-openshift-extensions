@@ -1,5 +1,5 @@
-hash: ed5e15a7fedc32103893df215a3bac4aea90059efe2107595f620b2c308d8450
-updated: 2018-01-30T09:06:54.713354197+02:00
+hash: 659f56c9a85c1dc037d2b91c091c3a5a0679fbdad2898771cf2d493ba3138b6a
+updated: 2018-01-31T13:22:00.584188999+02:00
 imports:
 - name: code.cloudfoundry.org/bytefmt
   version: b31f603f5e1e047fdb38584e1a922dcc5c4de5c8
@@ -15,6 +15,8 @@ imports:
   version: dcef7f55730566d41eae5db10e7d6981829720f6
 - name: github.com/ghodss/yaml
   version: 73d445a93680fa1a78ae23a5839bad48f32ba1ee
+- name: github.com/go-ini/ini
+  version: 32e4c1e6bc4e7d0d8451aa6b75200d19e37a536a
 - name: github.com/go-openapi/analysis
   version: b44dc874b601d9e4e2f6e19140e794ba24bead3b
 - name: github.com/go-openapi/jsonpointer

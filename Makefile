@@ -10,7 +10,7 @@ FLEX_DRIVER_BINARY_NAME=ovirt-flexdriver
 PROVISIONER_BINARY_NAME=ovirt-provisioner
 
 IMAGE=rgolangh/ovirt-provisioner
-VERSION?=$(shell git describe --tags --always | cut -d "-" -f1)
+VERSION?=$(shell git describe --tags --always)
 COMMIT=$(shell git rev-parse HEAD)
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 

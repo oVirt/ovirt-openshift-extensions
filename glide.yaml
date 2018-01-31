@@ -16,3 +16,5 @@ import:
   - tools/clientcmd
   - tools/record
   - tools/remotecommand
+- package: github.com/go-ini/ini
+  version: ^1.32.0

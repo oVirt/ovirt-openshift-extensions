@@ -6,6 +6,7 @@ _vendor*
 /ovirt-flexdriver
 /ovirt-flexdriver.conf
 /ovirt-provisioner
+/ovirt-api.conf
 deployment/container/ovirt-provisioner
 
 # Created by .ignore support plugin (hsz.mobi)
