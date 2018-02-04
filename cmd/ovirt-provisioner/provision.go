@@ -44,7 +44,7 @@ const (
 // NewOvirtProvisioner creates a new Ovirt provisioner
 func NewOvirtProvisioner(ovirtClient *internal.Ovirt) controller.Provisioner {
 	var identity types.UID
-	provisioner := ovirtProvisioner{
+	provisioner := &ovirtProvisioner{
 		ovirtClient: ovirtClient,
 		identity:    identity,
 	}
