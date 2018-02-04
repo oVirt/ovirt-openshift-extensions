@@ -193,35 +193,31 @@ func Attach(jsonOpts string, nodeName string) (internal.Response, error) {
 		e := errors.New(fmt.Sprintf("VM %s doesn't exist", nodeName))
 		return internal.FailedResponseFromError(e), e
 	}
+
 	diskResult, err := ovirt.GetDiskByName(fromk8sNameToOvirt(r.VolumeName))
 	if err != nil {
 		return internal.FailedResponseFromError(err), err
 	}
 
-	// 1. no such disk, create it on the VM
 	if len(diskResult.Disks) == 0 {
-		attachment, err := ovirt.CreateDisk(fromk8sNameToOvirt(r.VolumeName), r.StorageDomain, r.Size, r.Mode == "ro", vm.Id, "", "")
-		if err != nil {
-			return internal.FailedResponseFromError(err), err
-		}
-		return responseFromDiskAttachment(attachment.Id, attachment.Interface), err
-	} else {
-		// 2. The disk - fetch the disk attachment on the VM
-		attachment, err := ovirt.GetDiskAttachment(vm.Id, diskResult.Disks[0].Id)
-		if err != nil {
-			_, noAttachment := err.(internal.NotFound)
-			if noAttachment {
-				attachment, err =
-					ovirt.CreateDisk(fromk8sNameToOvirt(r.VolumeName), r.StorageDomain, r.Size, r.Mode == "ro", vm.Id, diskResult.Disks[0].Id, "virtio_scsi")
-				if err != nil {
-					return internal.FailedResponseFromError(err), err
-				}
-			} else {
+		return internal.FailedResponseFromError(fmt.Errorf("disk %s doesn't exist", r.VolumeName)), err
+	}
+
+	// fetch the disk attachment on the VM
+	attachment, err := ovirt.GetDiskAttachment(vm.Id, diskResult.Disks[0].Id)
+	if err != nil {
+		_, noAttachment := err.(internal.NotFound)
+		if noAttachment {
+			attachment, err =
+				ovirt.CreateDisk(fromk8sNameToOvirt(r.VolumeName), r.StorageDomain, r.Size, r.Mode == "ro", vm.Id, diskResult.Disks[0].Id, "virtio_scsi")
+			if err != nil {
 				return internal.FailedResponseFromError(err), err
 			}
+		} else {
+			return internal.FailedResponseFromError(err), err
 		}
-		return responseFromDiskAttachment(attachment.Id, attachment.Interface), err
 	}
+	return responseFromDiskAttachment(attachment.Id, attachment.Interface), err
 }
 
 // IsAttached will check if the disk exists on the VM attachments collections.
