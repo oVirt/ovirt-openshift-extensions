@@ -18,6 +18,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/golang/glog"
 	"github.com/kubernetes-incubator/external-storage/lib/controller"
 	"github.com/ovirt/ovirt-flexdriver/internal"
 	"k8s.io/api/core/v1"
@@ -62,6 +63,7 @@ type ovirtProvisioner struct {
 // Provision creates a volume i.e. the storage asset and returns a PV object for
 // the volume.
 func (p ovirtProvisioner) Provision(options controller.VolumeOptions) (*v1.PersistentVolume, error) {
+	glog.Infof("About to provision a disk named %s", options.PVName)
 	// call ovirt api, create an unattached disk
 	vol, err := p.ovirtClient.CreateUnattachedDisk(
 		options.PVName,
@@ -114,6 +116,7 @@ func (p ovirtProvisioner) Provision(options controller.VolumeOptions) (*v1.Persi
 // Provision creates a volume i.e. the storage asset and returns a PV object for
 // the volume.
 func (p ovirtProvisioner) Delete(volume *v1.PersistentVolume) error {
+	glog.Infof("About to delete disk %s id %s", volume.Name, volume.Annotations[annVolumeID])
 	// Remove the disk from the storage domain - TODO consider wipe-after-delete and the rest of the options later
 	_, err := p.ovirtClient.Delete("disks/" + volume.Annotations[annVolumeID])
 	return err
