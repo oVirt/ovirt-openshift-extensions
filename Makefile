@@ -31,7 +31,7 @@ build-provisioner:
 	-o $(PROVISIONER_BINARY_NAME) \
 	-v cmd/$(PROVISIONER_BINARY_NAME)/*.go
 
-container:
+container: \
 	build
 	quick-container
 
