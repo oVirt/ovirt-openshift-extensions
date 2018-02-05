@@ -187,7 +187,7 @@ func (ovirt *Ovirt) CreateUnattachedDisk(diskName string, storageDomainName stri
 		StorageDomains:  StorageDomains{[]StorageDomain{{Name: storageDomainName}}},
 	}
 
-	post, err := ovirt.Post("/disks/", disk)
+	post, err := ovirt.Post("/disks", disk)
 	if err != nil {
 		return disk, err
 	}
