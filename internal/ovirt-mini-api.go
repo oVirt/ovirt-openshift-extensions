@@ -17,7 +17,6 @@ limitations under the License.
 package internal
 
 import (
-	"code.cloudfoundry.org/bytefmt"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
@@ -177,7 +176,7 @@ func (ovirt Ovirt) GetDiskByName(diskName string) (DiskResult, error) {
 	return diskResult, err
 }
 
-func (ovirt *Ovirt) CreateUnattachedDisk(diskName string, storageDomainName string, sizeIbBytes int, readOnly bool, format string) (Disk, error) {
+func (ovirt *Ovirt) CreateUnattachedDisk(diskName string, storageDomainName string, sizeIbBytes int64, readOnly bool, format string) (Disk, error) {
 	disk := Disk{
 		Name:            diskName,
 		ProvisionedSize: uint64(sizeIbBytes),
@@ -197,22 +196,16 @@ func (ovirt *Ovirt) CreateUnattachedDisk(diskName string, storageDomainName stri
 func (ovirt *Ovirt) CreateDisk(
 	diskName string,
 	storageDomainName string,
-	size string,
 	readOnly bool,
 	vmId string,
 	diskId string,
 	diskInterface string) (DiskAttachment, error) {
 
-	s, err := bytefmt.ToBytes(size)
-	if err != nil {
-		return DiskAttachment{}, err
-	}
 	a := DiskAttachment{
 		Active: true,
 		Disk: Disk{
-			Name:            diskName,
-			ProvisionedSize: s,
-			Format:          "raw",
+			Name:   diskName,
+			Format: "raw",
 			StorageDomains: StorageDomains{
 				[]StorageDomain{{Name: storageDomainName}},
 			},

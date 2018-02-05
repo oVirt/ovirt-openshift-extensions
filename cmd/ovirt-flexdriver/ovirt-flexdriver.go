@@ -209,7 +209,7 @@ func Attach(jsonOpts string, nodeName string) (internal.Response, error) {
 		_, noAttachment := err.(internal.NotFound)
 		if noAttachment {
 			attachment, err =
-				ovirt.CreateDisk(fromk8sNameToOvirt(r.VolumeName), r.StorageDomain, r.Size, r.Mode == "ro", vm.Id, diskResult.Disks[0].Id, "virtio_scsi")
+				ovirt.CreateDisk(fromk8sNameToOvirt(r.VolumeName), r.StorageDomain, r.Mode == "ro", vm.Id, diskResult.Disks[0].Id, "virtio_scsi")
 			if err != nil {
 				return internal.FailedResponseFromError(err), err
 			}
