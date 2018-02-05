@@ -1,0 +1,12 @@
+apiVersion: v1
+data:
+  connection: |
+    url=https://hostname/ovirt-engine/api
+    username=admin@internal
+    password=pass
+    insecure=false
+    cafile=
+kind: ConfigMap
+metadata:
+  name: ovirt
+  namespace: kube-system

@@ -1,0 +1,27 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: ovirt-provisioner
+  namespace: kube-system
+spec:
+  serviceAccount: ovirt-provisioner
+  containers:
+  - name: ovirt-provisioner
+    image: rgolangh/ovirt-provisioner:v0.2.0
+    securityContext:
+    imagePullPolicy: "IfNotPresent"
+    volumeMounts:
+    - name: config-volume
+      mountPath: /etc/ovirt
+    env:
+    - name: OVIRT_API_CONF
+      value: /etc/ovirt/ovirt-api.conf
+  volumes:
+    - name: config-volume
+      configMap:
+        name: ovirt
+        items:
+          - key: connection
+            path: ovirt-api.conf
+  RestartPolicy: Always
+  dnsPolicy: Default

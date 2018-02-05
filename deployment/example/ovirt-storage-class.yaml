@@ -1,0 +1,12 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: ovirt
+provisioner: external/ovirt 
+parameters:
+  type: io1
+  iopsPerGB: "10"
+  ovirtStorageDomain: "data1"
+  fsType: ext4
+
+

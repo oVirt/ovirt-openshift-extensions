@@ -1,0 +1,13 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: example-ovirt3
+  annotations:
+    volume.beta.kubernetes.io/storage-class: ovirt
+spec:
+  storageClassName: ovirt
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
