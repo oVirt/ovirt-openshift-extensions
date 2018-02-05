@@ -63,13 +63,20 @@ type ovirtProvisioner struct {
 // Provision creates a volume i.e. the storage asset and returns a PV object for
 // the volume.
 func (p ovirtProvisioner) Provision(options controller.VolumeOptions) (*v1.PersistentVolume, error) {
-	glog.Infof("About to provision a disk named %s", options.PVName)
 	// call ovirt api, create an unattached disk
+	capacity := options.PVC.Spec.Resources.Requests[v1.ResourceName(v1.ResourceStorage)]
+	volSizeBytes := capacity.Value()
+	glog.Infof("About to provision a disk name: %s domain: %s size: %v format: %s ",
+		options.PVName,
+		options.Parameters["ovirtStorageDomain"],
+		int(volSizeBytes),
+		options.Parameters["ovirtDiskFormat"],
+	)
 	vol, err := p.ovirtClient.CreateUnattachedDisk(
 		options.PVName,
 		options.Parameters["ovirtStorageDomain"],
-		options.PVC.Spec.Size(),
-		false, // TODO support the PV Spec access mode?
+		int(volSizeBytes), // TODO change the api to support int64 and not int
+		false,             // TODO support the PV Spec access mode?
 		options.Parameters["ovirtDiskFormat"],
 	)
 	if err != nil {
