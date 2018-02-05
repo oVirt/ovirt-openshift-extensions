@@ -409,6 +409,10 @@ func fetchToken(ovirtEngineUrl url.URL, username string, password string, client
 		return Token{}, err
 	}
 
+	if resp.StatusCode != 200 {
+		return Token{}, fmt.Errorf("fail to login and fetching token %s", resp.Status)
+	}
+
 	tokenResponse, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return Token{}, err
