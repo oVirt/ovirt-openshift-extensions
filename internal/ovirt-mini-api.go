@@ -143,8 +143,6 @@ func (ovirt *Ovirt) Attach(params AttachRequest, vmName string) (Response, error
 			Active:      true,
 			Disk: Disk{
 				Name: params.VolumeName,
-				// TODO not in the spec, raise that
-				ProvisionedSize: bytefmt.GIGABYTE,
 			},
 		})
 
