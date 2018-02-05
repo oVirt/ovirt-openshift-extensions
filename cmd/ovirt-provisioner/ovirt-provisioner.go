@@ -99,7 +99,7 @@ func newOvirt() (*internal.Ovirt, error) {
 	if exist {
 		conf = value
 	} else {
-		conf = "/etc/ovirt-api.conf"
+		conf = "/etc/ovirt/ovirt-api.conf"
 	}
 
 	cfg, err := ini.InsensitiveLoad(conf)
