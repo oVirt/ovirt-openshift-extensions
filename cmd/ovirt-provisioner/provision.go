@@ -66,17 +66,21 @@ func (p ovirtProvisioner) Provision(options controller.VolumeOptions) (*v1.Persi
 	// call ovirt api, create an unattached disk
 	capacity := options.PVC.Spec.Resources.Requests[v1.ResourceName(v1.ResourceStorage)]
 	volSizeBytes := capacity.Value()
+	fsType, exists := options.Parameters["fsType"]
+	if !exists || fsType == "" {
+		fsType = "ext4"
+	}
 	glog.Infof("About to provision a disk name: %s domain: %s size: %v format: %s ",
 		options.PVName,
 		options.Parameters["ovirtStorageDomain"],
-		int(volSizeBytes),
+		volSizeBytes,
 		options.Parameters["ovirtDiskFormat"],
 	)
 	vol, err := p.ovirtClient.CreateUnattachedDisk(
 		options.PVName,
 		options.Parameters["ovirtStorageDomain"],
-		int(volSizeBytes), // TODO change the api to support int64 and not int
-		false,             // TODO support the PV Spec access mode?
+		volSizeBytes,
+		false, // TODO support the PV Spec access mode?
 		options.Parameters["ovirtDiskFormat"],
 	)
 	if err != nil {
@@ -90,8 +94,6 @@ func (p ovirtProvisioner) Provision(options controller.VolumeOptions) (*v1.Persi
 
 	labels := make(map[string]string)
 	labels[apis.LabelZoneFailureDomain] = "" // TODO A Zone is ovirt cluster?
-
-	//volSize := volumeOptions.PVC.Spec.Resources.Requests[v1.ResourceName(v1.ResourceStorage)]
 
 	pv := &v1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{
@@ -112,6 +114,7 @@ func (p ovirtProvisioner) Provision(options controller.VolumeOptions) (*v1.Persi
 					Driver:   fmt.Sprintf("%s/%s", flexvolumeVendor, flexvolumeDriver),
 					Options:  map[string]string{},
 					ReadOnly: false, // TODO support PV spec access mode?
+					FSType:   fsType,
 				},
 			},
 		},
