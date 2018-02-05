@@ -108,7 +108,7 @@ func newOvirt() (*internal.Ovirt, error) {
 	}
 	connection := internal.Connection{}
 	connection.Url = cfg.Section("").Key("url").String()
-	connection.Username = cfg.Section("").Key("useraname").String()
+	connection.Username = cfg.Section("").Key("username").String()
 	connection.Password = cfg.Section("").Key("password").String()
 	connection.Insecure = cfg.Section("").Key("insecure").MustBool()
 	connection.CAFile = cfg.Section("").Key("cafile").String()
