@@ -1,0 +1,104 @@
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: ovirt-provisioner
+  namespace: kube-system
+subjects:
+  - kind: ServiceAccount
+    name: ovirt-provisioner
+    namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: ovirt-provisioner
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: ovirt-provisioner
+  namespace: kube-system
+rules:
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["list", "watch", "create", "update", "patch"]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ovirt
+  namespace: kube-system
+data:
+  connection: |
+    url={{ ovirt_api_url}}
+    username={{ ovirt_username }}
+    password={{ ovirt_password }}
+    insecure={{ ovirt_insecure }}
+    cafile={{ ovirt_ca }}
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: ovirt-provisioner
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: ovirt-provisioner
+subjects:
+- kind: ServiceAccount
+  name: ovirt-provisioner
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  name: ovirt-provisioner
+  namespace: kube-system
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create", "get", "delete"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ovirt-provisioner
+  namespace: kube-system
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  name: ovirt-provisioner
+  namespace: kube-system
+spec:
+  serviceAccount: ovirt-provisioner
+  containers:
+  - name: ovirt-provisioner
+    image: rgolangh/ovirt-provisioner:v0.2.0
+    securityContext:
+    imagePullPolicy: "IfNotPresent"
+    volumeMounts:
+    - name: config-volume
+      mountPath: /etc/ovirt
+    env:
+    - name: OVIRT_API_CONF
+      value: /etc/ovirt/ovirt-api.conf
+  volumes:
+    - name: config-volume
+      configMap:
+        name: ovirt
+        items:
+          - key: connection
+            path: ovirt-api.conf
+  restartPolicy: Always
+  dnsPolicy: Default
+---

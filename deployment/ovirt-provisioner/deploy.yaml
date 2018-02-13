@@ -1,0 +1,26 @@
+---
+- hosts: k8s-ovirt-masters
+  remote_user: root
+  vars:
+    ovirt_api_url: https://hostname/ovirt-engine/api
+    ovirt_username: admin@internal
+    ovirt_password: pass
+    ovirt_insecure: false
+    ovirt_ca:
+    manifest_file: ovirt-provisioner-manifest.yaml
+    deprovision: false
+  tags: tagged
+  tasks:
+    - name: Copy the all-in-one manifest
+      template:
+        src: k8s/{{ manifest_file }}.j2
+        dest: /root/{{ manifest_file }}
+        force: yes
+
+    - name: Provision the provisioner and its companion object
+      command: kubectl create -f /root/{{ manifest_file }}
+      when: not deprovision
+
+    - name: De-Provision the provisioner and its companion object
+      command: kubectl delete -f /root/{{ manifest_file }}
+      when: deprovision
