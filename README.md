@@ -6,6 +6,10 @@ Implementation of flexvolume driver for [oVirt](https://ovirt.org) and a dynamic
 
 oVirt flexvolume driver is attachable, i.e. it supports attaching/detaching storage volumes from nodes, by detaching them from the underlying VM.
 
+Here is a short [demo](http://www.youtube.com/watch?v=_E9pUVrI0hs):\
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=_E9pUVrI0hs" target="_blank"><img src="http://img.youtube.com/vi/_E9pUVrI0hs/0.jpg" 
+alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a>
+
 # Deployment
 Both ovirt-flexdriver and ovirt-provisioner have deployment containers that use Ansible -\
 `ovirt-flexdriver-ansible` and `ovirt-provisioner-ansible`.
