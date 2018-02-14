@@ -17,8 +17,8 @@ limitations under the License.
 package main
 
 import (
+	"../../internal"
 	"encoding/json"
-	"github.com/ovirt/ovirt-flexdriver/internal"
 )
 
 var attachJson = `{

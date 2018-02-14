@@ -8,6 +8,7 @@ _vendor*
 /ovirt-provisioner
 /ovirt-api.conf
 deployment/container/ovirt-provisioner
+ovirt-flexdriver*.tar.gz
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Go template
