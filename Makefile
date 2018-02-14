@@ -10,12 +10,15 @@ FLEX_DRIVER_BINARY_NAME=ovirt-flexdriver
 PROVISIONER_BINARY_NAME=ovirt-provisioner
 
 IMAGE=rgolangh/ovirt-provisioner
-VERSION?=$(shell git describe --tags --always)
+VERSION?=$(shell git describe --tags --always|cut -d "-" -f1)
+RELEASE?=$(shell git describe --tags --always|cut -d "-" -f2- | sed 's/-/_/')
 COMMIT=$(shell git rev-parse HEAD)
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 
 COMMON_ENV=CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 COMMON_GO_BUILD_FLAGS=-a -ldflags '-extldflags "-static"'
+
+TARBALL=${FLEX_DRIVER_BINARY_NAME}-${VERSION}-${RELEASE}.tar.gz
 
 all: clean deps build test
 
@@ -59,5 +62,20 @@ run: \
 	./$(PROVISIONER_BINARY_NAME)
 deps:
 	glide install --strip-vendor
+
+rpm:
+	/bin/git ls-files | tar --files-from /proc/self/fd/0 -czf "$(TARBALL)"
+ifdef ARTIFACT_DIR
+	rpmbuild -tb $(TARBALL) \
+	    --define "debug_package %{nil}" \
+        --define "_rpmdir ${ARTIFACT_DIR}" \
+	    --define "_version ${VERSION}" \
+	    --define "_release ${RELEASE}"
+else
+	rpmbuild -tb $(TARBALL) \
+			--define "debug_package %{nil}" \
+			--define "_version ${VERSION}" \
+			--define "_release ${RELEASE}"
+endif
 
 .PHONY: build-flex build-provisioner

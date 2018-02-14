@@ -17,13 +17,13 @@ limitations under the License.
 package main
 
 import (
+	"../../internal"
 	"bufio"
 	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/op/go-logging"
-	"github.com/ovirt/ovirt-flexdriver/internal"
 	"gopkg.in/gcfg.v1"
 	"os"
 	"os/exec"
