@@ -52,16 +52,19 @@ build: \
 
 test:
 	$(GOTEST) -v ./...
+
 clean:
 	$(GOCLEAN)
 	rm -f $(FLEX_DRIVER_BINARY_NAME)
 	rm -f $(PROVISIONER_BINARY_NAME)
+
 run: \
 	build \
 	./$(FLEX_DRIVER_BINARY_NAME)
 	./$(PROVISIONER_BINARY_NAME)
+
 deps:
-	glide install --strip-vendor
+	glide --debug  install --strip-vendor
 
 rpm:
 	/bin/git ls-files | tar --files-from /proc/self/fd/0 -czf "$(TARBALL)"

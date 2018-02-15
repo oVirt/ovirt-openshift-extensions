@@ -1,4 +1,4 @@
-package: github.com/ovirt/ovirt-flexdriver
+package: github.com/rgolangh/ovirt-flexdriver
 excludeDirs:
 - docs/demo/hostpath-provisioner
 - nfs/test/e2e
