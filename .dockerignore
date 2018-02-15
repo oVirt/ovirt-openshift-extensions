@@ -1,0 +1,8 @@
+*
+!cmd/
+!internal/
+!glide.lock
+!glide.yaml
+!Gopkg.toml
+!Gopkg.lock
+!Makefile
