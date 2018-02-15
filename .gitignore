@@ -9,6 +9,10 @@ _vendor*
 /ovirt-api.conf
 deployment/container/ovirt-provisioner
 ovirt-flexdriver*.tar.gz
+.glide
+.pki
+exported-artifacts
+mocker*
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Go template

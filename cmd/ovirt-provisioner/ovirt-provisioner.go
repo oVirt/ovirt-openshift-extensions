@@ -17,11 +17,11 @@ limitations under the License.
 package main
 
 import (
+	"../../internal"
 	"flag"
 	"github.com/go-ini/ini"
 	"github.com/golang/glog"
 	"github.com/kubernetes-incubator/external-storage/lib/controller"
-	"github.com/ovirt/ovirt-flexdriver/internal"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"

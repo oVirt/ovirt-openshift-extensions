@@ -17,10 +17,10 @@ limitations under the License.
 package main
 
 import (
+	"../../internal"
 	"fmt"
 	"github.com/golang/glog"
 	"github.com/kubernetes-incubator/external-storage/lib/controller"
-	"github.com/ovirt/ovirt-flexdriver/internal"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
