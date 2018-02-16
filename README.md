@@ -15,7 +15,7 @@ The driver is a binary executable that needs to reside on every node,which is an
 and every master.\
 The [deploy.yaml][flex-playbook] playbook
 resolves configuration template [ovirt-flexdriver.conf.j2][flex-conf]  
-- fill in the details of your environment ``
+- fill in the details of your environment
   ```ini
   [general]
   # the inventory needs to map each hostname to the vm name in oVirt
@@ -63,11 +63,13 @@ ansible-playbook deployment/ovirt-provisioner/deploy.yaml
   
 # Build
 There are few make targets for building the artifacts:
+- `make deps` - get and install the project dependencies
 - `make build-flex` - build the flexdriver in local 
 - `make build-provisioner` - build the provisioner
 - `make build` - build the flexvolume driver and provisioner
 - `make quick-container` - creates the container for the provisioner, with a tag derived from `git describe`
-  
+- `make rpm` - builds and rpm from the previously created binaries
+
 # Sources
 - [flexvolume plugin page on openshift](https://docs.openshift.org/latest/install_config/persistent_storage/persistent_storage_flex_volume.html)
 - [flexvolume spec on kubernetes page](https://github.com/kubernetes/community/blob/master/contributors/devel/flexvolume.md)
