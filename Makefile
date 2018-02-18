@@ -44,6 +44,7 @@ quick-container:
 
 push:
     # don't forget docker login. TODO official registry
+        docker login -u rgolangh -p ${DOCKER_BUILDER_API_KEY}
 	docker push $(IMAGE):$(VERSION)
 
 build: \
