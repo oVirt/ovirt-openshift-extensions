@@ -2,6 +2,12 @@
 - hosts: k8s-ovirt-nodes:k8s-ovirt-masters
   remote_user: root
   vars:
+    # defaults - override in an inventory file or include
+    engine_url: https://hostname/ovirt-engine/api
+    engine_username: admin@internal
+    engine_password: pass
+    engine_insecure: false
+    engine_ca_file:
     vendor: ovirt
     driver: ovirt-flexdriver
     plugin_dir: "/usr/libexec/kubernetes/kubelet-plugins/volume/exec/{{ vendor }}~{{ driver }}"

@@ -2,13 +2,15 @@
 - hosts: k8s-ovirt-masters
   remote_user: root
   vars:
-    ovirt_api_url: https://hostname/ovirt-engine/api
-    ovirt_username: admin@internal
-    ovirt_password: pass
-    ovirt_insecure: false
-    ovirt_ca:
+    # defaults - override in an inventory file or include
+    engine_url: https://hostname/ovirt-engine/api
+    engine_username: admin@internal
+    engine_password: pass
+    engine_insecure: false
+    engine_ca_file:
     manifest_file: ovirt-provisioner-manifest.yaml
     deprovision: false
+    provisioner_version: v0.2.0
   tags: tagged
   tasks:
     - name: Copy the all-in-one manifest

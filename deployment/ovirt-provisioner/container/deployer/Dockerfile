@@ -12,13 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM centos:7
+FROM rgolangh/ovirt-provisioner
 
 MAINTAINER Roy Golan, rgolan@redhat.com
 
-RUN mkdir -p  /opt/
+COPY deployment/ovirt-provisioner/deploy.yaml $PREFIX
+COPY deployment/entrypoint.sh /entrypoint.sh
 
-COPY ovirt-provisioner /opt/ovirt-provisioner
-
-ENTRYPOINT ["/opt/ovirt-provisioner"]
 

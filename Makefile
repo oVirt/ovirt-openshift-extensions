@@ -10,6 +10,7 @@ FLEX_DRIVER_BINARY_NAME=ovirt-flexdriver
 PROVISIONER_BINARY_NAME=ovirt-provisioner
 
 IMAGE=rgolangh/ovirt-provisioner
+REGISTRY=rgolangh
 VERSION?=$(shell git describe --tags --always|cut -d "-" -f1)
 RELEASE?=$(shell git describe --tags --always|cut -d "-" -f2- | sed 's/-/_/')
 COMMIT=$(shell git rev-parse HEAD)
@@ -35,12 +36,21 @@ build-provisioner:
 	-v cmd/$(PROVISIONER_BINARY_NAME)/*.go
 
 container: \
-	build
-	quick-container
+	container-flexdriver \
+	container-provisioner
 
-quick-container:
-	cp $(PROVISIONER_BINARY_NAME) deployment/container
-	docker build -t $(IMAGE):$(VERSION) deployment/container/
+container-flexdriver:
+	docker build -t $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME)-deployer:$(VERSION) . -f deployment/ovirt-flexdriver/container/Dockerfile
+
+container-provisioner: \
+	container-provisioner-binary
+	container-provisioner-deployer
+
+container-provisioner-binary:
+	docker build -t $(REGISTRY)/$(PROVISIONER_BINARY_NAME):$(VERSION) . -f deployment/ovirt-provisioner/container/binary/Dockerfile
+
+container-provisioner-deployer:
+	docker build -t $(REGISTRY)/$(PROVISIONER_BINARY_NAME)-deployer:$(VERSION) . -f  deployment/ovirt-provisioner/container/deployer/Dockerfile
 
 push:
     # don't forget docker login. TODO official registry
@@ -82,4 +92,4 @@ else
 			--define "_release ${RELEASE}"
 endif
 
-.PHONY: build-flex build-provisioner
+.PHONY: build-flex build-provisioner container-provisioner-deployer

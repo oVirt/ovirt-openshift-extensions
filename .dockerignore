@@ -3,6 +3,8 @@
 !internal/
 !glide.lock
 !glide.yaml
-!Gopkg.toml
-!Gopkg.lock
 !Makefile
+!deployment/ovirt-flexdriver/deploy.yaml
+!deployment/ovirt-flexdriver/ovirt-flexdriver.conf.j2
+!deployment/ovirt-provisioner/deploy.yaml
+!deployment/entrypoint.sh

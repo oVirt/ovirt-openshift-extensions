@@ -1,8 +1,7 @@
 #!/bin/bash -ex
 
-echo building ovirt-provisioner
+docker build deployment/ovirt-flexdriver
 
-docker build .
 #mkdir -p /tmp/go/{src,pkg,bin}
 #export GOPATH=/tmp/go
 #export PATH=${PATH}:${GOPATH}/bin

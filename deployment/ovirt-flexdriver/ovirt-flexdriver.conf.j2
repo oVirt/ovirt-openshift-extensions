@@ -2,8 +2,8 @@
 ovirtVmName={{ vm_name }}
 
 [connection]
-url=https://hostname/ovirt-engine/api
-username=admin@internal
-password=pass
-insecure=false
-cafile=
+url={{ engine_url }}
+username={{ engine_username }}
+password={{ engine_password }}
+insecure={{ engine_insecure }}
+cafile={{ engine_ca_file }}
