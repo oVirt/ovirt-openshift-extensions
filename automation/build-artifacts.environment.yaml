@@ -1,0 +1,5 @@
+- name: 'DOCKER_BUILDER_API_KEY' 
+  valueFrom:
+    secretKeyRef:
+        name: 'docker_api_key'
+        key: 'key'
