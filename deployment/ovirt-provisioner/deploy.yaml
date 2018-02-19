@@ -15,7 +15,7 @@
   tasks:
     - name: Copy the all-in-one manifest
       template:
-        src: k8s/{{ manifest_file }}.j2
+        src: "{{ manifest_file }}.j2"
         dest: /root/{{ manifest_file }}
         force: yes
 

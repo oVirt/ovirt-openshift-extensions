@@ -16,7 +16,11 @@ FROM rgolangh/ovirt-provisioner
 
 MAINTAINER Roy Golan, rgolan@redhat.com
 
-COPY deployment/ovirt-provisioner/deploy.yaml $PREFIX
+RUN dnf install -y ansible && dnf clean all
+
+COPY deployment/ovirt-provisioner/deploy.yaml /opt
+COPY deployment/ovirt-provisioner/ovirt-provisioner-manifest.yaml.j2 /opt
 COPY deployment/entrypoint.sh /entrypoint.sh
 
-
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["-v"]

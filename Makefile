@@ -21,7 +21,7 @@ COMMON_GO_BUILD_FLAGS=-a -ldflags '-extldflags "-static"'
 
 TARBALL=${FLEX_DRIVER_BINARY_NAME}-${VERSION}-${RELEASE}.tar.gz
 
-all: clean deps build test
+all: clean deps build test container container-push
 
 build-flex:
 	$(COMMON_ENV) $(GOBUILD) \
@@ -40,22 +40,23 @@ container: \
 	container-provisioner
 
 container-flexdriver:
-	docker build -t $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME)-deployer:$(VERSION) . -f deployment/ovirt-flexdriver/container/Dockerfile
+	docker build -t $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME)-ansible:$(VERSION) . -f deployment/ovirt-flexdriver/container/Dockerfile
 
 container-provisioner: \
-	container-provisioner-binary
-	container-provisioner-deployer
+	container-provisioner-binary \
+	container-provisioner-ansible
 
 container-provisioner-binary:
 	docker build -t $(REGISTRY)/$(PROVISIONER_BINARY_NAME):$(VERSION) . -f deployment/ovirt-provisioner/container/binary/Dockerfile
 
-container-provisioner-deployer:
-	docker build -t $(REGISTRY)/$(PROVISIONER_BINARY_NAME)-deployer:$(VERSION) . -f  deployment/ovirt-provisioner/container/deployer/Dockerfile
+container-provisioner-ansible:
+	docker build -t $(REGISTRY)/$(PROVISIONER_BINARY_NAME)-ansible:$(VERSION) . -f  deployment/ovirt-provisioner/container/ansible/Dockerfile
 
-push:
-    # don't forget docker login. TODO official registry
-        docker login -u rgolangh -p ${DOCKER_BUILDER_API_KEY}
-	docker push $(IMAGE):$(VERSION)
+container-push:
+	docker login -u rgolangh -p ${DOCKER_BUILDER_API_KEY}
+	docker push $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME)-ansible:$(VERSION)
+	docker push $(REGISTRY)/$(PROVISIONER_BINARY_NAME):$(VERSION)
+	docker push $(REGISTRY)/$(PROVISIONER_BINARY_NAME)-ansible:$(VERSION)
 
 build: \
 	build-flex \
@@ -92,4 +93,4 @@ else
 			--define "_release ${RELEASE}"
 endif
 
-.PHONY: build-flex build-provisioner container-provisioner-deployer
+.PHONY: build-flex build-provisioner container container-flexdriver container-provisioner container-provisioner-binary container-provisioner-ansible container-push

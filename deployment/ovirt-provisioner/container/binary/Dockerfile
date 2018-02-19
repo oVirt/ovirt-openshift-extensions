@@ -16,7 +16,7 @@ FROM fedora:27
 
 MAINTAINER Roy Golan, rgolan@redhat.com
 
-RUN yum install -y golang git
+RUN dnf install -y golang git && dnf clean all
 
 RUN mkdir -p /go/{src,bin,pkg}
 ENV GOPATH /go
@@ -32,7 +32,6 @@ COPY Makefile .
 COPY glide.lock .
 COPY glide.yaml .
 
-RUN make deps
-RUN make build-provisioner -e
+RUN make deps build-provisioner -e
 
 ENTRYPOINT ["/opt/ovirt-provisioner"]

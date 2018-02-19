@@ -4,64 +4,61 @@
 
 Implementation of flexvolume driver for [oVirt](https://ovirt.org) and a dynamic volume provisioner
 
-
 oVirt flexvolume driver is attachable, i.e. it supports attaching/detaching storage volumes from nodes, by detaching them from the underlying VM.
 
-
 # Deployment
+Both ovirt-flexdriver and ovirt-provisioner have deployment containers that use Ansible -\
+`ovirt-flexdriver-ansible` and `ovirt-provisioner-ansible`.
 
-## Deploy the Flexvolume driver
-The driver is a binary executable that needs to reside on every node,which is an oVirt VM,
-and every master.\
-The [deploy.yaml][flex-playbook] playbook
-resolves configuration template [ovirt-flexdriver.conf.j2][flex-conf]  
-- fill in the details of your environment
-  ```ini
-  [general]
-  # the inventory needs to map each hostname to the vm name in oVirt
-  ovirtVmName={{ vm_name }}
-  
-  [connection]
-  url=https://hostname/ovirt-engine/api
-  username=admin@internal
-  password=pass
-  insecure=false
-  cafile=
-  ```
-- [Build](#Build) the binary or download from the release\
-For that use the [deploy.yaml][flex-playbook] Ansible playbook.\
-Your inventory needs to specify 2 groups, one for nodes and one for masters:
-  ```ini
-  # ansible inventory
-  ...
-  [k8s-ovirt-nodes]
-  kube-node1 vm_name=kube-node1
-  kube-node2 vm_name=kube-node2
-  [k8s-ovirt-masters]
-  kube-master1 vm_name=kube_master
-   ```
+* Prepare an inventory file
+fill in the details of your nodes and master, and the ovirt-engine api connection details:
+ 
+    ```ini
+    # ansible inventory - either /etc/ansible/hosts or a custom one
+    
+    [k8s-ovirt-nodes]
+    kube-node1 vm_name=kube-node1
+    kube-node2 vm_name=kube-node2
+    
+    [k8s-ovirt-masters]
+    kube-master1 vm_name=kube_master
+    
+    [all:vars]
+    engine_url=https://hostname/ovirt-engine/api
+    engine_username=admin@internal
+    engine_password=123
+    engine_insecure=false
+    engine_ca_file=
+    ```
 
-- run the playbook to deploy the flexdriver
-  ```
-  ansible-playbook deployment/ovirt-flexdriver/deploy.yaml
-  ```
+* run the Ansible containers to deploy
+    ```
+    sudo docker run --rm -it \
+        -v /root/.ssh:/root/.ssh:z \
+        -v /etc/ansible/hosts:/etc/ansible/hosts \
+        rgolangh/ovirt-flexdriver-ansible:v0.2.0
+    
+    sudo docker run --rm -it \
+        -v /root/.ssh:/root/.ssh:z \
+        -v /etc/ansible/hosts:/etc/ansible/hosts \
+        rgolangh/ovirt-flexdriver-ansible:v0.2.0
+    ```
 
 - Pre-requisite
   - Running ovirt 4.1 instance (support for disk_attachments API)
   - k8s 1.9 (possibly working on 1.8, untested)
   - Every k8s minion name should match its VM name
 
-## Deploy the dynamic provisioner POD
-The provisioner is a container which registers itself to the [kubernetes provision controller]()\
-so all we need is to create the needed definitions in k8s and let it start it. The definitions are\
-all under [ovirt-provisioner-manifest.yaml](deployment/ovirt-provisioner/k8s/ovirt-provisioner-manifest.yaml.j2).
-
-Now edit the vars section in the [playbook][prov-playbook] and run it:
-```
-ansible-playbook deployment/ovirt-provisioner/deploy.yaml
-```
   
-# Build
+# Build in a container
+Building is done in dedicated containers, or can be done manually:
+Make targets for containers:
+- `make container-flexdriver`  - build the flexdriver in a container with the Ansible deploy playbook
+- `make container-provisioner-binary`  - build the provisioner container
+- `make container-provisioner-ansible` - build the provisioner Ansible container with the deploy playbook
+- `make container` - build all containers
+
+# Build locally
 There are few make targets for building the artifacts:
 - `make deps` - get and install the project dependencies
 - `make build-flex` - build the flexdriver in local 

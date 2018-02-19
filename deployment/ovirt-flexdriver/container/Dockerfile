@@ -2,7 +2,7 @@ FROM fedora:27
 
 MAINTAINER Roy Golan, rgolan@redhat.com
 
-RUN dnf install -y golang git
+RUN dnf install -y golang git ansible && dnf clean all
 
 RUN mkdir -p /go/{src,bin,pkg}
 ENV GOPATH /go
@@ -21,7 +21,7 @@ COPY deployment/ovirt-flexdriver/deploy.yaml $PREFIX
 COPY deployment/ovirt-flexdriver/ovirt-flexdriver.conf.j2 $PREFIX
 COPY deployment/entrypoint.sh /entrypoint.sh
 
-RUN make deps
-RUN make build-flex -e
+RUN make deps build-flex -e
 
-ENTRYPOINT /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+CMD "-v"

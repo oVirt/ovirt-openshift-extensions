@@ -6,5 +6,6 @@
 !Makefile
 !deployment/ovirt-flexdriver/deploy.yaml
 !deployment/ovirt-flexdriver/ovirt-flexdriver.conf.j2
+!deployment/ovirt-provisioner/ovirt-provisioner-manifest.yaml.j2
 !deployment/ovirt-provisioner/deploy.yaml
 !deployment/entrypoint.sh
