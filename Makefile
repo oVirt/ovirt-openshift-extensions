@@ -41,6 +41,7 @@ container: \
 
 container-flexdriver:
 	docker build -t $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME)-ansible:$(VERSION) . -f deployment/ovirt-flexdriver/container/Dockerfile
+	docker tag $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME)-ansible:$(VERSION) $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME)-ansible:latest
 
 container-provisioner: \
 	container-provisioner-binary \
@@ -48,15 +49,21 @@ container-provisioner: \
 
 container-provisioner-binary:
 	docker build -t $(REGISTRY)/$(PROVISIONER_BINARY_NAME):$(VERSION) . -f deployment/ovirt-provisioner/container/binary/Dockerfile
+	docker tag $(REGISTRY)/$(PROVISIONER_BINARY_NAME):$(VERSION) $(REGISTRY)/$(PROVISIONER_BINARY_NAME):latest
 
 container-provisioner-ansible:
 	docker build -t $(REGISTRY)/$(PROVISIONER_BINARY_NAME)-ansible:$(VERSION) . -f  deployment/ovirt-provisioner/container/ansible/Dockerfile
+	docker tag $(REGISTRY)/$(PROVISIONER_BINARY_NAME)-ansible:$(VERSION) $(REGISTRY)/$(PROVISIONER_BINARY_NAME)-ansible:latest
 
 container-push:
 	docker login -u rgolangh -p ${DOCKER_BUILDER_API_KEY}
 	docker push $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME)-ansible:$(VERSION)
 	docker push $(REGISTRY)/$(PROVISIONER_BINARY_NAME):$(VERSION)
 	docker push $(REGISTRY)/$(PROVISIONER_BINARY_NAME)-ansible:$(VERSION)
+	# push latest
+	docker push $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME)-ansible:latest
+	docker push $(REGISTRY)/$(PROVISIONER_BINARY_NAME):latest
+	docker push $(REGISTRY)/$(PROVISIONER_BINARY_NAME)-ansible:latest
 
 build: \
 	build-flex \
