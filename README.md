@@ -40,12 +40,12 @@ fill in the details of your nodes and master, and the ovirt-engine api connectio
     sudo docker run --rm -it \
         -v /root/.ssh:/root/.ssh:z \
         -v /etc/ansible/hosts:/etc/ansible/hosts \
-        rgolangh/ovirt-flexdriver-ansible:v0.2.0
+        rgolangh/ovirt-flexdriver-ansible
     
     sudo docker run --rm -it \
         -v /root/.ssh:/root/.ssh:z \
         -v /etc/ansible/hosts:/etc/ansible/hosts \
-        rgolangh/ovirt-flexdriver-ansible:v0.2.0
+        rgolangh/ovirt-flexdriver-ansible
     ```
 
 - Pre-requisite
