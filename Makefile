@@ -6,6 +6,8 @@ GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 GODEP=dep
 
+PREFIX=.
+
 FLEX_DRIVER_BINARY_NAME=ovirt-flexdriver
 PROVISIONER_BINARY_NAME=ovirt-provisioner
 
@@ -26,13 +28,13 @@ all: clean deps build test container container-push
 build-flex:
 	$(COMMON_ENV) $(GOBUILD) \
 	$(COMMON_GO_BUILD_FLAGS) \
-	-o $(FLEX_DRIVER_BINARY_NAME) \
+	-o $(PREFIX)/$(FLEX_DRIVER_BINARY_NAME) \
 	-v cmd/$(FLEX_DRIVER_BINARY_NAME)/*.go
 
 build-provisioner:
 	$(COMMON_ENV) $(GOBUILD) \
 	$(COMMON_GO_BUILD_FLAGS) \
-	-o $(PROVISIONER_BINARY_NAME) \
+	-o $(PREFIX)/$(PROVISIONER_BINARY_NAME) \
 	-v cmd/$(PROVISIONER_BINARY_NAME)/*.go
 
 container: \

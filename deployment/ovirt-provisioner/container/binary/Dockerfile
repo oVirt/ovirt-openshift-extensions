@@ -32,6 +32,6 @@ COPY Makefile .
 COPY glide.lock .
 COPY glide.yaml .
 
-RUN make deps build-provisioner -e
+RUN make deps build-provisioner PREFIX=$PREFIX
 
 ENTRYPOINT ["/opt/ovirt-provisioner"]
