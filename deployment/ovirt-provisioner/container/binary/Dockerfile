@@ -16,14 +16,12 @@ FROM fedora:27
 
 MAINTAINER Roy Golan, rgolan@redhat.com
 
-RUN dnf install -y golang git && dnf clean all
+RUN dnf install -y golang git glide && dnf clean all
 
 RUN mkdir -p /go/{src,bin,pkg}
 ENV GOPATH /go
 ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 ARG PREFIX=/opt
-RUN curl https://glide.sh/get | sh
-RUN go get -u github.com/golang/dep/cmd/dep
 
 WORKDIR /go/src/github.com/rgolangh/ovirt-flexdriver
 COPY cmd cmd/
