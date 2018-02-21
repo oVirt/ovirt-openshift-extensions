@@ -11,7 +11,7 @@
   vars:
     manifest_file: ovirt-provisioner-manifest.yaml
     deprovision: false
-    provisioner_version: v0.2.0
+    provisioner_version: {{ lookup('env','OVIRT_PROVISIONER_VERSION') }}
   tags: tagged
   tasks:
     - name: Copy the all-in-one manifest
