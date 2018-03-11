@@ -88,18 +88,19 @@ deps:
 	glide --debug  install --strip-vendor
 
 rpm:
-	/bin/git archive --format=tar.gz HEAD > "$(TARBALL)"
+	/bin/git archive --format=tar.gz HEAD > $(TARBALL)
 ifdef ARTIFACT_DIR
 	rpmbuild -tb $(TARBALL) \
-	    --define "debug_package %{nil}" \
-        --define "_rpmdir ${ARTIFACT_DIR}" \
-	    --define "_version ${VERSION}" \
-	    --define "_release ${RELEASE}"
+		--define "debug_package %{nil}" \
+		--define "_rpmdir ${ARTIFACT_DIR}" \
+		--define "_version ${VERSION}" \
+		--define "_release ${RELEASE}"
 else
 	rpmbuild -tb $(TARBALL) \
-			--define "debug_package %{nil}" \
-			--define "_version ${VERSION}" \
-			--define "_release ${RELEASE}"
+		--define "debug_package %{nil}" \
+		--define "_rpmdir ." \
+		--define "_version ${VERSION}" \
+		--define "_release ${RELEASE}"
 endif
 
 .PHONY: build-flex build-provisioner container container-flexdriver container-provisioner container-provisioner-binary container-provisioner-ansible container-push
