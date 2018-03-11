@@ -5,7 +5,7 @@ Summary:    A Flexvolume driver to provision k8s volumes using oVirt
 
 License:    ASL 2.0
 URL:        http://www.ovirt.org
-Source0:    %{name}-%{version}%{?_release:-%_release}.tar.gz
+Source0:    %{name}-%{version}%{?_release:_%_release}.tar.gz
 
 %description
 A Flexvolume driver to provision k8s volumes using oVirt

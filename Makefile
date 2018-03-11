@@ -21,7 +21,7 @@ BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 COMMON_ENV=CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 COMMON_GO_BUILD_FLAGS=-a -ldflags '-extldflags "-static"'
 
-TARBALL=${FLEX_DRIVER_BINARY_NAME}-${VERSION}-${RELEASE}.tar.gz
+TARBALL=$(FLEX_DRIVER_BINARY_NAME)-$(VERSION)$(if $(RELEASE),_$(RELEASE)).tar.gz
 
 all: clean deps build test container container-push
 
@@ -88,7 +88,7 @@ deps:
 	glide --debug  install --strip-vendor
 
 rpm:
-	/bin/git ls-files | tar --files-from /proc/self/fd/0 -czf "$(TARBALL)"
+	/bin/git archive --format=tar.gz HEAD > "$(TARBALL)"
 ifdef ARTIFACT_DIR
 	rpmbuild -tb $(TARBALL) \
 	    --define "debug_package %{nil}" \
