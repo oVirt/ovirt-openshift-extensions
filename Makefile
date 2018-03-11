@@ -85,8 +85,7 @@ run: \
 	./$(PROVISIONER_BINARY_NAME)
 
 deps:
-	glide --debug  install --strip-vendor
-
+	dep ensure
 rpm:
 	/bin/git archive --format=tar.gz HEAD > $(TARBALL)
 ifdef ARTIFACT_DIR

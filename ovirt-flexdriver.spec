@@ -35,11 +35,14 @@ BuildRequires: golang >= %{golang_version}
 %build
 # set up temporary build gopath for the rpmbuild 
 set -x
-mkdir -p ./_build/src/%{repo}                    
-ln -s $(pwd) ./_build/src/%{repo}/%{name}-flexdriver        
+pwd
 
-export GOPATH=$(pwd)/_build
-cd _build/src/%{repo}/%{name}-flexdriver
+%define tmp_go_path build
+mkdir -p ./%{tmp_go_path}/src/%{repo}                    
+ln -s $(pwd) ./build/src/%{repo}/%{name}-flexdriver        
+
+export GOPATH=$(pwd)/%{tmp_go_path}
+cd %{tmp_go_path}/src/%{repo}/%{name}-flexdriver
 make build
 
 %install

@@ -1,8 +1,6 @@
 *.ca
 *.retry
 deployment/*.retry
-vendor/*
-_vendor*
 /ovirt-flexdriver
 /ovirt-flexdriver.conf
 /ovirt-provisioner
@@ -13,6 +11,8 @@ ovirt-flexdriver*.tar.gz
 .pki
 exported-artifacts
 mocker*
+
+vendor/**/*.spec
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Go template
@@ -70,4 +70,3 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 fabric.properties
-
