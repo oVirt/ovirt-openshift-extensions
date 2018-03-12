@@ -7,6 +7,7 @@ GOGET=$(GOCMD) get
 GODEP=dep
 
 PREFIX=.
+ARTIFACT_DIR ?= .
 
 FLEX_DRIVER_BINARY_NAME=ovirt-flexdriver
 PROVISIONER_BINARY_NAME=ovirt-provisioner
@@ -88,18 +89,10 @@ deps:
 	dep ensure
 rpm:
 	/bin/git archive --format=tar.gz HEAD > $(TARBALL)
-ifdef ARTIFACT_DIR
 	rpmbuild -tb $(TARBALL) \
 		--define "debug_package %{nil}" \
 		--define "_rpmdir ${ARTIFACT_DIR}" \
 		--define "_version ${VERSION}" \
 		--define "_release ${RELEASE}"
-else
-	rpmbuild -tb $(TARBALL) \
-		--define "debug_package %{nil}" \
-		--define "_rpmdir ." \
-		--define "_version ${VERSION}" \
-		--define "_release ${RELEASE}"
-endif
 
 .PHONY: build-flex build-provisioner container container-flexdriver container-provisioner container-provisioner-binary container-provisioner-ansible container-push
