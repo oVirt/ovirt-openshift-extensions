@@ -30,7 +30,7 @@ Storage provisioner plugin for k8s using oVirt
 BuildRequires: golang >= %{golang_version} 
 
 %prep
-%setup -c
+%setup -c -q
 
 %build
 # set up temporary build gopath for the rpmbuild 
@@ -43,13 +43,14 @@ ln -s $(pwd) ./build/src/%{repo}/%{name}-flexdriver
 
 export GOPATH=$(pwd)/%{tmp_go_path}
 cd %{tmp_go_path}/src/%{repo}/%{name}-flexdriver
-make build PREFIX=%{buildroot}
+make build
 
 %install
-mkdir -p %{buildroot}%{kube_plugin_dir}
-install -p -m 755 %{name}-flexdriver %{buildroot}%{kube_plugin_dir}
-install -p -m 644 deployment/%{name}-flexvolume-driver/%{name}.conf.j2 %{buildroot}%{kube_plugin_dir}/%{name}-flexvolume-driver.conf
-install -p -m 755 %{name}-provisioner %{buildroot}
+mkdir -p %{buildroot}/%{kube_plugin_dir}
+install -p -m 755 %{name}-flexdriver %{buildroot}/%{kube_plugin_dir}/%{name}-flexvolume-driver
+install -p -m 644 deployment/%{name}-flexdriver/%{name}-flexdriver.conf.j2 %{buildroot}//%{kube_plugin_dir}/%{name}-flexvolume-driver.conf
+mkdir -p %{buildroot}/usr/bin/
+install -p -m 755 %{name}-provisioner %{buildroot}/usr/bin/
 
 %files flexvolume-driver
 %dir %{kube_plugin_dir}
