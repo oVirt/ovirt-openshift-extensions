@@ -22,7 +22,7 @@ Summary:    Storage provisioner plugin for k8s using oVirt
 Storage provisioner plugin for k8s using oVirt
 
 %global vendor ovirt
-%global kube_plugin_dir   /usr/libexec/kubernetes/kubelet-plugins/volume/exec/%{vendor}~%{name}
+%global kube_plugin_dir   /usr/libexec/kubernetes/kubelet-plugins/volume/exec/%{vendor}~%{name}-flexvolume-driver
 %global repo github.com/rgolangh
 %global golang_version 1.9.1
 %global debug_package %{nil}
@@ -43,11 +43,11 @@ ln -s $(pwd) ./build/src/%{repo}/%{name}-flexdriver
 
 export GOPATH=$(pwd)/%{tmp_go_path}
 cd %{tmp_go_path}/src/%{repo}/%{name}-flexdriver
-make build
+make build PREFIX=%{buildroot}
 
 %install
 mkdir -p %{buildroot}%{kube_plugin_dir}
-install -p -m 755 %{name}-flexvolume-driver %{buildroot}%{kube_plugin_dir}
+install -p -m 755 %{name}-flexdriver %{buildroot}%{kube_plugin_dir}
 install -p -m 644 deployment/%{name}-flexvolume-driver/%{name}.conf.j2 %{buildroot}%{kube_plugin_dir}/%{name}-flexvolume-driver.conf
 install -p -m 755 %{name}-provisioner %{buildroot}
 
