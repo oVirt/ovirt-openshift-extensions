@@ -43,8 +43,9 @@ container: \
 	container-provisioner
 
 container-flexdriver:
-	docker build -t $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME)-ansible:$(VERSION) . -f deployment/ovirt-flexdriver/container/Dockerfile
-	docker tag $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME)-ansible:$(VERSION) $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME)-ansible:latest
+	# place the rpm flat under the repo otherwise dockerignore will mask its directory. TODO make it more flexible
+	docker build -t $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME):$(VERSION) . -f deployment/ovirt-flexdriver/container/Dockerfile
+	docker tag $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME):$(VERSION) $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME):latest
 
 container-provisioner: \
 	container-provisioner-binary \

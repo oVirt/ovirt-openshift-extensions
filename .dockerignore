@@ -9,3 +9,4 @@
 !deployment/ovirt-provisioner/ovirt-provisioner-manifest.yaml.j2
 !deployment/ovirt-provisioner/deploy.yaml
 !deployment/entrypoint.sh
+!**/*.rpm
