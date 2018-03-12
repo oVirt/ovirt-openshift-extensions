@@ -14,9 +14,9 @@
 
 FROM rgolangh/ovirt-provisioner
 
-MAINTAINER Roy Golan, rgolan@redhat.com
+LABEL maintainer="Roy Golan, rgolan@redhat.com"
 
-RUN dnf install -y ansible && dnf clean all
+RUN yum install -y ansible && yum clean all
 
 COPY deployment/ovirt-provisioner/deploy.yaml /opt
 COPY deployment/ovirt-provisioner/ovirt-provisioner-manifest.yaml.j2 /opt

@@ -12,24 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM fedora:27
+FROM centos:7
 
-MAINTAINER Roy Golan, rgolan@redhat.com
+LABEL maintainer="Roy Golan, rgolan@redhat.com"
 
-RUN dnf install -y golang git glide && dnf clean all
+ARG RPM=ovirt-provisioner*.rpm
 
-RUN mkdir -p /go/{src,bin,pkg}
-ENV GOPATH /go
-ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
-ARG PREFIX=/opt
+COPY ${RPM} /root
 
-WORKDIR /go/src/github.com/rgolangh/ovirt-flexdriver
-COPY cmd cmd/
-COPY internal internal/
-COPY Makefile .
-COPY glide.lock .
-COPY glide.yaml .
+RUN yum install -y /root/${RPM} && yum clean all
 
-RUN make deps build-provisioner PREFIX=$PREFIX
-
-ENTRYPOINT ["/opt/ovirt-provisioner"]
+ENTRYPOINT ["/usr/bin/ovirt-provisioner"]

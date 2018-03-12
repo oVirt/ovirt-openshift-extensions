@@ -7,6 +7,7 @@ GOGET=$(GOCMD) get
 GODEP=dep
 
 PREFIX=.
+ARTIFACT_DIR ?= .
 
 FLEX_DRIVER_BINARY_NAME=ovirt-flexdriver
 PROVISIONER_BINARY_NAME=ovirt-provisioner
@@ -21,7 +22,7 @@ BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 COMMON_ENV=CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 COMMON_GO_BUILD_FLAGS=-a -ldflags '-extldflags "-static"'
 
-TARBALL=${FLEX_DRIVER_BINARY_NAME}-${VERSION}-${RELEASE}.tar.gz
+TARBALL=$(FLEX_DRIVER_BINARY_NAME)-$(VERSION)$(if $(RELEASE),_$(RELEASE)).tar.gz
 
 all: clean deps build test container container-push
 
@@ -42,8 +43,9 @@ container: \
 	container-provisioner
 
 container-flexdriver:
-	docker build -t $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME)-ansible:$(VERSION) . -f deployment/ovirt-flexdriver/container/Dockerfile
-	docker tag $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME)-ansible:$(VERSION) $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME)-ansible:latest
+	# place the rpm flat under the repo otherwise dockerignore will mask its directory. TODO make it more flexible
+	docker build -t $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME):$(VERSION) . -f deployment/ovirt-flexdriver/container/Dockerfile
+	docker tag $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME):$(VERSION) $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME):latest
 
 container-provisioner: \
 	container-provisioner-binary \
@@ -85,21 +87,13 @@ run: \
 	./$(PROVISIONER_BINARY_NAME)
 
 deps:
-	glide --debug  install --strip-vendor
-
+	dep ensure
 rpm:
-	/bin/git ls-files | tar --files-from /proc/self/fd/0 -czf "$(TARBALL)"
-ifdef ARTIFACT_DIR
+	/bin/git archive --format=tar.gz HEAD > $(TARBALL)
 	rpmbuild -tb $(TARBALL) \
-	    --define "debug_package %{nil}" \
-        --define "_rpmdir ${ARTIFACT_DIR}" \
-	    --define "_version ${VERSION}" \
-	    --define "_release ${RELEASE}"
-else
-	rpmbuild -tb $(TARBALL) \
-			--define "debug_package %{nil}" \
-			--define "_version ${VERSION}" \
-			--define "_release ${RELEASE}"
-endif
+		--define "debug_package %{nil}" \
+		--define "_rpmdir ${ARTIFACT_DIR}" \
+		--define "_version ${VERSION}" \
+		--define "_release ${RELEASE}"
 
 .PHONY: build-flex build-provisioner container container-flexdriver container-provisioner container-provisioner-binary container-provisioner-ansible container-push

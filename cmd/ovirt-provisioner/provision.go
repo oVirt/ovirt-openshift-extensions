@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"../../internal"
+	"github.com/rgolangh/ovirt-flexdriver/internal"
 	"fmt"
 	"github.com/golang/glog"
 	"github.com/kubernetes-incubator/external-storage/lib/controller"
