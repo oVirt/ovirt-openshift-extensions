@@ -61,11 +61,11 @@ container-provisioner-ansible:
 
 container-push:
 	@docker login -u rgolangh -p ${DOCKER_BUILDER_API_KEY}
-	docker push $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME)-ansible:$(VERSION)
+	docker push $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME):$(VERSION)
 	docker push $(REGISTRY)/$(PROVISIONER_BINARY_NAME):$(VERSION)
 	docker push $(REGISTRY)/$(PROVISIONER_BINARY_NAME)-ansible:$(VERSION)
 	# push latest
-	docker push $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME)-ansible:latest
+	docker push $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME):latest
 	docker push $(REGISTRY)/$(PROVISIONER_BINARY_NAME):latest
 	docker push $(REGISTRY)/$(PROVISIONER_BINARY_NAME)-ansible:latest
 
