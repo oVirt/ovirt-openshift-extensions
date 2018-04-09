@@ -10,56 +10,63 @@ Here is a short [demo](http://www.youtube.com/watch?v=_E9pUVrI0hs):\
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=_E9pUVrI0hs" target="_blank"><img src="http://img.youtube.com/vi/_E9pUVrI0hs/0.jpg" 
 alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a>
 
+The project creates 3 containers:
+1. **`ovirt-flexvolume-driver`**
+   A container that exist to expose the binary, imediatly sleeps
+forever. Used in a daemonset deployment - see the apb.
+2. **`ovirt-volume-provisioner`**
+   A container for the provisioer controller. Used in a deployment - see
+apb
+3. `**ovirt-flexvolume-driver-apb**`
+  An apb container that will deploy both the driver and the provisioner.
+  One can use the service catalog to push the apb there and use it or straight from the command line.
+  See the apb Makefile currently under [deployment/ovirt-flexvolume-driver/Makefile](deployment/ovirt-flexvolume-driver/Makefile).
+
 # Deployment
-Both ovirt-flexdriver and ovirt-provisioner have deployment containers that use Ansible -\
-`ovirt-flexdriver-ansible` and `ovirt-provisioner-ansible`.
+There are 2 main deployment methods: using a deployment container(recommended) or manual
 
-* Prepare an inventory file
-fill in the details of your nodes and master, and the ovirt-engine api connection details:
- 
-    ```ini
-    # ansible inventory - either /etc/ansible/hosts or a custom one
-    
-    [k8s-ovirt-nodes]
-    kube-node1 vm_name=kube-node1
-    kube-node2 vm_name=kube-node2
-    
-    [k8s-ovirt-masters]
-    kube-master1 vm_name=kube_master
-    
-    [all:vars]
-    engine_url=https://hostname/ovirt-engine/api
-    engine_username=admin@internal
-    engine_password=123
-    engine_insecure=false
-    engine_ca_file=
-    ```
+## Deploy using the service-catalog(recommended)
 
-* run the Ansible containers to deploy
-    ```
-    sudo docker run --rm -it \
-        -v /root/.ssh:/root/.ssh:z \
-        -v /etc/ansible/hosts:/etc/ansible/hosts \
-        rgolangh/ovirt-flexdriver-ansible
-    
-    sudo docker run --rm -it \
-        -v /root/.ssh:/root/.ssh:z \
-        -v /etc/ansible/hosts:/etc/ansible/hosts \
-        rgolangh/ovirt-flexdriver-ansible
-    ```
+Pre-requisite:
+- Openshift 3.9.0
+- Running service catalog
 
-- Pre-requisite
+1. push the apb image to your cluster repo
+   ```
+   cd deployment/ovirt-flexvolume-driver
+   make apb_push DOCKERHOST=your_registry
+   ```
+2. go to the service catalog UI and deploy the ovirt-flexvolume-driver-apb
+   a demo link here <--
+
+## Deploy Manually
+
+1. push the apb image like in the service-catalog deployment
+
+2. use docker directly to invoke the deployment
+   - replace 172.30.1.1:5000/openshift/ovirt-flexvolume-driver-apb with your image url
+   - fill in the details in `extra-vars`
+   
+   ```
+   docker run \
+     --rm \
+     --net=host \
+     -v $HOME/.kube:/opt/apb/.kube:z \
+     -u $UID 172.30.1.1:5000/openshift/ovirt-flexvolume-driver-apb \
+     provision \
+     --extra-vars '{"admin_password":"developer","admin_user":"developer","cluster":"openshift","namespace":"default","engine_password":"123","engine_url":"https://your_engine_hostname:28443/ovirt-engine/api","engine_username":"admin@internal"}'
+   ```
+
+# Pre-requisite
   - Running ovirt 4.1 instance (support for disk_attachments API)
   - k8s 1.9 (possibly working on 1.8, untested)
   - Every k8s minion name should match its VM name
 
-  
 # Build in a container
 Building is done in dedicated containers, or can be done manually:
 Make targets for containers:
-- `make container-flexdriver`  - build the flexdriver in a container with the Ansible deploy playbook
-- `make container-provisioner-binary`  - build the provisioner container
-- `make container-provisioner-ansible` - build the provisioner Ansible container with the deploy playbook
+- `make container-flexdriver`   - installs the flexdriver in a container
+- `make container-provisioner`  - installs the provisioner in acontainer
 - `make container` - build all containers
 
 # Build locally

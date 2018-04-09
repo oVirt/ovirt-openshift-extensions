@@ -1,0 +1,163 @@
+### This main will deploy the flexvolume driver as a daemon set, and the provisioner as
+### deployment (we need only 1 instance of it) including all it dependent objects - role, role binding, cluster-role,
+### cluster-role bindings, config map, and service account
+
+- name: login
+  command: "oc login -u {{ admin_user }} -p {{ admin_password }}"
+
+- name: create the security context
+  k8s_v1_service_account:
+    name: ovirt-flexvolume-driver
+    namespace: "{{ namespace }}"
+
+- name: add security context to the serviceaccount
+  command: "oc adm policy add-scc-to-user {{ item }} -n {{ namespace }} -z ovirt-flexvolume-driver"
+  with_items: [ hostaccess, privileged ]
+
+- name: Deploy flexvolume driver as daemonset
+  openshift_v1_daemon_set:
+    name: ovirt-flexvolume-driver
+    namespace: "{{ namespace }}"
+    service_account_name: ovirt-flexvolume-driver
+    labels:
+      app: ovirt-flexvolume-driver
+      service: ovirt-flexvolume-driver
+    spec_selector_match_labels:
+      name: ovirt-flexvolume-driver
+    spec_template_metadata_labels:
+      name: ovirt-flexvolume-driver
+    spec_template_spec_tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+    containers:
+    - image: docker.io/rgolangh/ovirt-flexvolume-driver
+      name: ovirt-flexvolume-driver
+      securityContext:
+          privileged: true
+      resources:
+        limits:
+          memory: 200Mi
+        requests:
+          cpu: 100m
+          memory: 200Mi
+      volumeMounts:
+        - name: plugindir
+          mountPath: /usr/libexec/kubernetes/kubelet-plugins/volume/exec/
+          readOnly: false
+      terminationGracePeriodSeconds: 30
+    volumes:
+      - name: plugindir
+        hostPath:
+          path: /usr/libexec/kubernetes/kubelet-plugins/volume/exec/
+
+# provisioner installation
+- name: Cluster role
+  openshift_v1_cluster_role:
+    name: ovirt-volume-provisioner
+    # namespace: "{{ namespace }}"
+    rules:
+      - api_groups: [""]
+        resources: ["persistentvolumes"]
+        verbs: ["get", "list", "watch", "create", "delete"]
+      - api_groups: [""]
+        resources: ["persistentvolumeclaims"]
+        verbs: ["get", "list", "watch", "update"]
+      - api_groups: ["storage.k8s.io"]
+        resources: ["storageclasses"]
+        verbs: ["get", "list", "watch"]
+      - api_groups: [""]
+        resources: ["events"]
+        verbs: ["list", "watch", "create", "update", "patch"]
+
+- name: Cluster role binding
+  k8s_v1beta1_cluster_role_binding:
+    name: ovirt-volume-provisioner
+    # namespace: "{{ namespace }}"
+    subjects:
+      - kind: ServiceAccount
+        name: ovirt-provisioner
+        namespace: kube-system
+    role_ref_kind: ClusterRole
+    role_ref_name: ovirt-provisioner
+    api_group: rbac.authorization.k8s.io
+
+- name: Role
+  openshift_v1_role:
+    name: ovirt-volume-provisioner
+    namespace: "{{ namespace }}"
+    rules:
+    - api_groups: [""]
+      resources: ["secrets"]
+      verbs: ["create", "get", "delete"]
+
+- name: Role Binding
+  k8s_v1beta1_role_binding:
+    name: ovirt-volume-provisioner
+    namespace: "{{ namespace }}"
+    role_ref_kind: Role
+    role_ref_name: ovirt-volume-provisioner
+    api_group: rbac.authorization.k8s.io
+    subjects:
+      - kind: ServiceAccount
+        name: ovirt-volume-provisioner
+
+- name: set the config map
+  k8s_v1_config_map:
+    name: ovirt
+    namespace: "{{ namespace }}"
+    data:
+      connection: |
+        url={{ engine_url}}
+        username={{ engine_username }}
+        password={{ engine_password }}
+        insecure={{ engine_insecure | default(true) }}
+        cafile={{ engine_ca_file | default('') }}
+
+- name: create the security context
+  k8s_v1_service_account:
+    name: ovirt-volume-provisioner
+    namespace: "{{ namespace }}"
+
+- name: deploy the volume provisioner
+  k8s_apps_v1beta1_deployment:
+    name: ovirt-volume-provisioner
+    namespace: "{{ namespace }}"
+    service_account_name: ovirt-volume-provisioner
+    dns_policy: Default
+    spec_replicas: 1
+    spec_selector_match_labels:
+      name: ovirt-volume-provisioner
+    spec_template_metadata_labels:
+      name: ovirt-volume-provisioner
+    spec_template_spec_tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+    containers:
+      - image: rgolangh/ovirt-volume-provisioner
+        name: ovirt-volume-provisioner
+        volumeMounts:
+          - name: config-volume
+            mountPath: /etc/ovirt
+        env:
+        - name: OVIRT_API_CONF
+          value: /etc/ovirt/ovirt-api.conf
+    volumes:
+      - name: config-volume
+        configMap:
+          name: ovirt
+          items:
+            - key: connection
+              path: ovirt-api.conf
+
+
+##############################################################################
+## Bindable services must make credentials available to the Ansible Service
+## Broker during the provision stage.  They will later be made available to
+## applications after a binding is created.
+## https://github.com/kubernetes-incubator/service-catalog/blob/master/docs/design.md#using-a-service-instance
+##############################################################################
+#- name: encode bind credentials
+#  asb_encode_binding:
+#    fields:
+#      ENV_VAR_1: value1
+#      ENV_VAR_2: value2
