@@ -36,8 +36,8 @@ Pre-requisite:
    cd deployment/ovirt-flexvolume-driver
    make apb_push DOCKERHOST=your_registry
    ```
-2. go to the service catalog UI and deploy the ovirt-flexvolume-driver-apb
-   a demo link here <--
+2. go to the service catalog UI and deploy the ovirt-flexvolume-driver-apb. Here is a demo doing that:
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=frcehKUk_g4" target="_blank"><img src="http://img.youtube.com/vi/frcehKUk_g4/0.jpg" alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a>
 
 ## Deploy Manually
 
