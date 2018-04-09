@@ -11,6 +11,8 @@ ARTIFACT_DIR ?= .
 
 FLEX_DRIVER_BINARY_NAME=ovirt-flexdriver
 PROVISIONER_BINARY_NAME=ovirt-provisioner
+FLEX_CONTAINER_NAME=ovirt-flexvolume-driver
+PROVISIONER_CONTAINER_NAME=ovirt-volume-provisioner
 
 IMAGE=rgolangh/ovirt-provisioner
 REGISTRY=rgolangh
@@ -44,30 +46,20 @@ container: \
 
 container-flexdriver:
 	# place the rpm flat under the repo otherwise dockerignore will mask its directory. TODO make it more flexible
-	docker build -t $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME):$(VERSION) . -f deployment/ovirt-flexdriver/container/Dockerfile
-	docker tag $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME):$(VERSION) $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME):latest
+	docker build -t $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION) . -f deployment/ovirt-flexdriver/container/Dockerfile
+	docker tag $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION) $(REGISTRY)/$(FLEX_CONTAINER_NAME):latest
 
-container-provisioner: \
-	container-provisioner-binary \
-	container-provisioner-ansible
-
-container-provisioner-binary:
-	docker build -t $(REGISTRY)/$(PROVISIONER_BINARY_NAME):$(VERSION) . -f deployment/ovirt-provisioner/container/binary/Dockerfile
-	docker tag $(REGISTRY)/$(PROVISIONER_BINARY_NAME):$(VERSION) $(REGISTRY)/$(PROVISIONER_BINARY_NAME):latest
-
-container-provisioner-ansible:
-	docker build -t $(REGISTRY)/$(PROVISIONER_BINARY_NAME)-ansible:$(VERSION) . -f  deployment/ovirt-provisioner/container/ansible/Dockerfile
-	docker tag $(REGISTRY)/$(PROVISIONER_BINARY_NAME)-ansible:$(VERSION) $(REGISTRY)/$(PROVISIONER_BINARY_NAME)-ansible:latest
+container-provisioner:
+	docker build -t $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION) . -f deployment/ovirt-provisioner/container/binary/Dockerfile
+	docker tag $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION) $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):latest
 
 container-push:
 	@docker login -u rgolangh -p ${DOCKER_BUILDER_API_KEY}
-	docker push $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME):$(VERSION)
-	docker push $(REGISTRY)/$(PROVISIONER_BINARY_NAME):$(VERSION)
-	docker push $(REGISTRY)/$(PROVISIONER_BINARY_NAME)-ansible:$(VERSION)
+	docker push $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION)
+	docker push $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION)
 	# push latest
-	docker push $(REGISTRY)/$(FLEX_DRIVER_BINARY_NAME):latest
-	docker push $(REGISTRY)/$(PROVISIONER_BINARY_NAME):latest
-	docker push $(REGISTRY)/$(PROVISIONER_BINARY_NAME)-ansible:latest
+	docker push $(REGISTRY)/$(FLEX_CONTAINER_NAME):latest
+	docker push $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):latest
 
 build: \
 	build-flex \

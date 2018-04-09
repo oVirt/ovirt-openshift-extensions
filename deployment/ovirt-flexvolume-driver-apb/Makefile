@@ -1,6 +1,6 @@
 DOCKERHOST = docker.io
-DOCKERORG = ovirt-flexvolume-driver-apb
-IMAGENAME = ovirt-flexvolume-driver
+DOCKERORG = rgolangh
+IMAGENAME = ovirt-flexvolume-driver-apb
 TAG = latest
 USER=$(shell id -u)
 PWD=$(shell pwd)

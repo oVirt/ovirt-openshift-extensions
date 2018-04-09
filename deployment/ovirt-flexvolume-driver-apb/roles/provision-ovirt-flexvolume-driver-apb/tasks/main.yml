@@ -32,10 +32,6 @@
     containers:
     - image: docker.io/rgolangh/ovirt-flexvolume-driver
       name: ovirt-flexvolume-driver
-      command:
-        - sleep
-      args:
-        - 1d
       securityContext:
           privileged: true
       resources:
@@ -137,7 +133,7 @@
       - key: node-role.kubernetes.io/master
         effect: NoSchedule
     containers:
-      - image: rgolangh/ovirt-provisioner
+      - image: rgolangh/ovirt-volume-provisioner
         name: ovirt-volume-provisioner
         volumeMounts:
           - name: config-volume
