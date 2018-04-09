@@ -17,7 +17,7 @@ forever. Used in a daemonset deployment - see the apb.
 2. **`ovirt-volume-provisioner`**
    A container for the provisioer controller. Used in a deployment - see
 apb
-3. `**ovirt-flexvolume-driver-apb**`
+3. **`ovirt-flexvolume-driver-apb`**
   An apb container that will deploy both the driver and the provisioner.
   One can use the service catalog to push the apb there and use it or straight from the command line.
   See the apb Makefile currently under [deployment/ovirt-flexvolume-driver/Makefile](deployment/ovirt-flexvolume-driver/Makefile).
@@ -25,7 +25,7 @@ apb
 # Deployment
 There are 2 main deployment methods: using a deployment container(recommended) or manual
 
-## Deploy using the service-catalog(recommended)
+## Deploy using the deployment container(APB) and service-catalog(recommended)
 
 Pre-requisite:
 - Openshift 3.9.0
@@ -62,21 +62,13 @@ Pre-requisite:
   - k8s 1.9 (possibly working on 1.8, untested)
   - Every k8s minion name should match its VM name
 
-# Build in a container
-Building is done in dedicated containers, or can be done manually:
-Make targets for containers:
-- `make container-flexdriver`   - installs the flexdriver in a container
-- `make container-provisioner`  - installs the provisioner in acontainer
-- `make container` - build all containers
 
-# Build locally
+# Make targets
 There are few make targets for building the artifacts:
-- `make deps` - get and install the project dependencies
-- `make build-flex` - build the flexdriver in local 
-- `make build-provisioner` - build the provisioner
-- `make build` - build the flexvolume driver and provisioner
-- `make quick-container` - creates the container for the provisioner, with a tag derived from `git describe`
-- `make rpm` - builds and rpm from the previously created binaries
+- `make deps`      - get and install the project dependencies
+- `make build`     - build the flexvolume driver and provisioner binaries
+- `make rpm`       - builds and rpm from the previously created binaries
+- `make container` - creates the containers
 
 # Sources
 - [flexvolume plugin page on openshift](https://docs.openshift.org/latest/install_config/persistent_storage/persistent_storage_flex_volume.html)
