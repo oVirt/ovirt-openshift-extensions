@@ -50,7 +50,7 @@ container-flexdriver:
 	docker tag $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION) $(REGISTRY)/$(FLEX_CONTAINER_NAME):latest
 
 container-provisioner:
-	docker build -t $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION) . -f deployment/ovirt-provisioner/container/binary/Dockerfile
+	docker build -t $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION) . -f deployment/ovirt-provisioner/container/Dockerfile
 	docker tag $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION) $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):latest
 
 container-push:
