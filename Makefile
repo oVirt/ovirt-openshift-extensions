@@ -46,12 +46,17 @@ container: \
 
 container-flexdriver:
 	# place the rpm flat under the repo otherwise dockerignore will mask its directory. TODO make it more flexible
-	docker build -t $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION) . -f deployment/ovirt-flexdriver/container/Dockerfile
-	docker tag $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION) $(REGISTRY)/$(FLEX_CONTAINER_NAME):latest
+	docker build \
+	 -t $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION) -t $(REGISTRY)/$(FLEX_CONTAINER_NAME):latest \
+	  . \
+	  -f deployment/ovirt-flexdriver/container/Dockerfile
 
 container-provisioner:
-	docker build -t $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION) . -f deployment/ovirt-provisioner/container/Dockerfile
-	docker tag $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION) $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):latest
+	docker build \
+	    -t $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION) \
+	    -t $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):latest \
+	     . \
+	     -f deployment/ovirt-provisioner/container/Dockerfile
 
 container-push:
 	@docker login -u rgolangh -p ${DOCKER_BUILDER_API_KEY}
