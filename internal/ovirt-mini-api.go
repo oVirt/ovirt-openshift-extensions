@@ -44,11 +44,11 @@ type Ovirt struct {
 }
 
 type Connection struct {
-	Url      string `gcfg:"url"`
-	Username string `gcfg:"username"`
-	Password string `gcfg:"password"`
-	Insecure bool   `gcfg:"insecure"`
-	CAFile   string `gcfg:"cafile"`
+	Url      string
+	Username string
+	Password string
+	Insecure bool
+	CAFile   string
 }
 
 type Token struct {

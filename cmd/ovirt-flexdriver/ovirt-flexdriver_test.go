@@ -54,3 +54,37 @@ func getDeviceForTest() (string, error) {
 	return strings.Split(split[1], " ")[0], nil
 
 }
+
+func TestNewDriverFromConfig(t *testing.T) {
+	conf := `
+url=123
+username=user@abcde123213
+password=123444
+insecure=true
+cafile=
+ovirtVmName=kube-node-1
+
+`
+	ovirt, e := newDriver(strings.NewReader(conf))
+	if e != nil {
+		t.Error(e)
+	}
+	if ovirt.Connection.Url != "123" {
+		t.Errorf("failed parsing url")
+	}
+	if ovirt.Connection.Username != "user@abcde123213" {
+		t.Errorf("failed parsing username")
+	}
+	if ovirt.Connection.Password != "123444" {
+		t.Errorf("failed parsing password")
+	}
+	if ovirt.Connection.Insecure != true {
+		t.Errorf("failed parsing insecure")
+	}
+	if ovirt.Connection.CAFile != "" {
+		t.Errorf("failed parsing cafile")
+	}
+	if ovirtVmName != "kube-node-1" {
+		t.Errorf("failed parsing ovirtVmName")
+	}
+}
