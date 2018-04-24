@@ -5,6 +5,18 @@
 - name: login
   command: "oc login -u {{ admin_user }} -p {{ admin_password }}"
 
+- name: set the config map
+  k8s_v1_config_map:
+    name: ovirt
+    namespace: "{{ namespace }}"
+    data:
+      connection: |
+        url={{ engine_url}}
+        username={{ engine_username }}
+        password={{ engine_password }}
+        insecure={{ engine_insecure | default(true) }}
+        cafile={{ engine_ca_file | default('') }}
+
 - name: create the security context
   k8s_v1_service_account:
     name: ovirt-flexvolume-driver
@@ -44,11 +56,19 @@
         - name: plugindir
           mountPath: /usr/libexec/kubernetes/kubelet-plugins/volume/exec/
           readOnly: false
+        - name: config-volume
+          mountPath: /opt/ovirt-flexvolume-driver
       terminationGracePeriodSeconds: 30
     volumes:
       - name: plugindir
         hostPath:
           path: /usr/libexec/kubernetes/kubelet-plugins/volume/exec/
+      - name: config-volume
+        configMap:
+          name: ovirt
+          items:
+            - key: connection
+              path: ovirt-flexvolume-driver.conf
 
 # provisioner installation
 - name: Cluster role
@@ -100,18 +120,6 @@
     subjects:
       - kind: ServiceAccount
         name: ovirt-volume-provisioner
-
-- name: set the config map
-  k8s_v1_config_map:
-    name: ovirt
-    namespace: "{{ namespace }}"
-    data:
-      connection: |
-        url={{ engine_url}}
-        username={{ engine_username }}
-        password={{ engine_password }}
-        insecure={{ engine_insecure | default(true) }}
-        cafile={{ engine_ca_file | default('') }}
 
 - name: create the security context
   k8s_v1_service_account:

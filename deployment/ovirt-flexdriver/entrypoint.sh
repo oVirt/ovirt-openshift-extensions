@@ -12,5 +12,8 @@ dir=/usr/libexec/kubernetes/kubelet-plugins/volume/exec/
 ls -la $dir # debug info
 rpm -ivh /root/ovirt-flexvolume-driver*.rpm --force
 
+# copy the conf file into the target dir
+cp -v /opt/ovirt-flexvolume-driver/ovirt-flexvolume-driver.conf $dir/ovirt~ovirt-flexvolume-driver/
+
 # Now that we have it we can just sleep
 while true;do sleep 1d;done
