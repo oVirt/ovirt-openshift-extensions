@@ -14,7 +14,6 @@ PROVISIONER_BINARY_NAME=ovirt-provisioner
 FLEX_CONTAINER_NAME=ovirt-flexvolume-driver
 PROVISIONER_CONTAINER_NAME=ovirt-volume-provisioner
 
-IMAGE=rgolangh/ovirt-provisioner
 REGISTRY=rgolangh
 VERSION?=$(shell git describe --tags --always|cut -d "-" -f1)
 RELEASE?=$(shell git describe --tags --always|cut -d "-" -f2- | sed 's/-/_/')
@@ -47,21 +46,22 @@ container: \
 container-flexdriver:
 	# place the rpm flat under the repo otherwise dockerignore will mask its directory. TODO make it more flexible
 	docker build \
-	 -t $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION) -t $(REGISTRY)/$(FLEX_CONTAINER_NAME):latest \
-	  . \
-	  -f deployment/ovirt-flexdriver/container/Dockerfile
+         -t $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION)$(if $(RELEASE),_$(RELEASE)) \
+         -t $(REGISTRY)/$(FLEX_CONTAINER_NAME):latest \
+         . \
+         -f deployment/ovirt-flexdriver/container/Dockerfile
 
 container-provisioner:
 	docker build \
-	    -t $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION) \
-	    -t $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):latest \
-	     . \
-	     -f deployment/ovirt-provisioner/container/Dockerfile
+        -t $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION)$(if $(RELEASE),_$(RELEASE)) \
+        -t $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):latest \
+        . \
+        -f deployment/ovirt-provisioner/container/Dockerfile
 
 container-push:
 	@docker login -u rgolangh -p ${DOCKER_BUILDER_API_KEY}
-	docker push $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION)
-	docker push $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION)
+	docker push $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION)$(if $(RELEASE),_$(RELEASE))
+	docker push $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION)$(if $(RELEASE),_$(RELEASE))
 	# push latest
 	docker push $(REGISTRY)/$(FLEX_CONTAINER_NAME):latest
 	docker push $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):latest
