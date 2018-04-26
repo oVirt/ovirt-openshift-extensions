@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/spf13/viper"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -56,6 +57,23 @@ type Token struct {
 	ExpireIn       int64  `json:"exp,string"`
 	Type           string `json:"token_type"`
 	ExpirationTime time.Time
+}
+
+// newDriver creates a new ovirt driver instance from a config reader, to make it
+// easy to pass various config items, either file, string, reading from remote etc.
+// the underlying config format supports properties files (like java)
+func NewOvirt(configReader io.Reader) (*Ovirt, error) {
+	viper.SetConfigType("props")
+	o := Ovirt{}
+	if err := viper.ReadConfig(configReader); err != nil {
+		return nil, err
+	}
+	o.Connection.Url = viper.GetString("url")
+	o.Connection.Username = viper.GetString("username")
+	o.Connection.Password = viper.GetString("password")
+	o.Connection.Insecure = viper.GetBool("insecure")
+	o.Connection.CAFile = viper.GetString("cafile")
+	return &o, nil
 }
 
 func (ovirt *Ovirt) Authenticate() error {

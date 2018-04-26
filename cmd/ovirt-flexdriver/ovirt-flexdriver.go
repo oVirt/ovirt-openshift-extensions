@@ -25,7 +25,6 @@ import (
 	"github.com/op/go-logging"
 	"github.com/rgolangh/ovirt-flexdriver/internal"
 	"github.com/spf13/viper"
-	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -150,34 +149,21 @@ func newOvirt() (*internal.Ovirt, error) {
 	if err != nil {
 		return nil, errors.New(err.Error() + " file is " + driverConfigFile)
 	}
-	driver, err := newDriver(bytes.NewReader(file))
+	driver, err := internal.NewOvirt(bytes.NewReader(file))
 	if err != nil {
 		return nil, err
 	}
+
+	//additional settings to read
+	viper.SetConfigType("props")
+	viper.ReadConfig(bytes.NewReader(file))
+	ovirtVmName = viper.GetString("ovirtVmName")
 
 	err = driver.Authenticate()
 	if err != nil {
 		return nil, err
 	}
 	return driver, nil
-}
-
-// newDriver creates a new ovirt driver instance from a config reader, to make it
-// easy to pass various config items, either file, string, reading from remote etc.
-// the underlying config format supports properties files (like java)
-func newDriver(configReader io.Reader) (*internal.Ovirt, error) {
-	viper.SetConfigType("props")
-	driver := internal.Ovirt{}
-	if err := viper.ReadConfig(configReader); err != nil {
-		return nil, err
-	}
-	driver.Connection.Url = viper.GetString("url")
-	driver.Connection.Username = viper.GetString("username")
-	driver.Connection.Password = viper.GetString("password")
-	driver.Connection.Insecure = viper.GetBool("insecure")
-	driver.Connection.CAFile = viper.GetString("cafile")
-	ovirtVmName = viper.GetString("ovirtVmName")
-	return &driver, nil
 }
 
 // Attach will attach the volume to the nodeName.
