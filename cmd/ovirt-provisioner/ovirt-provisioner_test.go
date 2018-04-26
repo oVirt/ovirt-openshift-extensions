@@ -1,3 +1,5 @@
+// +build integ
+
 /*
 Copyright 2017 oVirt-maintainers
 
