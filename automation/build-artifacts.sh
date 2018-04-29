@@ -14,3 +14,4 @@ find $EXPORTED_ARTIFACTS -name "*.rpm" | xargs -I '{}' cp -v '{}' .
 
 make container
 make container-push
+make apb_build apb_docker_push

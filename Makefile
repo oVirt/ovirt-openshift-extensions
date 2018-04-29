@@ -66,6 +66,12 @@ container-push:
 	docker push $(REGISTRY)/$(FLEX_CONTAINER_NAME):latest
 	docker push $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):latest
 
+apb_build:
+	$(MAKE) -C deployment/ovirt-flexvolume-driver-apb/ apb_build
+
+apb_docker_push:
+	$(MAKE) -C deployment/ovirt-flexvolume-driver-apb/ docker_push
+
 build: \
 	build-flex \
 	build-provisioner
