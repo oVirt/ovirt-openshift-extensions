@@ -18,31 +18,40 @@ package internal
 
 import (
 	"code.cloudfoundry.org/bytefmt"
-	"errors"
 	"fmt"
-	"gopkg.in/gcfg.v1"
 	"net/http"
 	"net/http/httptest"
-	"os"
+	"strings"
 	"testing"
 	"time"
 )
 
-var driverConfig string
-
-func init() {
-	driverConfig = os.Getenv("OVIRT_FLEXDRIVER_CONF")
-}
-
 func TestLoadConf(t *testing.T) {
-	api := Ovirt{}
-	err := gcfg.ReadFileInto(&api, driverConfig)
-	if err != nil {
-		t.Fatal(err)
+	conf := `
+url=123
+username=user@abcde123213
+password=123444
+insecure=true
+cafile=
+`
+	ovirt, e := NewOvirt(strings.NewReader(conf))
+	if e != nil {
+		t.Error(e)
 	}
-	// sanity check the config is loaded
-	if api.Connection.Url == "" {
-		t.Fatal("empty connection url")
+	if ovirt.Connection.Url != "123" {
+		t.Errorf("failed parsing url")
+	}
+	if ovirt.Connection.Username != "user@abcde123213" {
+		t.Errorf("failed parsing username")
+	}
+	if ovirt.Connection.Password != "123444" {
+		t.Errorf("failed parsing password")
+	}
+	if ovirt.Connection.Insecure != true {
+		t.Errorf("failed parsing insecure")
+	}
+	if ovirt.Connection.CAFile != "" {
+		t.Errorf("failed parsing cafile")
 	}
 }
 
@@ -56,8 +65,12 @@ func TestAuthenticateWithUnexpiredToken(t *testing.T) {
 }
 
 func TestFetchToken(t *testing.T) {
+	// ignore loading the token
+	tokenStore = "/dev/null"
+	// expire in 1 month from now
+	expiredIn := time.Now().AddDate(0, 1, 0).UnixNano()
 	// create test server with handler
-	api := prepareApi(tokenHandlerFunc(200))
+	api := prepareApi(tokenHandlerFunc(expiredIn))
 
 	err := api.Authenticate()
 
@@ -65,38 +78,13 @@ func TestFetchToken(t *testing.T) {
 		t.Fatalf("failed authentication %s", err)
 	}
 
-	if api.token.ExpireIn != 200 {
-		t.Fatalf("token expiration expected: 200, got: %v", api.token.ExpireIn)
+	if api.token.ExpireIn != expiredIn {
+		t.Fatalf("token expiration expected: %v, got: %v", expiredIn, api.token.ExpireIn)
 	}
 
 	if api.token.ExpirationTime.Before(time.Now()) {
-		t.Fatalf("token should expire only within 200 sec, but expires on %s", api.token.ExpirationTime)
+		t.Fatalf("token should expire in the future, but expired on on %v ", api.token.ExpirationTime)
 	}
-}
-
-func TestAttach(t *testing.T) {
-	expectedId := 1234
-	api := prepareApi(func(w http.ResponseWriter, request *http.Request) {
-		fmt.Fprintf(w, `{ "id": "%v", "bootable": "true", "pass_discard": "true", "interface": "ide", "active":"true"}`, expectedId)
-	})
-
-	response, e := api.Attach(
-		AttachRequest{"data", "vm_disk_1", "ext4", "rw", "", "", "", ""},
-		"host1")
-
-	if e != nil {
-		t.Fatal(e)
-	}
-
-	if response.Status != Success {
-		t.Error(errors.New("response failure"))
-	}
-
-	if response.Device != "/dev/disk/by-id/virtio"+string(expectedId) {
-		t.Error(errors.New("different device paths"))
-	}
-
-	t.Log(response)
 }
 
 func prepareApi(handler http.HandlerFunc) Ovirt {
@@ -107,7 +95,7 @@ func prepareApi(handler http.HandlerFunc) Ovirt {
 	return api
 }
 
-func tokenHandlerFunc(expireIn int) http.HandlerFunc {
+func tokenHandlerFunc(expireIn int64) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `{ "access_token": "1234567890", "exp": "%v", "token_type": "Bearer"}`, expireIn)
 	}
