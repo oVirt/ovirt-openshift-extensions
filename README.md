@@ -41,22 +41,33 @@ Pre-requisite:
 
 ## Deploy Manually
 
-1. push the apb image like in the service-catalog deployment
+1. make sure `oc` command is configured and has access to your cluster, e.g run `oc status`
 
-2. use docker directly to invoke the deployment
-   - replace 172.30.1.1:5000/openshift/ovirt-flexvolume-driver-apb with your image url
-   - fill in the details in `extra-vars`
-   
+2. run this command, but change the 'extra-vars' section to match your ovirt-engine details
+
    ```
    docker run \
      --rm \
      --net=host \
      -v $HOME/.kube:/opt/apb/.kube:z \
-     -u $UID 172.30.1.1:5000/openshift/ovirt-flexvolume-driver-apb \
+     -u $UID docker.io/rgolangh/ovirt-flexvolume-driver-apb provision \
      provision \
      --extra-vars '{"admin_password":"developer","admin_user":"developer","cluster":"openshift","namespace":"default","engine_password":"123","engine_url":"https://your_engine_hostname:28443/ovirt-engine/api","engine_username":"admin@internal"}'
    ```
 
+3. If its the first time deploying the image then it should take few moments to download it.
+
+4. Upon completion you have the components running:
+
+   ```
+   oc get ds   -n default  ovirt-flexvolume-driver 
+   name                      desired   current   ready     up-to-date   available   node selector   age
+   ovirt-flexvolume-driver   1         1         1         1            1           <none>          15m
+
+   oc get deployment  -n default ovirt-volume-provisioner 
+   NAME                       DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+   ovirt-volume-provisioner   1         1         1            1           17m
+   ```
 # Pre-requisite
   - Running ovirt 4.1 instance (support for disk_attachments API)
   - k8s 1.9 (possibly working on 1.8, untested)
