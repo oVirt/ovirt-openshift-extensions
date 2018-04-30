@@ -12,10 +12,10 @@ alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a>
 
 The project creates 3 containers:
 1. **`ovirt-flexvolume-driver`**
-   A container that exist to expose the binary, imediatly sleeps
+   A container that exist to install the binary on the host, immediately sleeps
 forever. Used in a daemonset deployment - see the apb.
 2. **`ovirt-volume-provisioner`**
-   A container for the provisioer controller. Used in a deployment - see
+   A container for the provisioner controller. Used in a deployment - see
 apb
 3. **`ovirt-flexvolume-driver-apb`**
   An apb container that will deploy both the driver and the provisioner.
@@ -33,8 +33,7 @@ Pre-requisite:
 
 1. push the apb image to your cluster repo
    ```
-   cd deployment/ovirt-flexvolume-driver
-   make apb_push DOCKERHOST=your_registry
+   make apb_build apb_push
    ```
 2. go to the service catalog UI and deploy the ovirt-flexvolume-driver-apb. Here is a demo doing that:
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=frcehKUk_g4" target="_blank"><img src="http://img.youtube.com/vi/frcehKUk_g4/0.jpg" alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a>
@@ -43,7 +42,7 @@ Pre-requisite:
 
 1. make sure `oc` command is configured and has access to your cluster, e.g run `oc status`
 
-2. run this command, but change the 'extra-vars' section to match your ovirt-engine details
+2. run this command, but change the `--extra-vars` section to match your ovirt-engine details
 
    ```
    docker run \
@@ -55,24 +54,24 @@ Pre-requisite:
      --extra-vars '{"admin_password":"developer","admin_user":"developer","cluster":"openshift","namespace":"default","engine_password":"123","engine_url":"https://your_engine_hostname:28443/ovirt-engine/api","engine_username":"admin@internal"}'
    ```
 
-3. If its the first time deploying the image then it should take few moments to download it.
+   - If its the first time deploying the image then it should take few moments to download it.
 
-4. Upon completion you have the components running:
+Upon completion you have the components running:
 
    ```
-   oc get ds   -n default  ovirt-flexvolume-driver 
+   oc get ds -n default ovirt-flexvolume-driver 
    name                      desired   current   ready     up-to-date   available   node selector   age
    ovirt-flexvolume-driver   1         1         1         1            1           <none>          15m
 
-   oc get deployment  -n default ovirt-volume-provisioner 
+   oc get deployment -n default ovirt-volume-provisioner 
    NAME                       DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
    ovirt-volume-provisioner   1         1         1            1           17m
    ```
-# Pre-requisite
+
+# Project pre-requisite
   - Running ovirt 4.1 instance (support for disk_attachments API)
   - k8s 1.9 (possibly working on 1.8, untested)
   - Every k8s minion name should match its VM name
-
 
 # Make targets
 There are few make targets for building the artifacts:
@@ -80,6 +79,8 @@ There are few make targets for building the artifacts:
 - `make build`     - build the flexvolume driver and provisioner binaries
 - `make rpm`       - builds and rpm from the previously created binaries
 - `make container` - creates the containers
+- `make apb_*`     - {build, push, docker_push} for the apb container life cycle
+
 
 # Sources
 - [flexvolume plugin page on openshift](https://docs.openshift.org/latest/install_config/persistent_storage/persistent_storage_flex_volume.html)
