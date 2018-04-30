@@ -69,6 +69,9 @@ container-push:
 apb_build:
 	$(MAKE) -C deployment/ovirt-flexvolume-driver-apb/ apb_build
 
+apb_push:
+	$(MAKE) -C deployment/ovirt-flexvolume-driver-apb/ apb_push
+
 apb_docker_push:
 	$(MAKE) -C deployment/ovirt-flexvolume-driver-apb/ docker_push
 
