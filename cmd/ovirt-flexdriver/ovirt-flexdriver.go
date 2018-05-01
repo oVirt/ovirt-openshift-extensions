@@ -309,8 +309,7 @@ func Detach(volumeName string, nodeName string) (internal.Response, error) {
 // status expected to be true.
 // deviceName - the full device name as the output of the #attach call i.e /dev/disk/by-id/virtio-abcdef123
 // see 	#responseFromDiskAttachment
-// jsonOpts - json string in the form of
-func WaitForAttach(deviceName string, jsonOpts string) (internal.Response, error) {
+func WaitForAttach(deviceName string, _ string) (internal.Response, error) {
 	ovirt, err := newOvirt()
 	if err != nil {
 		return internal.FailedResponseFromError(err), err
@@ -536,10 +535,10 @@ func GetVolumeName(jsonOpts string) (internal.Response, error) {
 	return responseFromDiskAttachment(attachment.Id, attachment.Interface), err
 }
 
-func Delete(s string) (internal.Response, error) {
+func Delete(_ string) (internal.Response, error) {
 	return internal.SuccessfulResponse, nil
 }
-func Provision(golis string) (internal.Response, error) {
+func Provision(_ string) (internal.Response, error) {
 	return internal.SuccessfulResponse, nil
 }
 
