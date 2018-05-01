@@ -1,6 +1,6 @@
 # ovirt-flexdriver
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/rgolangh/ovirt-flexdriver)](https://goreportcard.com/report/github.com/rgolangh/ovirt-flexdriver)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ovirt/ovirt-openshift-extensions)](https://goreportcard.com/report/github.com/ovirt/ovirt-openshift-extensions)
 
 Implementation of flexvolume driver for [oVirt](https://ovirt.org) and a dynamic volume provisioner
 
