@@ -37,7 +37,7 @@ func TestIntegration(t *testing.T) {
 
 			t.Logf("testSpec args: %s \n", spec.args)
 
-			r, e := App(spec.args)
+			r, e := app(spec.args)
 
 			if e != nil && spec.exitCode == 0 {
 				t.Errorf("expected a successful spec with %s but got %s \n", spec.args, e.Error())

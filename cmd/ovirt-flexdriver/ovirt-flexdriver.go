@@ -48,7 +48,7 @@ var driverConfigFile string
 var ovirtVmName string
 
 func main() {
-	s, e := App(os.Args[1:])
+	s, e := app(os.Args[1:])
 	log, err := logging.NewSyslogBackend("")
 	if err == nil && log != nil {
 		// syslog may not be available, i.e in busybox
@@ -62,7 +62,7 @@ func main() {
 	fmt.Fprint(os.Stdout, s)
 }
 
-func App(args []string) (string, error) {
+func app(args []string) (string, error) {
 
 	if len(args) == 0 {
 		return "", errors.New(usage)
@@ -193,7 +193,7 @@ func Attach(jsonOpts string, nodeName string) (internal.Response, error) {
 	}
 	// vm exist?
 	if vm.Id == "" {
-		e := errors.New(fmt.Sprintf("VM %s doesn't exist", nodeName))
+		e := fmt.Errorf("VM %s doesn't exist", nodeName)
 		return internal.FailedResponseFromError(e), e
 	}
 
@@ -241,7 +241,7 @@ func IsAttached(jsonOpts string, nodeName string) (internal.Response, error) {
 	}
 	// vm exist?
 	if vm.Id == "" {
-		e := errors.New(fmt.Sprintf("VM %s doesn't exist", nodeName))
+		e := fmt.Errorf("VM %s doesn't exist", nodeName)
 		return internal.FailedResponseFromError(e), e
 	}
 
@@ -267,11 +267,11 @@ func IsAttached(jsonOpts string, nodeName string) (internal.Response, error) {
 // nodeName - the hostname with the volume attached. Needs to be converted to ovirt's VM. See #internal.GetOvirtNodeName
 func Detach(volumeName string, nodeName string) (internal.Response, error) {
 	if nodeName == "" {
-		e := errors.New(fmt.Sprintf("Invalid node name '%s'", nodeName))
+		e := fmt.Errorf("Invalid node name '%s'", nodeName)
 		return internal.FailedResponseFromError(e), e
 	}
 	if volumeName == "" {
-		e := errors.New(fmt.Sprintf("Invalid volume name '%s'", volumeName))
+		e := fmt.Errorf("Invalid volume name '%s'", volumeName)
 		return internal.FailedResponseFromError(e), e
 	}
 
@@ -294,7 +294,7 @@ func Detach(volumeName string, nodeName string) (internal.Response, error) {
 
 	if len(diskResult.Disks) == 0 {
 		//TODO is this an error or ok state for detach?
-		err = errors.New(fmt.Sprintf("Disk by name %s does not exist", ovirtDiskName))
+		err = fmt.Errorf("Disk by name %s does not exist", ovirtDiskName)
 		return internal.FailedResponseFromError(err), err
 	} else {
 		err := ovirt.DetachDiskFromVM(vm.Id, diskResult.Disks[0].Id)
@@ -336,7 +336,7 @@ func WaitForAttach(deviceName string, jsonOpts string) (internal.Response, error
 		}
 	}
 	if attachment.Id == "" {
-		err = errors.New(fmt.Sprintf("Disk with id '%s' was not found", id))
+		err = fmt.Errorf("Disk with id '%s' was not found", id)
 		return internal.FailedResponseFromError(err), err
 	}
 
@@ -512,7 +512,7 @@ func GetVolumeName(jsonOpts string) (internal.Response, error) {
 	}
 	// vm exist?
 	if vm.Id == "" {
-		e := errors.New(fmt.Sprintf("VM %s doesn't exist", ovirtVmName))
+		e := fmt.Errorf("VM %s doesn't exist", ovirtVmName)
 		return internal.FailedResponseFromError(e), e
 	}
 	diskResult, err := ovirt.GetDiskByName(fromk8sNameToOvirt(jsonArgs.VolumeName))
@@ -529,7 +529,7 @@ func GetVolumeName(jsonOpts string) (internal.Response, error) {
 		// fetch the disk attachment on the VM
 		attachment, err := ovirt.GetDiskAttachment(vm.Id, diskResult.Disks[0].Id)
 		if err != nil {
-			err = errors.New(fmt.Sprintf("The volume %s is not attched to the node %s", jsonArgs.VolumeName, ovirtVmName))
+			err = fmt.Errorf("The volume %s is not attched to the node %s", jsonArgs.VolumeName, ovirtVmName)
 			return internal.FailedResponseFromError(err), err
 		}
 		return responseFromDiskAttachment(attachment.Id, attachment.Interface), err
@@ -539,7 +539,7 @@ func GetVolumeName(jsonOpts string) (internal.Response, error) {
 func Delete(s string) (internal.Response, error) {
 	return internal.SuccessfulResponse, nil
 }
-func Provision(s string) (internal.Response, error) {
+func Provision(golis string) (internal.Response, error) {
 	return internal.SuccessfulResponse, nil
 }
 
