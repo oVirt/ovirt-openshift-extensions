@@ -296,13 +296,13 @@ func Detach(volumeName string, nodeName string) (internal.Response, error) {
 		//TODO is this an error or ok state for detach?
 		err = fmt.Errorf("Disk by name %s does not exist", ovirtDiskName)
 		return internal.FailedResponseFromError(err), err
-	} else {
-		err := ovirt.DetachDiskFromVM(vm.Id, diskResult.Disks[0].Id)
-		if err != nil {
-			return internal.FailedResponseFromError(err), err
-		}
-		return internal.SuccessfulResponse, nil
 	}
+
+	err = ovirt.DetachDiskFromVM(vm.Id, diskResult.Disks[0].Id)
+	if err != nil {
+		return internal.FailedResponseFromError(err), err
+	}
+	return internal.SuccessfulResponse, nil
 }
 
 // WaitForAttach wait for a device disk to be attached to the VM. The disk attachment
@@ -525,15 +525,15 @@ func GetVolumeName(jsonOpts string) (internal.Response, error) {
 		//return internal.FailedResponseFromError(noDisk), noDisk
 		// maybe just return the name of the disk as is to indicate it is free?
 		return internal.NotSupportedResponse, nil
-	} else {
-		// fetch the disk attachment on the VM
-		attachment, err := ovirt.GetDiskAttachment(vm.Id, diskResult.Disks[0].Id)
-		if err != nil {
-			err = fmt.Errorf("The volume %s is not attched to the node %s", jsonArgs.VolumeName, ovirtVmName)
-			return internal.FailedResponseFromError(err), err
-		}
-		return responseFromDiskAttachment(attachment.Id, attachment.Interface), err
 	}
+
+	// fetch the disk attachment on the VM
+	attachment, err := ovirt.GetDiskAttachment(vm.Id, diskResult.Disks[0].Id)
+	if err != nil {
+		err = fmt.Errorf("the volume %s is not attached to the node %s", jsonArgs.VolumeName, ovirtVmName)
+		return internal.FailedResponseFromError(err), err
+	}
+	return responseFromDiskAttachment(attachment.Id, attachment.Interface), err
 }
 
 func Delete(s string) (internal.Response, error) {
