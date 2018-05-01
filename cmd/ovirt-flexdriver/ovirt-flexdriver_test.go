@@ -1,8 +1,6 @@
 package main
 
 import (
-	"os/exec"
-	"strings"
 	"testing"
 )
 
@@ -31,26 +29,4 @@ func TestExtractDeviceIdForUnknown(t *testing.T) {
 	if expected != id {
 		t.Errorf("expected %s got %s", expected, id)
 	}
-}
-
-func TestGetDeviceFileSystem(t *testing.T) {
-	input, err := getDeviceForTest()
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-	filesystem, e := getDeviceInfo(input)
-	t.Logf("fs %s error %v", filesystem, e)
-	if filesystem == "" {
-		t.Errorf("expecting some filesystem but got %s", filesystem)
-	}
-}
-func getDeviceForTest() (string, error) {
-	cmd := exec.Command("df", "-P", ".")
-	output, e := cmd.Output()
-	if e != nil {
-		return "", e
-	}
-	split := strings.Split(string(output), "\n")
-	return strings.Split(split[1], " ")[0], nil
-
 }
