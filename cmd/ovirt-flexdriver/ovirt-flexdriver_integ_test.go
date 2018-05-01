@@ -37,7 +37,7 @@ func TestIntegration(t *testing.T) {
 
 			t.Logf("testSpec args: %s \n", spec.args)
 
-			r, e := App(spec.args)
+			r, e := app(spec.args)
 
 			if e != nil && spec.exitCode == 0 {
 				t.Errorf("expected a successful spec with %s but got %s \n", spec.args, e.Error())
@@ -54,4 +54,31 @@ func TestIntegration(t *testing.T) {
 			previousResult = r
 		})
 	}
+}
+
+// if running in a mock env we must create a block device
+// using a loop device, like this:
+//		dd if=/dev/zero of=/tmp/dev0-backstore bs=1M count=1
+//		mknod /dev/fake-dev0 b 7 200
+//		losetup /dev/fake-dev0 /tmp/dev0-backstore
+func TestGetDeviceFileSystem(t *testing.T) {
+	input, err := getDeviceForTest()
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	filesystem, e := getDeviceInfo(input)
+	t.Logf("fs %s error %v", filesystem, e)
+	if filesystem == "" {
+		t.Errorf("expecting some filesystem but got %s", filesystem)
+	}
+}
+func getDeviceForTest() (string, error) {
+	cmd := exec.Command("df", "-P", ".")
+	output, e := cmd.Output()
+	if e != nil {
+		return "", e
+	}
+	split := strings.Split(string(output), "\n")
+	return strings.Split(split[1], " ")[0], nil
+
 }
