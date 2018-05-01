@@ -23,7 +23,7 @@ Storage provisioner plugin for k8s using oVirt
 
 %global vendor ovirt
 %global kube_plugin_dir   /usr/libexec/kubernetes/kubelet-plugins/volume/exec/%{vendor}~%{name}-flexvolume-driver
-%global repo github.com/rgolangh
+%global repo github.com/ovirt/ovirt-openshift-entensions
 %global golang_version 1.9.1
 %global debug_package %{nil}
 

@@ -17,8 +17,8 @@ limitations under the License.
 package main
 
 import (
-	"github.com/rgolangh/ovirt-flexdriver/internal"
 	"encoding/json"
+	"github.com/ovirt/ovirt-openshift-extensions/internal"
 )
 
 var attachJson = `{

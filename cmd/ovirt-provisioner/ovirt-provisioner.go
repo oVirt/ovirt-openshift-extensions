@@ -20,7 +20,7 @@ import (
 	"flag"
 	"github.com/golang/glog"
 	"github.com/kubernetes-incubator/external-storage/lib/controller"
-	"github.com/rgolangh/ovirt-flexdriver/internal"
+	"github.com/ovirt/ovirt-openshift-extensions/internal"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"

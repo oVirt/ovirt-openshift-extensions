@@ -23,7 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/op/go-logging"
-	"github.com/rgolangh/ovirt-flexdriver/internal"
+	"github.com/ovirt/ovirt-openshift-extensions/internal"
 	"github.com/spf13/viper"
 	"io/ioutil"
 	"os"
