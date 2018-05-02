@@ -1,5 +1,6 @@
 # ovirt-flexdriver
 
+[![Build Status](http://jenkins.ovirt.org/buildStatus/icon?job=oVirt_ovirt-openshift-extensions_standard-on-ghpush)](http://jenkins.ovirt.org/job/oVirt_ovirt-openshift-extensions_standard-on-ghpush/)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ovirt/ovirt-openshift-extensions)](https://goreportcard.com/report/github.com/ovirt/ovirt-openshift-extensions)
 
 Implementation of flexvolume driver for [oVirt](https://ovirt.org) and a dynamic volume provisioner
