@@ -23,7 +23,8 @@ Storage provisioner plugin for k8s using oVirt
 
 %global vendor ovirt
 %global kube_plugin_dir   /usr/libexec/kubernetes/kubelet-plugins/volume/exec/%{vendor}~%{name}-flexvolume-driver
-%global repo github.com/ovirt/ovirt-openshift-entensions
+%global org github.com/ovirt
+%global repo ovirt-openshift-extensions
 %global golang_version 1.9.1
 %global debug_package %{nil}
 
@@ -38,11 +39,11 @@ set -x
 pwd
 
 %define tmp_go_path build
-mkdir -p ./%{tmp_go_path}/src/%{repo}                    
-ln -s $(pwd) ./build/src/%{repo}/%{name}-flexdriver        
+mkdir -p ./%{tmp_go_path}/src/%{org}
+ln -s $(pwd) ./build/src/%{org}/%{repo}
 
 export GOPATH=$(pwd)/%{tmp_go_path}
-cd %{tmp_go_path}/src/%{repo}/%{name}-flexdriver
+cd %{tmp_go_path}/src/%{org}/%{repo}
 make build
 
 %install

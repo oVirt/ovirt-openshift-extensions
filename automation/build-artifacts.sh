@@ -1,7 +1,10 @@
 #!/bin/bash -ex
 
 automation_dir=$(dirname $(readlink -f $0))
+
+set +e
 source ${automation_dir}/defaults.sh
+set -e
 
 mkdir -p /tmp/build/src/${ORG}
 ln -s $HOME /tmp/build/src/${ORG}/
