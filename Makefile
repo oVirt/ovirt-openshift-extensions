@@ -106,4 +106,12 @@ rpm:
 		--define "_version ${VERSION}" \
 		--define "_release ${RELEASE}"
 
+srpm:
+	$(MAKE) tarball
+	rpmbuild -ts $(TARBALL) \
+		--define "debug_package %{nil}" \
+		--define "_rpmdir ${ARTIFACT_DIR}" \
+		--define "_version ${VERSION}" \
+		--define "_release ${RELEASE}"
+
 .PHONY: build-flex build-provisioner container container-flexdriver container-provisioner container-provisioner-binary container-provisioner-ansible container-push
