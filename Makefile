@@ -94,8 +94,12 @@ run: \
 
 deps:
 	dep ensure
-rpm:
+
+tarball:
 	/bin/git archive --format=tar.gz HEAD > $(TARBALL)
+
+rpm:
+	$(MAKE) tarball
 	rpmbuild -tb $(TARBALL) \
 		--define "debug_package %{nil}" \
 		--define "_rpmdir ${ARTIFACT_DIR}" \
