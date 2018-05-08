@@ -23,7 +23,7 @@ BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 COMMON_ENV=CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 COMMON_GO_BUILD_FLAGS=-a -ldflags '-extldflags "-static"'
 
-TARBALL=$(FLEX_DRIVER_BINARY_NAME)-$(VERSION)$(if $(RELEASE),_$(RELEASE)).tar.gz
+TARBALL=ovirt-openshift-extensions-$(VERSION)$(if $(RELEASE),_$(RELEASE)).tar.gz
 
 all: clean deps build test container container-push
 
