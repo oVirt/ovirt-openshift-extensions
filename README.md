@@ -50,7 +50,7 @@ Pre-requisite:
      --rm \
      --net=host \
      -v $HOME/.kube:/opt/apb/.kube:z \
-     -u $UID docker.io/rgolangh/ovirt-flexvolume-driver-apb provision \
+     -u $UID docker.io/rgolangh/ovirt-flexvolume-driver-apb \
      provision \
      --extra-vars '{"admin_password":"developer","admin_user":"developer","cluster":"openshift","namespace":"default","engine_password":"123","engine_url":"https://your_engine_hostname:28443/ovirt-engine/api","engine_username":"admin@internal"}'
    ```
