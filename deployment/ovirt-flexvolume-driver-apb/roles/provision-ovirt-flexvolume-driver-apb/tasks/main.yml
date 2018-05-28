@@ -92,14 +92,11 @@
 - name: Cluster role binding
   k8s_v1beta1_cluster_role_binding:
     name: ovirt-volume-provisioner
-    # namespace: "{{ namespace }}"
     subjects:
       - kind: ServiceAccount
-        name: ovirt-provisioner
-        namespace: kube-system
+        name: ovirt-volume-provisioner
     role_ref_kind: ClusterRole
-    role_ref_name: ovirt-provisioner
-    api_group: rbac.authorization.k8s.io
+    role_ref_name: ovirt-volume-provisioner
 
 - name: Role
   openshift_v1_role:
