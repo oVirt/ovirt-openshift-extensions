@@ -1,0 +1,57 @@
+---
+- name: Openshift Origin On oVirt
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars_files:
+    - vars.yaml
+
+  pre_tasks:
+    - name: Log in to oVirt
+      ovirt_auth:
+        url: "{{ engine_url }}"
+        username: "{{ engine_user }}"
+        password: "{{ engine_password }}"
+        ca_file: "{{ engine_cafile | default(omit) }}"
+        insecure: "{{ engine_insecure | default(true) }}"
+      tags:
+        - always
+    - name: check template existence, to spare the download and upload of the qcow image
+      ovirt_disks:
+        auth: "{{ ovirt_auth }}"
+        name: "{{ template_name }}"
+        storage_domain: "{{ rhv_data_storage }}"
+        state: present
+      register: template_disk_exists
+      ignore_errors: true
+      tags: always
+
+
+  roles:
+    - { role: oVirt.image-template, when: template_disk_exists == True }
+    - oVirt.vm-infra
+
+  tasks:
+    - ovirt_nics_facts:
+        auth: "{{ ovirt_auth }}"
+        vm: master0.example.com
+        name: nic*
+    - debug:
+        msg: '{{ ovirt_nics[0].reported_devices[0].ips | json_query("[?version==`v4`]") | map(attribute="address") | list }}'
+
+    - shell: 'echo master0.example.com {{ item }} >> /etc/hosts'
+      with_items: '{{ ovirt_nics[0].reported_devices[0].ips | json_query("[?version==`v4`]") | map(attribute="address") | list }}'
+
+
+  post_tasks:
+    - name: Logout from oVirt
+      ovirt_auth:
+        state: absent
+        ovirt_auth: "{{ ovirt_auth }}"
+      tags:
+        - always
+
+- import_playbook: /usr/share/ansible/openshift-ansible/playbooks/prerequisites.yml
+- import_playbook: /usr/share/ansible/openshift-ansible/playbooks/deploy_cluster.yml
+

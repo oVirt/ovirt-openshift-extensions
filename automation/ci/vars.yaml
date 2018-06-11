@@ -1,0 +1,102 @@
+---
+###########################
+# Common
+###########################
+compatibility_version: 4.2
+
+# Data center
+data_center_name: Default
+
+##########################
+# VM infra
+##########################
+template_cluster: "{{ rhv_cluster }}"
+template_name: centos7
+template_memory: 1GiB
+template_cpu: 1
+template_disk_storage: "{{ rhv_data_storage }}"
+template_disk_size: 5GiB
+template_nics:
+  - name: nic1
+    profile_name: ovirtmgmt
+    interface: virtio
+
+##########################
+# Other top scope vars
+##########################
+debug_vm_create: true
+wait_for_ip: true
+vm_infra_wait_for_ip_retries: 10
+vm_infra_wait_for_ip_delay: 40
+
+master_vm:
+  cluster: "{{ rhv_cluster }}"
+  template: "{{ template_name }}"
+  memory: 1GiB
+  cores: 2
+  high_availability: true
+  disks:
+    - size: 5GiB
+      storage_domain: "{{ rhv_data_storage }}"
+      name: docker_disk
+      interface: virtio
+    - size: 2GiB
+      storage_domain: "{{ rhv_data_storage }}"
+      name: localvol_disk
+      interface: virtio
+    - size: 1GiB
+      storage_domain: "{{ rhv_data_storage }}"
+      name: etcd_disk
+      interface: virtio
+  state: running
+
+
+##########################
+# Cloud Init Script
+##########################
+# Use the following if RHEL 7.4 or below VMs are being created on a RHV 4.2 or above engine
+#    - sed -i 's@^# device =.*@device = /dev/virtio-ports/ovirt-guest-agent.0@' /etc/ovirt-guest-agent.conf
+#    - sed -i 's@com.redhat.rhevm.vdsm@ovirt-guest-agent.0@' /etc/udev/rules.d/55-ovirt-guest-agent.rules
+#    - 'udevadm trigger --subsystem-match="virtio-ports"'
+
+cloud_init_script_master: |
+  runcmd:
+    - mkdir -p '/var/lib/origin/openshift.local.volumes'
+    - mkdir -p '/var/lib/etcd'
+    - /usr/sbin/mkfs.xfs -L localvol /dev/vdc
+    - /usr/sbin/mkfs.xfs -L etcd /dev/vdd
+    - sleep "$(($RANDOM % 30))"
+    - sync
+    - reboot
+  mounts:
+    - [ '/dev/vdc', '/var/lib/origin/openshift.local.volumes', 'xfs', 'defaults,gquota' ]
+    - [ '/dev/vdd', '/var/lib/etcd', 'xfs', 'defaults' ]
+
+vms:
+  # Master VMs
+  - name: "master0.{{ public_hosted_zone }}"
+    profile: "{{ master_vm }}"
+    tag: openshift_master
+    cloud_init:
+      host_name: "master0.{{ public_hosted_zone }}"
+      authorized_ssh_keys: "{{ root_ssh_key }}"
+      custom_script: "{{ cloud_init_script_master }}"
+
+pre_tasks:
+  - name: Log in to oVirt
+    ovirt_auth:
+      url: "{{ engine_url }}"
+      username: "{{ engine_user }}"
+      password: "{{ engine_password }}"
+      ca_file: "{{ engine_cafile | default(omit) }}"
+      insecure: "{{ engine_insecure | default(true) }}"
+    tags:
+      - always
+post_tasks:
+  - name: Logout from oVirt
+    ovirt_auth:
+      state: absent
+      ovirt_auth: "{{ ovirt_auth }}"
+    tags:
+      - alway 
+...
