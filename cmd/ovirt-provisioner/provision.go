@@ -30,7 +30,7 @@ import (
 
 const (
 	flexvolumeVendor = "ovirt"
-	flexvolumeDriver = "ovirt-flexdriver"
+	flexvolumeDriver = "ovirt-flexvolume-driver"
 
 	// are we allowed to set this? else make up our own
 	annCreatedBy = "kubernetes.io/createdby"
