@@ -15,8 +15,8 @@ FLEX_CONTAINER_NAME=ovirt-flexvolume-driver
 PROVISIONER_CONTAINER_NAME=ovirt-volume-provisioner
 
 REGISTRY=rgolangh
-VERSION?=$(shell git describe --tags --always|cut -d "-" -f1)
-RELEASE?=$(shell git describe --tags --always|cut -d "-" -f2- | sed 's/-/_/')
+VERSION?=$(shell git describe --tags --match "v[0-9]*" --always|cut -d "-" -f1)
+RELEASE?=$(shell git describe --tags --match "v[0-9]*" --always|cut -d "-" -f2- | sed 's/-/_/')
 COMMIT=$(shell git rev-parse HEAD)
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 
