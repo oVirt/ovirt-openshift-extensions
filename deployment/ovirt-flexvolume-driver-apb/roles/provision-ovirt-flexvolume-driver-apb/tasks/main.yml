@@ -95,8 +95,9 @@
     subjects:
       - kind: ServiceAccount
         name: ovirt-volume-provisioner
+        namespace: "{{ namespace }}"
     role_ref_kind: ClusterRole
-    role_ref_name: ovirt-volume-provisioner
+    role_ref_name: cluster-admin
 
 - name: Role
   openshift_v1_role:
