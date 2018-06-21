@@ -43,16 +43,29 @@ Pre-requisite:
 
 1. make sure `oc` command is configured and has access to your cluster, e.g run `oc status`
 
-2. run this command, but change the `--extra-vars` section to match your ovirt-engine details
-
+2. use a cluster admin user to deploy, or grant permission to one
    ```
+   oc login -u system:admin
+   oc adm policy add-cluster-role-to-user cluster-admin developer
+   ```
+3. deploy
+   ```
+   OCP_USER=developer \
+   OCP_PASS=pass \
+   ENGINE_URL=https://engine-fqdn/ovirt-engine/api \
+   ENGINE_USER=admin@internal \
+   ENGINE_PASS=123
+   
    docker run \
-     --rm \
-     --net=host \
-     -v $HOME/.kube:/opt/apb/.kube:z \
-     -u $UID docker.io/rgolangh/ovirt-flexvolume-driver-apb \
-     provision \
-     --extra-vars '{"admin_password":"developer","admin_user":"developer","cluster":"openshift","namespace":"default","engine_password":"123","engine_url":"https://your_engine_hostname:28443/ovirt-engine/api","engine_username":"admin@internal"}'
+    --rm \
+    --net=host \
+    -v $HOME/.kube:/opt/apb/.kube:z \
+    -u $UID docker.io/rgolangh/ovirt-flexvolume-driver-apb \
+    provision \
+    -e admin_password=$OCP_PASS -e admin_user=$OCP_USER \
+    -e cluster=openshift -e namespace=default \
+    -e engine_password=$ENGINE_PASS -e engine_url=$ENGINE_URL \
+    -e engine_username=$ENGINE_USER
    ```
 
    - If its the first time deploying the image then it should take few moments to download it.
