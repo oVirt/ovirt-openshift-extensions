@@ -1,0 +1,11 @@
+- hosts: masters
+  remote_user: root
+  strategy: free
+
+  tasks:
+    - template: src=flex_deployer_pod.yaml dest=/root/flex_deployer_pod.yaml
+    - shell: oc login -u system:admin
+    - shell: oc adm policy add-cluster-role-to-user cluster-admin developer 
+    - shell: oc create -f /root/flex_deployer_pod.yaml
+
+    #TODO wait for deployment to be done
