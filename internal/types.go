@@ -32,9 +32,6 @@ type DiskAttachmentResult struct {
 
 type DiskFormat string
 
-const RAW DiskFormat = "raw"
-const COW DiskFormat = "cow"
-
 type Disk struct {
 	Id              string         `json:"id,omitempty"`
 	Name            string         `json:"name"`

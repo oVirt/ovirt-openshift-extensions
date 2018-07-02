@@ -317,7 +317,6 @@ func WaitForAttach(deviceName string, _ string) (internal.Response, error) {
 
 	//device name is a path on the os - get the id from it
 	id := extractDeviceId(deviceName)
-
 	vm, e := ovirt.GetVM(ovirtVmName)
 	if e != nil {
 		return internal.FailedResponseFromError(e), e
