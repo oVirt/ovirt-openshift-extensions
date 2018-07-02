@@ -26,8 +26,8 @@ template_nics:
 ##########################
 debug_vm_create: true
 wait_for_ip: true
-vm_infra_wait_for_ip_retries: 10
-vm_infra_wait_for_ip_delay: 40
+vm_infra_wait_for_ip_retries: 30
+vm_infra_wait_for_ip_delay: 20
 
 master_vm:
   cluster: "{{ rhv_cluster }}"
@@ -36,11 +36,11 @@ master_vm:
   cores: 2
   high_availability: true
   disks:
-    - size: 5GiB
+    - size: 10GiB
       storage_domain: "{{ rhv_data_storage }}"
       name: docker_disk
       interface: virtio
-    - size: 2GiB
+    - size: 4GiB
       storage_domain: "{{ rhv_data_storage }}"
       name: localvol_disk
       interface: virtio
@@ -60,12 +60,21 @@ master_vm:
 #    - 'udevadm trigger --subsystem-match="virtio-ports"'
 
 cloud_init_script_master: |
+  yum_repos:
+    centos-ovirt42:
+      baseurl: http://mirror.centos.org/centos/7/virt/x86_64/ovirt-4.2
+      enabled: true
+      gpgcheck: false
+    packages:
+    - ovirt-guest-agent
   runcmd:
+    - systemctl enable ovirt-guest-agent
+    - systemctl start ovirt-guest-agent
     - mkdir -p '/var/lib/origin/openshift.local.volumes'
     - mkdir -p '/var/lib/etcd'
     - /usr/sbin/mkfs.xfs -L localvol /dev/vdc
     - /usr/sbin/mkfs.xfs -L etcd /dev/vdd
-    - sleep "$(($RANDOM % 30))"
+    - sleep "$(($RANDOM % 60))"
     - sync
     - reboot
   mounts:
@@ -78,9 +87,16 @@ vms:
     profile: "{{ master_vm }}"
     tag: openshift_master
     cloud_init:
-      host_name: "master0.{{ public_hosted_zone }}"
+      root_password: admin
       authorized_ssh_keys: "{{ root_ssh_key }}"
+      host_name: "master0.{{ public_hosted_zone }}"
       custom_script: "{{ cloud_init_script_master }}"
+      nic_name: eth0
+      nic_on_boot: True
+      nic_boot_protocol: static
+      nic_ip_address: 192.168.202.50
+      nic_gateway: 192.168.202.1
+      nic_netmask: 255.255.254.0 
 
 pre_tasks:
   - name: Log in to oVirt
