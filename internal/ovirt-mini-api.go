@@ -195,11 +195,11 @@ func (ovirt Ovirt) GetDiskByName(diskName string) (DiskResult, error) {
 	return diskResult, err
 }
 
-func (ovirt *Ovirt) CreateUnattachedDisk(diskName string, storageDomainName string, sizeIbBytes int64, readOnly bool, format string) (Disk, error) {
+func (ovirt *Ovirt) CreateUnattachedDisk(diskName string, storageDomainName string, sizeIbBytes int64, readOnly bool, diskFormat string) (Disk, error) {
 	disk := Disk{
 		Name:            diskName,
 		ProvisionedSize: uint64(sizeIbBytes),
-		Format:          "raw",
+		Format:          DiskFormat(diskFormat),
 		StorageDomains:  StorageDomains{[]StorageDomain{{Name: storageDomainName}}},
 	}
 
