@@ -137,3 +137,32 @@ func TestByteSizeFormatting(t *testing.T) {
 	}
 	t.Log(bytes)
 }
+
+func genericRequestHandlerFunc(json string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, json)
+	}
+}
+
+func TestOvirt_CreateUnattachedDisk(t *testing.T) {
+	createResponse := `
+      {
+        "id": "0138c56c-1937-461b-98e1-a1c5c82ae082",
+        "name":"pvc-d69b93df-7e96-11e8-b3fa-001a4a160100",
+        "actual_size":"0",
+        "provisioned_size":"1073741824",
+        "status": "locked",
+        "format":"cow",
+        "storage_domains": { "storage_domain": [{"name":"iscidomain"}] }
+      }
+    `
+	api := prepareApi(genericRequestHandlerFunc(createResponse))
+	_, e := api.CreateUnattachedDisk(
+		"pvc-d69b93df-7e96-11e8-b3fa-001a4a160100",
+		"iscidomain",
+		1073741824,
+		false, "cow")
+	if e != nil {
+		t.Errorf(e.Error())
+	}
+}

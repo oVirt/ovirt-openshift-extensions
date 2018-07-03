@@ -35,8 +35,8 @@ type DiskFormat string
 type Disk struct {
 	Id              string         `json:"id,omitempty"`
 	Name            string         `json:"name"`
-	ActualSize      uint64         `json:"actual_size"`
-	ProvisionedSize uint64         `json:"provisioned_size"`
+	ActualSize      uint64         `json:"actual_size,omitempty,string"`
+	ProvisionedSize uint64         `json:"provisioned_size,string"`
 	Status          string         `json:"status,omitempty"`
 	Format          DiskFormat     `json:"format"`
 	StorageDomains  StorageDomains `json:"storage_domains"`
