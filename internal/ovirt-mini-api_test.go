@@ -161,7 +161,33 @@ func TestOvirt_CreateUnattachedDisk(t *testing.T) {
 		"pvc-d69b93df-7e96-11e8-b3fa-001a4a160100",
 		"iscidomain",
 		1073741824,
-		false, "cow")
+		false,
+		"cow")
+	if e != nil {
+		t.Errorf(e.Error())
+	}
+}
+
+func TestOvirt_Attach(t *testing.T) {
+	attachResponse := `
+      {
+        "id": "0138c56c-1937-461b-98e1-a1c5c82ae082",
+        "name":"pvc-d69b93df-7e96-11e8-b3fa-001a4a160100",
+        "actual_size":"0",
+        "provisioned_size":"1073741824",
+        "status": "locked",
+        "format":"cow",
+        "storage_domains": { "storage_domain": [{"name":"iscidomain"}] }
+      }
+    `
+	api := prepareApi(genericRequestHandlerFunc(attachResponse))
+	_, e := api.CreateDisk(
+		"pvc-d69b93df-7e96-11e8-b3fa-001a4a160100",
+		"iscidomain",
+		false,
+		"some-vm-id",
+		"disk-uuid",
+		"")
 	if e != nil {
 		t.Errorf(e.Error())
 	}
