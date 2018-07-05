@@ -17,13 +17,14 @@ PROVISIONER_CONTAINER_NAME=ovirt-volume-provisioner
 REGISTRY=rgolangh
 VERSION?=$(shell git describe --tags --always --match "v[0-9]*" | awk -F'-' '{print $$1 }')
 RELEASE?=$(shell git describe --tags --always --match "v[0-9]*" | awk -F'-' '{print $$2 "." $$3}')
+VERSION_RELEASE=$(VERSION)$(if $(RELEASE),_$(RELEASE))
 COMMIT=$(shell git rev-parse HEAD)
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 
 COMMON_ENV=CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 COMMON_GO_BUILD_FLAGS=-a -ldflags '-extldflags "-static"'
 
-TARBALL=ovirt-openshift-extensions-$(VERSION)$(if $(RELEASE),-$(RELEASE)).tar.gz
+TARBALL=ovirt-openshift-extensions-$(VERSION_RELEASE).tar.gz
 
 all: clean deps build test container container-push
 
@@ -46,23 +47,23 @@ container: \
 container-flexdriver:
 	# place the rpm flat under the repo otherwise dockerignore will mask its directory. TODO make it more flexible
 	docker build \
-         -t $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION)$(if $(RELEASE),_$(RELEASE)) \
+         -t $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION_RELEASE) \
          -t $(REGISTRY)/$(FLEX_CONTAINER_NAME):latest \
          . \
          -f deployment/ovirt-flexdriver/container/Dockerfile
 
 container-provisioner:
 	docker build \
-        -t $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION)$(if $(RELEASE),_$(RELEASE)) \
+        -t $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION_RELEASE) \
         -t $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):latest \
         . \
         -f deployment/ovirt-provisioner/container/Dockerfile
 
 container-push:
 	@docker login -u rgolangh -p ${DOCKER_BUILDER_API_KEY}
-	docker push $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION)$(if $(RELEASE),_$(RELEASE))
-	docker push $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION)$(if $(RELEASE),_$(RELEASE))
-	# push latest
+	docker push $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION_RELEASE)
+	docker push $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION_RELEASE)
+	# push lates
 	docker push $(REGISTRY)/$(FLEX_CONTAINER_NAME):latest
 	docker push $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):latest
 
