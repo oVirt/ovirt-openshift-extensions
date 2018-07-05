@@ -6,7 +6,10 @@ provisioner: external/ovirt
 parameters:
   type: io1
   iopsPerGB: "10"
-  ovirtStorageDomain: "data1"
+  ovirtStorageDomain: "data"
+  # specifing a disk format is a must and depends on
+  # the type of the domain - block-storage(iscsi/FC) or file(NFS/gluster...)
+  ovirtDiskFormat: "cow"
   fsType: ext4
 
 
