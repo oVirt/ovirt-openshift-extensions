@@ -15,15 +15,15 @@ FLEX_CONTAINER_NAME=ovirt-flexvolume-driver
 PROVISIONER_CONTAINER_NAME=ovirt-volume-provisioner
 
 REGISTRY=rgolangh
-VERSION?=$(shell git describe --tags --always --match "v[0-9]*" | awk -F'-' '{print $1 }')
-RELEASE?=$(shell git describe --tags --always --match "v[0-9]*" | awk -F'-' '{print $2 "." $3}')
+VERSION?=$(shell git describe --tags --always --match "v[0-9]*" | awk -F'-' '{print $$1 }')
+RELEASE?=$(shell git describe --tags --always --match "v[0-9]*" | awk -F'-' '{print $$2 "." $$3}')
 COMMIT=$(shell git rev-parse HEAD)
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 
 COMMON_ENV=CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 COMMON_GO_BUILD_FLAGS=-a -ldflags '-extldflags "-static"'
 
-TARBALL=ovirt-openshift-extensions-$(VERSION)$(if $(RELEASE),_$(RELEASE)).tar.gz
+TARBALL=ovirt-openshift-extensions-$(VERSION)$(if $(RELEASE),-$(RELEASE)).tar.gz
 
 all: clean deps build test container container-push
 
@@ -102,16 +102,16 @@ rpm:
 	$(MAKE) tarball
 	rpmbuild -tb $(TARBALL) \
 		--define "debug_package %{nil}" \
-		--define "_rpmdir ${ARTIFACT_DIR}" \
-		--define "_version ${VERSION}" \
-		--define "_release ${RELEASE}"
+		--define "_rpmdir $(ARTIFACT_DIR)" \
+		--define "_version $(VERSION)" \
+		--define "_release $(RELEASE)"
 
 srpm:
 	$(MAKE) tarball
 	rpmbuild -ts $(TARBALL) \
 		--define "debug_package %{nil}" \
-		--define "_rpmdir ${ARTIFACT_DIR}" \
-		--define "_version ${VERSION}" \
-		--define "_release ${RELEASE}"
+		--define "_rpmdir $(ARTIFACT_DIR)" \
+		--define "_version $(VERSION)" \
+		--define "_release $(RELEASE)"
 
 .PHONY: build-flex build-provisioner container container-flexdriver container-provisioner container-provisioner-binary container-provisioner-ansible container-push
