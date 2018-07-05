@@ -10,7 +10,7 @@ build_and_push: apb_build docker_push apb_push
 
 .PHONY: apb_build
 apb_build:
-	docker run --rm --privileged -v $(PWD):/mnt:z -v /var/run/docker.sock:/var/run/docker.sock -u 1000 docker.io/ansibleplaybookbundle/apb-tools:latest prepare
+	docker run --rm --privileged -v $(PWD):/mnt:z -v /var/run/docker.sock:/var/run/docker.sock -u ${USER} docker.io/ansibleplaybookbundle/apb-tools:latest prepare
 	docker build -t $(DOCKERHOST)/$(DOCKERORG)/$(IMAGENAME):$(TAG) .
 
 .PHONY: docker_push
