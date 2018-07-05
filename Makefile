@@ -16,7 +16,7 @@ PROVISIONER_CONTAINER_NAME=ovirt-volume-provisioner
 
 REGISTRY=rgolangh
 VERSION?=$(shell git describe --tags --always --match "v[0-9]*" | awk -F'-' '{print $$1 }')
-RELEASE?=$(shell git describe --tags --always --match "v[0-9]*" | awk -F'-' '{print $$2 "." $$3}')
+RELEASE?=$(shell git describe --tags --always --match "v[0-9]*" | awk -F'-' '$$2 != "" {print $$2 "." $$3}')
 VERSION_RELEASE=$(VERSION)$(if $(RELEASE),-$(RELEASE))
 COMMIT=$(shell git rev-parse HEAD)
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
@@ -104,8 +104,7 @@ rpm:
 	rpmbuild -tb $(TARBALL) \
 		--define "debug_package %{nil}" \
 		--define "_rpmdir $(ARTIFACT_DIR)" \
-		--define "_version $(VERSION)" \
-		--define "_release $(RELEASE)"
+		--define "_version $(VERSION)" $(if $(RELEASE), --define "_release $(RELEASE)")
 
 srpm:
 	$(MAKE) tarball
@@ -113,6 +112,6 @@ srpm:
 		--define "debug_package %{nil}" \
 		--define "_rpmdir $(ARTIFACT_DIR)" \
 		--define "_version $(VERSION)" \
-		--define "_release $(RELEASE)"
+		--define "_version $(VERSION)" $(if $(RELEASE), --define "_release $(RELEASE)")
 
 .PHONY: build-flex build-provisioner container container-flexdriver container-provisioner container-provisioner-binary container-provisioner-ansible container-push
