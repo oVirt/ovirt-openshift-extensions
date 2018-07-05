@@ -17,7 +17,7 @@ PROVISIONER_CONTAINER_NAME=ovirt-volume-provisioner
 REGISTRY=rgolangh
 VERSION?=$(shell git describe --tags --always --match "v[0-9]*" | awk -F'-' '{print $$1 }')
 RELEASE?=$(shell git describe --tags --always --match "v[0-9]*" | awk -F'-' '{print $$2 "." $$3}')
-VERSION_RELEASE=$(VERSION)$(if $(RELEASE),_$(RELEASE))
+VERSION_RELEASE=$(VERSION)$(if $(RELEASE),-$(RELEASE))
 COMMIT=$(shell git rev-parse HEAD)
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 
