@@ -1,7 +1,7 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: example-ovirt3
+  name: 1g-ovirt-cow-disk
   annotations:
     volume.beta.kubernetes.io/storage-class: ovirt
 spec:

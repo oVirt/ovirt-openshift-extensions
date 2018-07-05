@@ -8,20 +8,12 @@ spec:
   containers:
   - image: busybox
     name: testpodwithflex
-    command: ["sh", "-c", "while true; do ls -la /opt;echo yallla ;sleep 1;done"]
+    command: ["sh", "-c", "while true; do ls -la /opt; echo this file system was made availble using ovirt flexdriver; sleep 1m; done"]
     imagePullPolicy: Always
-    env:
-    - name: APP_ENV
-      value: staging
-    - name: UNICORN_WORKER_PROCESSES
-      value: "2"
     volumeMounts:
     - name: pv0002
       mountPath: "/opt"
-    ports:
-    - containerPort: 80
   volumes:
   - name: pv0002
     persistentVolumeClaim:
-      claimName: example-ovirt3
-        
+      claimName: 1g-ovirt-cow-disk
