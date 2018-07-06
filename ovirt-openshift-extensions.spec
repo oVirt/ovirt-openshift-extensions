@@ -5,7 +5,7 @@ License:    ASL 2.0
 URL:        http://www.ovirt.org
 Source0:    %{name}-%{version}%{?_release:-%_release}.tar.gz
 Summary:    flexvolume and provisioner
-BuildArch:  x86_64
+ExclusiveArch: x86_64
 
 %description
 A Flexvolume driver to provision k8s volumes using oVirt
