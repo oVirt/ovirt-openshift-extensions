@@ -1,11 +1,32 @@
+---
 - hosts: masters
   remote_user: root
   strategy: free
 
   tasks:
-    - template: src=flex_deployer_pod.yaml dest=/root/flex_deployer_pod.yaml
-    - shell: oc login -u system:admin
-    - shell: oc adm policy add-cluster-role-to-user cluster-admin developer 
-    - shell: oc create -f /root/flex_deployer_pod.yaml
+    - name: copy the deployer spec
+      template: src=flex_deployer_pod.yaml dest=/root/flex_deployer_pod.yaml
 
-    #TODO wait for deployment to be done
+    - name: login as system
+      shell: oc login -u system:admin
+
+    - name: add cluster role to developer user
+      shell: oc adm policy add-cluster-role-to-user cluster-admin developer
+
+    - name: create the flex deployer pod
+      shell: oc create -f /root/flex_deployer_pod.yaml
+
+    - name: verify that the flex driver pod is running
+      shell: oc get pods -l name=ovirt-flexvolume-driver -o json | jq '.items[] | select (.status.phase == "Running")' -e
+      register: result
+      until: result.rc ==  0
+      retries: 60
+      delay: 1
+
+    - name: verify that the volume provisioner pod is running
+      shell: oc get pods -l name=ovirt-volume-provisioner -o json | jq '.items[] | select (.status.phase == "Running")' -e
+      register: result
+      until: result.rc ==  0
+      retries: 60
+      delay: 1
+---
