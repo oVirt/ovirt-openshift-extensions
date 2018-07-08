@@ -29,4 +29,33 @@
       until: result.rc ==  0
       retries: 60
       delay: 1
----
+
+    - name: deploy a test pod that uses flex
+      shell: oc create -f https://raw.githubusercontent.com/oVirt/ovirt-openshift-extensions/master/deployment/example/test-pod-with-flex.yaml
+
+    - name: wait fot the test pod with flex to run
+      shell: oc get pods -l name=testpodwithflex -o json | jq '.items[] | select (.status.phase == "Running")' -e
+      register: result
+      until: result.rc == 0
+      retries: 60
+      delay: 1
+
+    - name: verify the test pod sees the flex mounted file system
+      shell: oc exec -it testpodwithflex ls -la /var
+
+    - name: shutdown the testpodwithflex container
+      shell: oc delete pods/testpodwithflex
+
+    - name: wait for the pod to be down
+      shell: oc get pods -l name=testpodwithflex -o json | jq '.items[] | select (.status.phase == "Down")' -e
+      register: result
+      until: result.rc == 0
+      retries: 60
+      delay: 1
+
+    - name: verify ovirt disks are detached - using oc events
+      shell: oc get events -l TODO EXTRACT EVENT
+      register: result
+      until: result.rc == 0
+      retries: 60
+      delay: 1
