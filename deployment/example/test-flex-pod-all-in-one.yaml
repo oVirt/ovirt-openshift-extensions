@@ -1,0 +1,49 @@
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: ovirt
+provisioner: external/ovirt 
+parameters:
+  type: io1
+  iopsPerGB: "10"
+  ovirtStorageDomain: "data"
+  # specifing a disk format is a must and depends on
+  # the type of the domain - block-storage(iscsi/FC) or file(NFS/gluster...)
+  ovirtDiskFormat: "cow"
+fsType: ext4
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: 1g-ovirt-cow-disk
+  annotations:
+    volume.beta.kubernetes.io/storage-class: ovirt
+spec:
+  storageClassName: ovirt
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+storage: 1Gi
+---
+apiVersion: v1 
+kind: Pod 
+metadata:
+  name: testpodwithflex
+  labels:
+    app: ovirt 
+spec:
+  containers:
+  - image: busybox
+    name: testpodwithflex
+    command: ["sh", "-c", "while true; do ls -la /opt; echo this file system was made availble using ovirt flexdriver; sleep 1m; done"]
+    imagePullPolicy: Always
+    volumeMounts:
+    - name: pv0002
+      mountPath: "/opt"
+  volumes:
+  - name: pv0002
+    persistentVolumeClaim:
+      claimName: 1g-ovirt-cow-disk
+--
