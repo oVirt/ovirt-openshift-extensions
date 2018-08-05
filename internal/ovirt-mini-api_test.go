@@ -26,6 +26,9 @@ import (
 	"time"
 )
 
+const vmId = "12345678-1234-1234-1234-123456789101"
+const diskId = "d69b93df-7e96-11e8-b3fa-001a4a160100"
+
 func TestLoadConf(t *testing.T) {
 	conf := `
 url=123
@@ -188,6 +191,15 @@ func TestOvirt_Attach(t *testing.T) {
 		"some-vm-id",
 		"disk-uuid",
 		"")
+	if e != nil {
+		t.Errorf(e.Error())
+	}
+}
+
+func TestOvirt_DetachDiskFromVM(t *testing.T) {
+	detachResponse := "{}"
+	api := prepareApi(genericRequestHandlerFunc(detachResponse))
+	e := api.DetachDiskFromVM(vmId, diskId)
 	if e != nil {
 		t.Errorf(e.Error())
 	}
