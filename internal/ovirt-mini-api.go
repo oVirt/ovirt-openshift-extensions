@@ -137,10 +137,11 @@ func persistToken(ovirt *Ovirt) {
 func isTokenValid(ovirt *Ovirt) bool {
 	req, _ := getRequest(ovirt.Connection.Url, ovirt.token.Value)
 	resp, err := ovirt.client.Do(req)
+	defer resp.Body.Close()
+
 	if err != nil {
 		return false
 	}
-	defer resp.Body.Close()
 	if resp.StatusCode > 200 {
 		return false
 	}
@@ -171,11 +172,11 @@ func (ovirt *Ovirt) Attach(params AttachRequest, vmName string) (Response, error
 	// ovirt API call
 	req, err := postWithJsonData(ovirt, "/vms/"+vmName+"/diskattachments", requestJson)
 	resp, err := ovirt.client.Do(req)
+	defer resp.Body.Close()
 
 	if err != nil {
 		return FailedResponse, err
 	}
-	defer resp.Body.Close()
 
 	diskAttachment := DiskAttachment{}
 	jsonResponse, err := ioutil.ReadAll(resp.Body)
@@ -255,16 +256,17 @@ func (ovirt *Ovirt) Get(path string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	response, err := ovirt.client.Do(request)
+	resp, err := ovirt.client.Do(request)
+	defer resp.Body.Close()
+
 	if err != nil {
 		return nil, err
 	}
-	if response.StatusCode > 200 {
-		return nil, translateError(*response)
+	if resp.StatusCode > 200 {
+		return nil, translateError(*resp)
 	}
-	defer response.Body.Close()
 
-	bytes, err := ioutil.ReadAll(response.Body)
+	bytes, err := ioutil.ReadAll(resp.Body)
 	return bytes, err
 }
 
@@ -295,16 +297,17 @@ func (ovirt *Ovirt) Post(path string, data interface{}) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	response, err := ovirt.client.Do(request)
+	resp, err := ovirt.client.Do(request)
+	defer resp.Body.Close()
+
 	if err != nil {
 		return "", err
 	}
-	if response.StatusCode > 300 {
-		return "", errors.New(response.Status)
+	if resp.StatusCode > 300 {
+		return "", errors.New(resp.Status)
 	}
-	defer response.Body.Close()
 
-	bytes, err := ioutil.ReadAll(response.Body)
+	bytes, err := ioutil.ReadAll(resp.Body)
 	return string(bytes), err
 }
 
@@ -314,13 +317,14 @@ func (ovirt *Ovirt) Delete(path string) ([]byte, error) {
 		return nil, err
 	}
 	response, err := ovirt.client.Do(request)
+	defer response.Body.Close()
+
 	if err != nil {
 		return nil, err
 	}
 	if response.StatusCode > 200 {
 		return nil, errors.New(response.Status)
 	}
-	defer response.Body.Close()
 
 	bytes, err := ioutil.ReadAll(response.Body)
 	return bytes, err
@@ -381,11 +385,12 @@ func fetchCafile(ovirt *Ovirt, hostname string, origPort string) error {
 		port = "8080"
 	}
 	resp, err := http.Get(fmt.Sprintf("http://%s:%s/%s", hostname, port, caUrl))
+	defer resp.Body.Close()
+
 	if err != nil {
 		fmt.Println("Error while downloading CA", err)
 		return err
 	}
-	defer resp.Body.Close()
 
 	output, err := os.Create("ovirt.ca")
 	if err != nil {
@@ -413,7 +418,7 @@ func fetchToken(ovirtEngineUrl url.URL, username string, password string, client
 	req.Header.Add("Accept", "application/json")
 
 	resp, err := client.Do(req)
-	//defer resp.Body.Close()
+	defer resp.Body.Close()
 
 	if err != nil {
 		return Token{}, err
