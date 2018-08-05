@@ -17,11 +17,13 @@ limitations under the License.
 package internal
 
 import (
+	"bytes"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/golang/glog"
 	"github.com/spf13/viper"
 	"io"
 	"io/ioutil"
@@ -135,8 +137,7 @@ func persistToken(ovirt *Ovirt) {
 // isTokenValid tries a simple GET / with the oauth token
 // returns true for 200 ok, otherwise false
 func isTokenValid(ovirt *Ovirt) bool {
-	req, _ := getRequest(ovirt.Connection.Url, ovirt.token.Value)
-	resp, err := ovirt.client.Do(req)
+	resp, err := ovirt.clientDo(http.MethodGet, ovirt.Connection.Url, strings.NewReader(""))
 	defer resp.Body.Close()
 
 	if err != nil {
@@ -170,8 +171,7 @@ func (ovirt *Ovirt) Attach(params AttachRequest, vmName string) (Response, error
 	}
 
 	// ovirt API call
-	req, err := postWithJsonData(ovirt, "/vms/"+vmName+"/diskattachments", requestJson)
-	resp, err := ovirt.client.Do(req)
+	resp, err := ovirt.clientDo(http.MethodPost, "vms/"+vmName+"/diskattachments", bytes.NewReader(requestJson))
 	defer resp.Body.Close()
 
 	if err != nil {
@@ -204,7 +204,7 @@ func (ovirt *Ovirt) CreateUnattachedDisk(diskName string, storageDomainName stri
 		StorageDomains:  StorageDomains{[]StorageDomain{{Name: storageDomainName}}},
 	}
 
-	post, err := ovirt.Post("/disks", disk)
+	post, err := ovirt.Post("disks", disk)
 	if err != nil {
 		return disk, err
 	}
@@ -242,7 +242,7 @@ func (ovirt *Ovirt) CreateDisk(
 		a.Disk.Id = diskId
 	}
 
-	post, err := ovirt.Post("/vms/"+vmId+"/diskattachments", a)
+	post, err := ovirt.Post("vms/"+vmId+"/diskattachments", a)
 	if err != nil {
 		return a, err
 	}
@@ -252,11 +252,7 @@ func (ovirt *Ovirt) CreateDisk(
 }
 
 func (ovirt *Ovirt) Get(path string) ([]byte, error) {
-	request, err := getRequest(fmt.Sprintf("%s/%s", ovirt.Connection.Url, path), ovirt.token.Value)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := ovirt.client.Do(request)
+	resp, err := ovirt.clientDo(http.MethodGet, path, strings.NewReader(""))
 	defer resp.Body.Close()
 
 	if err != nil {
@@ -293,11 +289,7 @@ func (ovirt *Ovirt) Post(path string, data interface{}) (string, error) {
 		return "", err
 	}
 	fmt.Println(string(d))
-	request, err := postWithJsonData(ovirt, path, d)
-	if err != nil {
-		return "", err
-	}
-	resp, err := ovirt.client.Do(request)
+	resp, err := ovirt.clientDo(http.MethodPost, path, bytes.NewReader(d))
 	defer resp.Body.Close()
 
 	if err != nil {
@@ -312,21 +304,17 @@ func (ovirt *Ovirt) Post(path string, data interface{}) (string, error) {
 }
 
 func (ovirt *Ovirt) Delete(path string) ([]byte, error) {
-	request, err := deleteRequest(fmt.Sprintf("%s/%s", ovirt.Connection.Url, path), ovirt.token.Value)
-	if err != nil {
-		return nil, err
-	}
-	response, err := ovirt.client.Do(request)
-	defer response.Body.Close()
+	resp, err := ovirt.clientDo(http.MethodDelete, path, strings.NewReader(""))
+	defer resp.Body.Close()
 
 	if err != nil {
 		return nil, err
 	}
-	if response.StatusCode > 200 {
-		return nil, errors.New(response.Status)
+	if resp.StatusCode > 200 {
+		return nil, errors.New(resp.Status)
 	}
 
-	bytes, err := ioutil.ReadAll(response.Body)
+	bytes, err := ioutil.ReadAll(resp.Body)
 	return bytes, err
 }
 
@@ -443,28 +431,30 @@ func fetchToken(ovirtEngineUrl url.URL, username string, password string, client
 	return t, nil
 }
 
-func getRequest(endpoint string, token string) (*http.Request, error) {
-	r, err := http.NewRequest("GET", endpoint, nil)
+func (ovirt *Ovirt) clientDo(method string, url string, payload io.Reader) (*http.Response, error) {
+	// TODO log debug the request response
+	url = fmt.Sprintf("%s/%s", ovirt.Connection.Url, url)
+	glog.Infof("calling ovirt api url: %s", url)
+	r, _ := http.NewRequest(method, url, payload)
 	r.Header.Set("Accept", "application/json")
-	r.Header.Set("Authorization", "Bearer "+token)
-	return r, err
-}
-
-func postWithJsonData(ovirt *Ovirt, endpoint string, json []byte) (*http.Request, error) {
-	r, err := http.NewRequest(
-		"POST",
-		ovirt.Connection.Url+endpoint,
-		strings.NewReader(string(json)),
-	)
-	r.Header.Set("Content-Type", "application/json")
-	r.Header.Set("Accept", "application/json")
+	r.Header.Add("Content-Type", "application/json")
 	r.Header.Set("Authorization", "Bearer "+ovirt.token.Value)
-	return r, err
-}
+	defer r.Body.Close()
 
-func deleteRequest(endpoint string, token string) (*http.Request, error) {
-	r, err := http.NewRequest(http.MethodDelete, endpoint, nil)
-	r.Header.Set("Accept", "application/json")
-	r.Header.Set("Authorization", "Bearer "+token)
-	return r, err
+	resp, err := ovirt.client.Do(r)
+
+	if err != nil || resp.StatusCode >= 300 {
+		glog.Infof("failed to call ovirt api with response: %s", resp.Body)
+		if resp.StatusCode == 401 {
+			// invalid token, probably expired due to inactivity or
+			// ovirt-engine has restarted. ovirt-engine doesn't support
+			// fully persistent oauth tokens
+			glog.Infof("ovirt api rejected the token, re-authenticating...")
+			os.Remove(tokenStore)
+			ovirt.token.Value = ""
+			ovirt.Authenticate()
+		}
+	}
+
+	return resp, err
 }
