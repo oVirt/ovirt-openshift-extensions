@@ -289,7 +289,7 @@ func (ovirt *Ovirt) Post(path string, data interface{}) (string, error) {
 		return "", err
 	}
 	fmt.Println(string(d))
-	resp, err := ovirt.clientDo(http.MethodPost, path, bytes.NewReader(d))
+	resp, err := ovirt.clientDo(http.MethodPost, path, strings.NewReader(string(d)))
 	defer resp.Body.Close()
 
 	if err != nil {
