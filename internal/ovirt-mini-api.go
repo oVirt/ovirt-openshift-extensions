@@ -109,13 +109,14 @@ func (ovirt *Ovirt) Authenticate() error {
 
 	savedToken, err := ioutil.ReadFile(tokenStore)
 	if err != nil {
-		// ignore for now
+		// ignore, probably first invocation or a re-authentication
 	} else {
 		json.Unmarshal(savedToken, &ovirt.token)
 	}
 	// get the token and persist if needed
 	if ovirt.token.Value == "" || time.Now().After(ovirt.token.ExpirationTime) || !isTokenValid(ovirt) {
 		ovirt.token, err = fetchToken(*ovirtEngineUrl, ovirt.Connection.Username, ovirt.Connection.Password, &ovirt.client)
+		glog.Infof("fetched token %s: ", ovirt.token)
 		if err != nil {
 			return err
 		}
@@ -129,8 +130,7 @@ func persistToken(ovirt *Ovirt) {
 	j, _ := json.Marshal(ovirt.token)
 	err := ioutil.WriteFile(tokenStore, j, 0600)
 	if err != nil {
-		// this err will be reported to stderr but won't bubble up.
-		fmt.Fprintln(os.Stderr, err)
+		glog.Errorf("error persisting token %s", err)
 	}
 }
 
@@ -449,7 +449,10 @@ func (ovirt *Ovirt) clientDo(method string, url string, payload io.Reader) (*htt
 			// ovirt-engine has restarted. ovirt-engine doesn't support
 			// fully persistent oauth tokens
 			glog.Infof("ovirt api rejected the token, re-authenticating...")
-			os.Remove(tokenStore)
+			err := os.Remove(tokenStore)
+			if err != nil {
+				glog.Infof("failed to remove the old token file %s", err)
+			}
 			ovirt.token.Value = ""
 			ovirt.Authenticate()
 		}
