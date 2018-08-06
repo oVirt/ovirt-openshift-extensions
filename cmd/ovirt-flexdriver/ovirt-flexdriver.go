@@ -22,7 +22,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/op/go-logging"
+	"github.com/golang/glog"
 	"github.com/ovirt/ovirt-openshift-extensions/internal"
 	"github.com/spf13/viper"
 	"io/ioutil"
@@ -49,12 +49,9 @@ var ovirtVmName string
 
 func main() {
 	s, e := app(os.Args[1:])
-	log, err := logging.NewSyslogBackend("")
-	if err == nil && log != nil {
-		// syslog may not be available, i.e in busybox
-		log.Writer.Info("invoking driver ----- " + strings.Join(os.Args, ","))
-		defer log.Writer.Info("invoking driver ----- " + s)
-	}
+	glog.Infof("invoking with args %s", os.Args)
+	defer glog.Infof("after invoking with args %s", os.Args)
+
 	if e != nil {
 		fmt.Fprint(os.Stderr, e.Error())
 		os.Exit(1)
@@ -120,11 +117,11 @@ func app(args []string) (string, error) {
 		return "", errors.New(usage)
 	}
 
-	bytes, marshalingErr := json.Marshal(result)
+	b, marshalingErr := json.Marshal(result)
 	if marshalingErr != nil {
 		return "", marshalingErr
 	}
-	return string(bytes), err
+	return string(b), err
 }
 
 func initialize() (internal.Response, error) {

@@ -262,8 +262,8 @@ func (ovirt *Ovirt) Get(path string) ([]byte, error) {
 		return nil, translateError(*resp)
 	}
 
-	bytes, err := ioutil.ReadAll(resp.Body)
-	return bytes, err
+	b, err := ioutil.ReadAll(resp.Body)
+	return b, err
 }
 
 type NotFound struct {
@@ -299,8 +299,8 @@ func (ovirt *Ovirt) Post(path string, data interface{}) (string, error) {
 		return "", errors.New(resp.Status)
 	}
 
-	bytes, err := ioutil.ReadAll(resp.Body)
-	return string(bytes), err
+	b, err := ioutil.ReadAll(resp.Body)
+	return string(b), err
 }
 
 func (ovirt *Ovirt) Delete(path string) ([]byte, error) {
@@ -314,8 +314,8 @@ func (ovirt *Ovirt) Delete(path string) ([]byte, error) {
 		return nil, errors.New(resp.Status)
 	}
 
-	bytes, err := ioutil.ReadAll(resp.Body)
-	return bytes, err
+	b, err := ioutil.ReadAll(resp.Body)
+	return b, err
 }
 
 func (ovirt *Ovirt) GetVM(name string) (VM, error) {
@@ -432,7 +432,6 @@ func fetchToken(ovirtEngineUrl url.URL, username string, password string, client
 }
 
 func (ovirt *Ovirt) clientDo(method string, url string, payload io.Reader) (*http.Response, error) {
-	// TODO log debug the request response
 	url = fmt.Sprintf("%s/%s", ovirt.Connection.Url, url)
 	glog.Infof("calling ovirt api url: %s", url)
 	r, _ := http.NewRequest(method, url, payload)
