@@ -52,6 +52,11 @@
         requests:
           cpu: 100m
           memory: 200Mi
+      env:
+      - name: OVIRT_VM_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: spec.nodeName
       volumeMounts:
         - name: plugindir
           mountPath: /usr/libexec/kubernetes/kubelet-plugins/volume/exec/
