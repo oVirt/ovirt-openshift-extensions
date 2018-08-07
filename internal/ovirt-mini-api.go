@@ -438,7 +438,6 @@ func (ovirt *Ovirt) clientDo(method string, url string, payload io.Reader) (*htt
 	r.Header.Set("Accept", "application/json")
 	r.Header.Add("Content-Type", "application/json")
 	r.Header.Set("Authorization", "Bearer "+ovirt.token.Value)
-	defer r.Body.Close()
 
 	resp, err := ovirt.client.Do(r)
 
