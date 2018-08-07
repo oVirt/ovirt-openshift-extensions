@@ -7,6 +7,7 @@
 
   vars_files:
     - vars.yaml
+    - user_vars.yaml
 
   pre_tasks:
     - fail:
@@ -28,14 +29,14 @@
       tags:
         - always
     - name: check template existence, to spare the download and upload of the qcow image
-      ovirt_disk_facts:
+      ovirt_templates_facts:
         auth: "{{ ovirt_auth }}"
         pattern: "name={{ template_name }} and storage.name={{ rhv_data_storage }}"
       tags: always
 
   roles:
     - role: oVirt.image-template
-      when: not ovirt_disks
+      when: not ovirt_templates
     - role: oVirt.vm-infra
 
   tasks:
