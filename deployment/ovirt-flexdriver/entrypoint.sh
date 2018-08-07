@@ -15,5 +15,8 @@ rpm -ivh /root/ovirt-flexvolume-driver*.rpm --force
 # copy the conf file into the target dir
 cp -v /opt/ovirt-flexvolume-driver/ovirt-flexvolume-driver.conf $dir/ovirt~ovirt-flexvolume-driver/
 
+# append per node values to the config
+echo "ovirtVmName=$OVIRT_VM_NAME" >> $dir/ovirt~ovirt-flexvolume-driver/ovirt-flexvolume-driver.conf
+
 # Now that we have it we can just sleep
 while true;do sleep 1d;done
