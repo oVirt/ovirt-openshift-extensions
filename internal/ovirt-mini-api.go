@@ -185,7 +185,7 @@ func (ovirt *Ovirt) Attach(params AttachRequest, vmName string) (Response, error
 
 	return attachResponse, err
 }
-func (ovirt Ovirt) GetDiskByName(diskName string) (DiskResult, error) {
+func (ovirt *Ovirt) GetDiskByName(diskName string) (DiskResult, error) {
 	var diskResult DiskResult
 	r, err := ovirt.Get(fmt.Sprintf("disks?search=name=%s", diskName))
 	if err != nil {
@@ -250,7 +250,7 @@ func (ovirt *Ovirt) CreateDisk(
 	return r, err
 }
 
-func (ovirt Ovirt) Get(path string) ([]byte, error) {
+func (ovirt *Ovirt) Get(path string) ([]byte, error) {
 	request, err := getRequest(fmt.Sprintf("%s/%s", ovirt.Connection.Url, path), ovirt.token.Value)
 	if err != nil {
 		return nil, err
@@ -284,14 +284,14 @@ func translateError(response http.Response) error {
 	return errors.New(response.Status)
 }
 
-func (ovirt Ovirt) Post(path string, data interface{}) (string, error) {
+func (ovirt *Ovirt) Post(path string, data interface{}) (string, error) {
 	d, err := json.Marshal(data)
 	if err != nil {
 		// failed json conversion
 		return "", err
 	}
 	fmt.Println(string(d))
-	request, err := postWithJsonData(&ovirt, path, d)
+	request, err := postWithJsonData(ovirt, path, d)
 	if err != nil {
 		return "", err
 	}
@@ -308,7 +308,7 @@ func (ovirt Ovirt) Post(path string, data interface{}) (string, error) {
 	return string(bytes), err
 }
 
-func (ovirt Ovirt) Delete(path string) ([]byte, error) {
+func (ovirt *Ovirt) Delete(path string) ([]byte, error) {
 	request, err := deleteRequest(fmt.Sprintf("%s/%s", ovirt.Connection.Url, path), ovirt.token.Value)
 	if err != nil {
 		return nil, err
