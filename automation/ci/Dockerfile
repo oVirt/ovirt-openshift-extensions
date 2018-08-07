@@ -21,10 +21,11 @@ RUN ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa
 ADD ansible.cfg /root/ansible.cfg
 ADD integ.ini /root/integ.ini
 ADD vars.yaml /root/vars.yaml
+RUN touch /root/user_vars.yaml
 ADD site.yaml  /root/site.yaml
 ADD setup_dns.yaml  /root/setup_dns.yaml
 ADD deploy_flex.yaml  /root/deploy_flex.yaml
-ADD flex_deployer_pod.yaml  /root/flex_deployer_pod.yaml
+ADD flex_deployer_job.yaml  /root/flex_deployer_job.yaml
 
 WORKDIR /root
 ENTRYPOINT ansible-playbook -i integ.ini site.yaml
