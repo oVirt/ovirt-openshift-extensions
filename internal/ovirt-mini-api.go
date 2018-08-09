@@ -23,10 +23,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/golang/glog"
 	"github.com/spf13/viper"
 	"io"
 	"io/ioutil"
+	"log/syslog"
 	"net/http"
 	"net/url"
 	"os"
@@ -39,6 +39,7 @@ const tokenUrl = "/ovirt-engine/sso/oauth/token"
 const tokenPayload = "grant_type=password&scope=ovirt-app-api&username=%s&password=%s"
 
 var tokenStore = "/tmp/ovirt-flexdriver.token"
+var log, logError = syslog.New(syslog.LOG_INFO, "ovirt-api")
 
 type Ovirt struct {
 	Connection Connection
@@ -116,7 +117,6 @@ func (ovirt *Ovirt) Authenticate() error {
 	// get the token and persist if needed
 	if ovirt.token.Value == "" || time.Now().After(ovirt.token.ExpirationTime) || !isTokenValid(ovirt) {
 		ovirt.token, err = fetchToken(*ovirtEngineUrl, ovirt.Connection.Username, ovirt.Connection.Password, &ovirt.client)
-		glog.Infof("fetched token %s: ", ovirt.token)
 		if err != nil {
 			return err
 		}
@@ -130,7 +130,7 @@ func persistToken(ovirt *Ovirt) {
 	j, _ := json.Marshal(ovirt.token)
 	err := ioutil.WriteFile(tokenStore, j, 0600)
 	if err != nil {
-		glog.Errorf("error persisting token %s", err)
+		logErrorf(fmt.Sprintf("error persisting token %s", err))
 	}
 }
 
@@ -433,7 +433,7 @@ func fetchToken(ovirtEngineUrl url.URL, username string, password string, client
 
 func (ovirt *Ovirt) clientDo(method string, url string, payload io.Reader) (*http.Response, error) {
 	url = fmt.Sprintf("%s/%s", ovirt.Connection.Url, url)
-	glog.Infof("calling ovirt api url: %s", url)
+	logInfof("calling ovirt api url: %s", url)
 	r, _ := http.NewRequest(method, url, payload)
 	r.Header.Set("Accept", "application/json")
 	r.Header.Add("Content-Type", "application/json")
@@ -442,15 +442,15 @@ func (ovirt *Ovirt) clientDo(method string, url string, payload io.Reader) (*htt
 	resp, err := ovirt.client.Do(r)
 
 	if err != nil || resp.StatusCode >= 300 {
-		glog.Infof("failed to call ovirt api with response: %s", resp.Body)
+		logInfof("failed to call ovirt api with response: %s", resp.Body)
 		if resp.StatusCode == 401 {
 			// invalid token, probably expired due to inactivity or
 			// ovirt-engine has restarted. ovirt-engine doesn't support
 			// fully persistent oauth tokens
-			glog.Infof("ovirt api rejected the token, re-authenticating...")
+			logInfof("ovirt api rejected the token, re-authenticating...")
 			err := os.Remove(tokenStore)
 			if err != nil {
-				glog.Infof("failed to remove the old token file %s", err)
+				logInfof("failed to remove the old token file %s", err)
 			}
 			ovirt.token.Value = ""
 			ovirt.Authenticate()
@@ -458,4 +458,16 @@ func (ovirt *Ovirt) clientDo(method string, url string, payload io.Reader) (*htt
 	}
 
 	return resp, err
+}
+
+func logInfof(format string, message ...interface{}) {
+	if log != nil && logError == nil {
+		log.Info(fmt.Sprintf(format, message))
+	}
+}
+
+func logErrorf(format string, message ...interface{}) {
+	if log != nil && logError == nil {
+		log.Err(fmt.Sprintf(format, message))
+	}
 }

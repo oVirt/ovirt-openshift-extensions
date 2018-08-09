@@ -22,10 +22,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/golang/glog"
 	"github.com/ovirt/ovirt-openshift-extensions/internal"
 	"github.com/spf13/viper"
 	"io/ioutil"
+	"log/syslog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -48,14 +48,18 @@ var driverConfigFile string
 var ovirtVmName string
 
 func main() {
-	s, e := app(os.Args[1:])
-	glog.Infof("invoking with args %s", os.Args)
-	defer glog.Infof("after invoking with args %s", os.Args)
+	writer, e := syslog.New(syslog.LOG_INFO, os.Args[0])
+	if e == nil {
+		writer.Info(fmt.Sprintf("invoking with args %s", os.Args))
+		defer writer.Info(fmt.Sprintf("invoking with args %s", os.Args))
+	}
 
+	s, e := app(os.Args[1:])
 	if e != nil {
 		fmt.Fprint(os.Stderr, e.Error())
 		os.Exit(1)
 	}
+
 	fmt.Fprint(os.Stdout, s)
 }
 
