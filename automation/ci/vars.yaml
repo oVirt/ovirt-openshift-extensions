@@ -32,8 +32,8 @@ vm_infra_wait_for_ip_delay: 20
 master_vm:
   cluster: "{{ rhv_cluster }}"
   template: "{{ template_name }}"
-  memory: 4GiB
-  cores: 2
+  memory: "{{ vm_memory | default('4GiB') }}"
+  cores: "{{ vm_cores | default(2) }}"
   high_availability: true
   disks:
     - size: 10GiB
