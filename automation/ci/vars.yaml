@@ -91,12 +91,6 @@ vms:
       authorized_ssh_keys: "{{ root_ssh_key }}"
       host_name: "master0.{{ public_hosted_zone }}"
       custom_script: "{{ cloud_init_script_master }}"
-      nic_name: eth0
-      nic_on_boot: True
-      nic_boot_protocol: static
-      nic_ip_address: 192.168.202.50
-      nic_gateway: 192.168.202.1
-      nic_netmask: 255.255.254.0 
 
 pre_tasks:
   - name: Log in to oVirt
