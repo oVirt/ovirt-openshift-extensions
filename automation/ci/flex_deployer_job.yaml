@@ -22,7 +22,7 @@ spec:
           value: "developer"
         image: docker.io/rgolangh/ovirt-flexvolume-driver-apb
         args: ["provision", "-e", "admin_user=$(ADMIN_USER)", "-e", "admin_password=$(ADMIN_PASS)","-e", "cluster=openshift","-e", "namespace=default","-e", "engine_password=$(ENGINE_PASS)","-e", "engine_url=$(ENGINE_URL)","-e", "engine_username=$(ENGINE_USER)"]
-        imagePullPolicy: Never
+        imagePullPolicy: Always
         name: ovirt-flexvolume-deployer
         restartPolicy: Never
         hostAliases:
