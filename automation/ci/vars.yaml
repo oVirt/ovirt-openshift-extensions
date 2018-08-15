@@ -92,21 +92,4 @@ vms:
       host_name: "master0.{{ public_hosted_zone }}"
       custom_script: "{{ cloud_init_script_master }}"
 
-pre_tasks:
-  - name: Log in to oVirt
-    ovirt_auth:
-      url: "{{ engine_url }}"
-      username: "{{ engine_user }}"
-      password: "{{ engine_password }}"
-      ca_file: "{{ engine_cafile | default(omit) }}"
-      insecure: "{{ engine_insecure | default(true) }}"
-    tags:
-      - always
-post_tasks:
-  - name: Logout from oVirt
-    ovirt_auth:
-      state: absent
-      ovirt_auth: "{{ ovirt_auth }}"
-    tags:
-      - alway 
 ...
