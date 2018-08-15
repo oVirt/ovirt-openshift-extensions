@@ -60,7 +60,7 @@
         - always
 
 - import_playbook: /root/setup_dns.yaml
-- import_playbook: /usr/share/ansible/openshift-ansible/playbooks/prerequisites.yml
-- import_playbook: /usr/share/ansible/openshift-ansible/playbooks/openshift-node/network_manager.yml
-- import_playbook: /usr/share/ansible/openshift-ansible/playbooks/deploy_cluster.yml
+- import_playbook: /root/openshift-ansible/playbooks/prerequisites.yml
+- import_playbook: /root/openshift-ansible/playbooks/openshift-node/network_manager.yml
+- import_playbook: /root/openshift-ansible/playbooks/deploy_cluster.yml
 - import_playbook: /root/deploy_flex.yaml

@@ -74,7 +74,7 @@ cloud_init_script_master: |
     - mkdir -p '/var/lib/etcd'
     - /usr/sbin/mkfs.xfs -L localvol /dev/vdc
     - /usr/sbin/mkfs.xfs -L etcd /dev/vdd
-    - sleep "$(($RANDOM % 60))"
+    - sleep "$(($RANDOM % 30))"
     - sync
     - reboot
   mounts:

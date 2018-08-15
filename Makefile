@@ -13,6 +13,7 @@ FLEX_DRIVER_BINARY_NAME=ovirt-flexdriver
 PROVISIONER_BINARY_NAME=ovirt-provisioner
 FLEX_CONTAINER_NAME=ovirt-flexvolume-driver
 PROVISIONER_CONTAINER_NAME=ovirt-volume-provisioner
+AUTOMATION_CONTAINER_NAME=ovirt-openshift-extensions-ci
 
 REGISTRY=rgolangh
 VERSION?=$(shell git describe --tags --always --match "v[0-9]*" | awk -F'-' '{print $$1 }')
@@ -42,7 +43,8 @@ build-provisioner:
 
 container: \
 	container-flexdriver \
-	container-provisioner
+	container-provisioner \
+        container-ci
 
 container-flexdriver:
 	# place the rpm flat under the repo otherwise dockerignore will mask its directory. TODO make it more flexible
@@ -59,13 +61,22 @@ container-provisioner:
         . \
         -f deployment/ovirt-provisioner/container/Dockerfile
 
+container-ci:
+	docker build \
+        -t $(REGISTRY)/$(AUTOMATION_CONTAINER_NAME):$(VERSION_RELEASE) \
+        -t $(REGISTRY)/$(AUTOMATION_CONTAINER_NAME):latest \
+        automation/ci \
+        -f automation/ci/Dockerfile
+
 container-push:
 	@docker login -u rgolangh -p ${DOCKER_BUILDER_API_KEY}
 	docker push $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION_RELEASE)
 	docker push $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION_RELEASE)
-	# push lates
+	docker push $(REGISTRY)/$(AUTOMATION_CONTAINER_NAME):$(VERSION_RELEASE)
+	# push latest
 	docker push $(REGISTRY)/$(FLEX_CONTAINER_NAME):latest
 	docker push $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):latest
+	docker push $(REGISTRY)/$(AUTOMATION_CONTAINER_NAME):latest
 
 apb_build:
 	$(MAKE) -C deployment/ovirt-flexvolume-driver-apb/ apb_build
