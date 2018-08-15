@@ -11,7 +11,7 @@ ovirt-flexdriver*.tar.gz
 .pki
 exported-artifacts
 mocker*
-
+ansible.log
 vendor/**/*.spec
 
 # Created by .ignore support plugin (hsz.mobi)

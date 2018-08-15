@@ -1,14 +1,12 @@
-From centos:7
+From centos:7.5.1804
 
 USER root
 
 RUN yum install -y \ 
-	centos-release-openshift-origin \
 	http://resources.ovirt.org/pub/yum-repo/ovirt-release42.rpm	
 RUN yum install -y \
 	file \
 	ansible \
-	atomic-openshift-utils \
 	git \
 	python-ovirt-engine-sdk4 \
 	ovirt-ansible-roles \
@@ -28,4 +26,5 @@ ADD deploy_flex.yaml  /root/deploy_flex.yaml
 ADD flex_deployer_job.yaml  /root/flex_deployer_job.yaml
 
 WORKDIR /root
+RUN git clone --branch release-3.10 https://github.com/openshift/openshift-ansible --depth 1
 ENTRYPOINT ansible-playbook -i integ.ini site.yaml
