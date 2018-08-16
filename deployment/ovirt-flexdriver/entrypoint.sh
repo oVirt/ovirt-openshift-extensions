@@ -18,5 +18,12 @@ cp -v /opt/ovirt-flexvolume-driver/ovirt-flexvolume-driver.conf $dir/ovirt~ovirt
 # append per node values to the config
 echo "ovirtVmName=$OVIRT_VM_NAME" >> $dir/ovirt~ovirt-flexvolume-driver/ovirt-flexvolume-driver.conf
 
+# to prevent half-baked initilization do and atomic move into $dir
+tmpdir=$(mktemp -d)
+mv $dir/ovirt~ovirt-flexvolume-driver $tmpdir/
+sleep 5
+mv $tmpdir/ovirt~ovirt-flexvolume-driver $dir
+rmdir $tmpdir
+
 # Now that we have it we can just sleep
 while true;do sleep 1d;done
