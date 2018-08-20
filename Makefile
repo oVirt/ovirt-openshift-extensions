@@ -44,29 +44,29 @@ build-provisioner:
 container: \
 	container-flexdriver \
 	container-provisioner \
-        container-ci
+	container-ci
 
 container-flexdriver:
 	# place the rpm flat under the repo otherwise dockerignore will mask its directory. TODO make it more flexible
 	docker build \
-         -t $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION_RELEASE) \
-         -t $(REGISTRY)/$(FLEX_CONTAINER_NAME):latest \
-         . \
-         -f deployment/ovirt-flexdriver/container/Dockerfile
+		-t $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION_RELEASE) \
+		-t $(REGISTRY)/$(FLEX_CONTAINER_NAME):latest \
+		. \
+		-f deployment/ovirt-flexdriver/container/Dockerfile
 
 container-provisioner:
 	docker build \
-        -t $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION_RELEASE) \
-        -t $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):latest \
-        . \
-        -f deployment/ovirt-provisioner/container/Dockerfile
+		-t $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION_RELEASE) \
+		-t $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):latest \
+		. \
+		-f deployment/ovirt-provisioner/container/Dockerfile
 
 container-ci:
 	docker build \
-        -t $(REGISTRY)/$(AUTOMATION_CONTAINER_NAME):$(VERSION_RELEASE) \
-        -t $(REGISTRY)/$(AUTOMATION_CONTAINER_NAME):latest \
-        automation/ci \
-        -f automation/ci/Dockerfile
+		-t $(REGISTRY)/$(AUTOMATION_CONTAINER_NAME):$(VERSION_RELEASE) \
+		-t $(REGISTRY)/$(AUTOMATION_CONTAINER_NAME):latest \
+		automation/ci \
+		-f automation/ci/Dockerfile
 
 container-push:
 	@docker login -u rgolangh -p ${DOCKER_BUILDER_API_KEY}
