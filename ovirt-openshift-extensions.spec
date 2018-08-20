@@ -22,6 +22,12 @@ Summary:    Storage provisioner plugin for k8s using oVirt
 %description -n ovirt-provisioner
 Storage provisioner plugin for k8s using oVirt
 
+%package -n ovirt-cloud-provider
+Summary:   Cloud provider controller for oVirt 
+
+%description -n ovirt-cloud-provider
+Cloud provider controller for oVirt
+
 %global vendor ovirt
 %global kube_plugin_dir   /usr/libexec/kubernetes/kubelet-plugins/volume/exec/%{vendor}~ovirt-flexvolume-driver
 %global org github.com/ovirt
@@ -53,6 +59,7 @@ install -p -m 755 ovirt-flexdriver %{buildroot}/%{kube_plugin_dir}/ovirt-flexvol
 install -p -m 644 deployment/ovirt-flexdriver/ovirt-flexdriver.conf.j2 %{buildroot}//%{kube_plugin_dir}/ovirt-flexvolume-driver.conf
 mkdir -p %{buildroot}/usr/bin/
 install -p -m 755 ovirt-provisioner %{buildroot}/usr/bin/
+install -p -m 755 ovirt-cloud-provider %{buildroot}/usr/bin/
 
 %files -n ovirt-flexvolume-driver
 %dir %{kube_plugin_dir}
@@ -62,4 +69,6 @@ install -p -m 755 ovirt-provisioner %{buildroot}/usr/bin/
 %files -n ovirt-provisioner
 /usr/bin/ovirt-provisioner
 
-%changelog
+%files -n ovirt-cloud-provider
+/usr/bin/ovirt-cloud-provider
+

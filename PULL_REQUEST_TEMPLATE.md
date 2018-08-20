@@ -1,4 +1,4 @@
-flex|provisioner|cloudprovider|ovirt-api|ci : Short imperative summary
+flex|provisioner|cloud-provider|ovirt-api|ci : Short imperative summary
 
 MOTIVATION \
 State the motication of the change

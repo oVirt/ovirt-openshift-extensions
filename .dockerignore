@@ -10,3 +10,4 @@
 !deployment/ovirt-provisioner/deploy.yaml
 !deployment/ovirt-flexdriver/entrypoint.sh
 !**/*.rpm
+!x86_64/*.rpm

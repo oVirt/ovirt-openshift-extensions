@@ -1,0 +1,21 @@
+---
+- hosts: k8s-nodes:k8s-masters
+  remote_user: root
+  tasks:
+    - name: Make sure kubelet is set with cloud-provider external
+#    TODO need a real way to edit the line in the yaml and keep it valid. This is just a mock command.
+      command: grep -P -i 'cloud[-]?provider' /etc/kubernetes/kubelet.conf
+
+- hosts: k8s-masters
+  remote_user: root
+  vars:
+      cloud_controller_deployment_file: ovirt-cloud-controller-descriptor.yaml
+  tasks:
+
+    - name: copy over ovirt's cloud controller deployment file
+      template:
+        src: "{{ cloud_controller_deployment_file }}"
+        dest: "/tmp/{{ cloud_controller_deployment_file }}"
+
+    - name: Create the cloud controller
+      command: kubectl create -f "/tmp/{{ cloud_controller_deployment_file }}"
