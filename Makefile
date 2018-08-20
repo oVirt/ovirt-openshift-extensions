@@ -14,11 +14,13 @@ PROVISIONER_BINARY_NAME=ovirt-provisioner
 FLEX_CONTAINER_NAME=ovirt-flexvolume-driver
 PROVISIONER_CONTAINER_NAME=ovirt-volume-provisioner
 AUTOMATION_CONTAINER_NAME=ovirt-openshift-extensions-ci
+CLOUD_PROVIDER_NAME=ovirt-cloud-provider
 
 REGISTRY=rgolangh
 VERSION?=$(shell git describe --tags --always --match "v[0-9]*" | awk -F'-' '{print $$1 }')
 RELEASE?=$(shell git describe --tags --always --match "v[0-9]*" | awk -F'-' '$$2 != "" {print $$2 "." $$3}')
 VERSION_RELEASE=$(VERSION)$(if $(RELEASE),-$(RELEASE))
+
 COMMIT=$(shell git rev-parse HEAD)
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 
@@ -41,9 +43,16 @@ build-provisioner:
 	-o $(PREFIX)/$(PROVISIONER_BINARY_NAME) \
 	-v cmd/$(PROVISIONER_BINARY_NAME)/*.go
 
+build-cloud-provider:
+	$(COMMON_ENV) $(GOBUILD) \
+	$(COMMON_GO_BUILD_FLAGS) \
+	-o $(PREFIX)/$(CLOUD_PROVIDER_NAME) \
+	-v cmd/$(CLOUD_PROVIDER_NAME)/*.go
+
 container: \
 	container-flexdriver \
 	container-provisioner \
+	container-cloud-provider \
 	container-ci
 
 container-flexdriver:
@@ -61,6 +70,15 @@ container-provisioner:
 		. \
 		-f deployment/ovirt-provisioner/container/Dockerfile
 
+container-cloud-provider:
+	docker build \
+		-t $(REGISTRY)/$(CLOUD_PROVIDER_NAME):$(VERSION_RELEASE) \
+		-t $(REGISTRY)/$(CLOUD_PROVIDER_NAME):latest \
+		. \
+		--build-arg RPM=$(CLOUD_PROVIDER_NAME)-$(VERSION_RELEASE).*.rpm \
+		--build-arg RPM_DIR="x86_64" \
+		-f deployment/$(CLOUD_PROVIDER_NAME)/container/Dockerfile
+
 container-ci:
 	docker build \
 		-t $(REGISTRY)/$(AUTOMATION_CONTAINER_NAME):$(VERSION_RELEASE) \
@@ -73,10 +91,12 @@ container-push:
 	docker push $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION_RELEASE)
 	docker push $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION_RELEASE)
 	docker push $(REGISTRY)/$(AUTOMATION_CONTAINER_NAME):$(VERSION_RELEASE)
+	docker push $(REGISTRY)/$(CLOUD_PROVIDER_NAME):$(VERSION_RELEASE)
 	# push latest
 	docker push $(REGISTRY)/$(FLEX_CONTAINER_NAME):latest
 	docker push $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):latest
 	docker push $(REGISTRY)/$(AUTOMATION_CONTAINER_NAME):latest
+	docker push $(REGISTRY)/$(CLOUD_PROVIDER_NAME):latest
 
 apb_build:
 	$(MAKE) -C deployment/ovirt-flexvolume-driver-apb/ apb_build
@@ -89,15 +109,15 @@ apb_docker_push:
 
 build: \
 	build-flex \
-	build-provisioner
+	build-provisioner \
+	build-cloud-provider
 
 test:
 	$(GOTEST) -v ./...
 
 clean:
 	$(GOCLEAN)
-	rm -f $(FLEX_DRIVER_BINARY_NAME)
-	rm -f $(PROVISIONER_BINARY_NAME)
+	git clean -dfx -e .idea*
 
 run: \
 	build \
@@ -105,7 +125,7 @@ run: \
 	./$(PROVISIONER_BINARY_NAME)
 
 deps:
-	dep ensure
+	dep ensure --update
 
 tarball:
 	/bin/git archive --format=tar.gz HEAD > $(TARBALL)
@@ -120,9 +140,11 @@ rpm:
 srpm:
 	$(MAKE) tarball
 	rpmbuild -ts $(TARBALL) \
-		--define "debug_package %{nil}" \
+		--define "debug_package %{nil}" \rm -f $(FLEX_DRIVER_BINARY_NAME)
+	rm -f $(PROVISIONER_BINARY_NAME)
+	rm -f $(CLOUD_PROVIDER_NAME)
 		--define "_rpmdir $(ARTIFACT_DIR)" \
 		--define "_version $(VERSION)" \
 		--define "_version $(VERSION)" $(if $(RELEASE), --define "_release $(RELEASE)")
 
-.PHONY: build-flex build-provisioner container container-flexdriver container-provisioner container-provisioner-binary container-provisioner-ansible container-push
+.PHONY: build-flex build-provisioner build-cloud-provider container container-flexdriver container-provisioner container-cloud-provider container-ci container-push

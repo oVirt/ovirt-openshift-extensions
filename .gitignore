@@ -4,9 +4,10 @@ deployment/*.retry
 /ovirt-flexdriver
 /ovirt-flexdriver.conf
 /ovirt-provisioner
+/ovirt-cloud-provider
 /ovirt-api.conf
 deployment/container/ovirt-provisioner
-ovirt-flexdriver*.tar.gz
+*.tar.gz
 .glide
 .pki
 exported-artifacts
@@ -14,22 +15,6 @@ mocker*
 ansible.log
 vendor/**/*.spec
 
-# Created by .ignore support plugin (hsz.mobi)
-### Go template
-# Binaries for programs and plugins
-*.exe
-*.dll
-*.so
-*.dylib
-
-# Test binary, build with `go test -c`
-*.test
-
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
-
-# Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
-.glide/
 ### JetBrains template
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and Webstorm
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
