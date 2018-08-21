@@ -23,9 +23,10 @@ Merging this code is work in progress here: https://github.com/oVirt/ovirt-opens
 NOTE: ovirt-cloud-provider will be available in v0.3.3
 
 ### Versions
-
-\<= v0.3.1 - oVirt >= 4.2, Openshift origin 3.9, OKD 3.10 \
-\>= v0.3.2 - oVirt >= 4.2, OKD 3.10, OKD 3.11 \
+| version   |ovirt version |openshift version|
+|-----------|--------------|-----------------|
+|\<= v0.3.1 | \>= 4.2      | 3.9,  3.10      |
+|\>= v0.3.2 | \>= 4.2      | 3.10, 3.11      |
 
 ### Installation
 There are 2 main deployment methods: using a deployment container(recommended) or manual
@@ -38,8 +39,8 @@ Pre-requisite:
 
 From the repo:
 - push the apb image to your cluster repo
-   ```
-   make apb_build apb_push
+   ```console
+   $ make apb_build apb_push
    ```
 - go to the service catalog UI and deploy the ovirt-flexvolume-driver-apb. \
  Here is a demo doing that: \
@@ -50,19 +51,19 @@ From the repo:
 - make sure `oc` command is configured and has access to your cluster, e.g run `oc status`
 
 - use a cluster admin user to deploy, or grant permission to one
-   ```
-   oc login -u system:admin
-   oc adm policy add-cluster-role-to-user cluster-admin developer
+   ```console
+   $ oc login -u system:admin
+   $ oc adm policy add-cluster-role-to-user cluster-admin developer
    ```
 - Run on a master:
-   ```
-   OCP_USER=developer \
-   OCP_PASS=pass \
-   ENGINE_URL=https://engine-fqdn/ovirt-engine/api \
-   ENGINE_USER=admin@internal \
-   ENGINE_PASS=123
+   ```console
+   $ OCP_USER=developer \
+     OCP_PASS=pass \
+     ENGINE_URL=https://engine-fqdn/ovirt-engine/api \
+     ENGINE_USER=admin@internal \
+     ENGINE_PASS=123
    
-   docker run \
+   $ docker run \
     --rm \
     --net=host \
     -v $HOME/.kube:/opt/apb/.kube:z \
@@ -78,12 +79,12 @@ From the repo:
 
 Upon completion you have the components running:
 
-   ```
-   oc get ds -n default ovirt-flexvolume-driver 
+   ```console
+   $ oc get ds -n default ovirt-flexvolume-driver 
    name                      desired   current   ready     up-to-date   available   node selector   age
    ovirt-flexvolume-driver   1         1         1         1            1           <none>          15m
 
-   oc get deployment -n default ovirt-volume-provisioner 
+   $ oc get deployment -n default ovirt-volume-provisioner 
    NAME                       DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
    ovirt-volume-provisioner   1         1         1            1           17m
    ```
