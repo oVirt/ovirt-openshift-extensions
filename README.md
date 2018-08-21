@@ -3,52 +3,58 @@
 [![Build Status](http://jenkins.ovirt.org/buildStatus/icon?job=oVirt_ovirt-openshift-extensions_standard-on-ghpush)](http://jenkins.ovirt.org/job/oVirt_ovirt-openshift-extensions_standard-on-ghpush/)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ovirt/ovirt-openshift-extensions)](https://goreportcard.com/report/github.com/ovirt/ovirt-openshift-extensions)
 
-Implementation of flexvolume driver for [oVirt](https://ovirt.org) and a dynamic volume provisioner
+## Purpose
+The project purpose is to the best out of openshift installation on top of oVirt.
+It's main components are:
 
-oVirt flexvolume driver is attachable, i.e. it supports attaching/detaching storage volumes from nodes, by detaching them from the underlying VM.
+### ovirt-volume-provisioner
+A kubernetes controller that creates/deletes persistent volumes, and allocates disks \
+in ovirt as a result. This is the first part for providing volumes from ovirt.
 
-Here is a short [demo](http://www.youtube.com/watch?v=_E9pUVrI0hs):\
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=_E9pUVrI0hs" target="_blank"><img src="http://img.youtube.com/vi/_E9pUVrI0hs/0.jpg" 
-alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a>
+### ovirt-flexvolume-driver
+A kubernetes node plugin that attaches/detaches a volume to a container. \
+It attaches the ovirt disk to the kube node(which is an ovirt vm). It identifies the disk device on the os, \
+prepares a filesystem, then mounts it so it is ready as a volume mount into a container.
 
-The project creates 3 containers:
-1. **`ovirt-flexvolume-driver`**
-   A container that exist to install the binary on the host, immediately sleeps
-forever. Used in a daemonset deployment - see the apb.
-2. **`ovirt-volume-provisioner`**
-   A container for the provisioner controller. Used in a deployment - see
-apb
-3. **`ovirt-flexvolume-driver-apb`**
-  An apb container that will deploy both the driver and the provisioner.
-  One can use the service catalog to push the apb there and use it or straight from the command line.
-  See the apb Makefile currently under [deployment/ovirt-flexvolume-driver/Makefile](deployment/ovirt-flexvolume-driver/Makefile).
+### ovirt-cloud-provider
+An out-of-tree implementation of a cloudprovider. \
+A controller that manages the admission of new nodes for openshift, from ovirt vms. \
+Merging this code is work in progress here: https://github.com/oVirt/ovirt-openshift-extensions/pull/59 \
+NOTE: ovirt-cloud-provider will be available in v0.3.3
 
-# Deployment
+### Versions
+
+\<= v0.3.1 - oVirt >= 4.2, Openshift origin 3.9, OKD 3.10 \
+\>= v0.3.2 - oVirt >= 4.2, OKD 3.10, OKD 3.11 \
+
+### Installation
 There are 2 main deployment methods: using a deployment container(recommended) or manual
 
-## Deploy using the deployment container(APB) and service-catalog(recommended)
+1. Deploy using the deployment container(APB) and service-catalog(recommended)
 
 Pre-requisite:
-- Openshift 3.9.0
+- Openshift 3.10.0
 - Running service catalog
 
-1. push the apb image to your cluster repo
+From the repo:
+- push the apb image to your cluster repo
    ```
    make apb_build apb_push
    ```
-2. go to the service catalog UI and deploy the ovirt-flexvolume-driver-apb. Here is a demo doing that:
+- go to the service catalog UI and deploy the ovirt-flexvolume-driver-apb. \
+ Here is a demo doing that: \
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=frcehKUk_g4" target="_blank"><img src="http://img.youtube.com/vi/frcehKUk_g4/0.jpg" alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a>
 
-## Deploy Manually
+2. Deploy Manually
 
-1. make sure `oc` command is configured and has access to your cluster, e.g run `oc status`
+- make sure `oc` command is configured and has access to your cluster, e.g run `oc status`
 
-2. use a cluster admin user to deploy, or grant permission to one
+- use a cluster admin user to deploy, or grant permission to one
    ```
    oc login -u system:admin
    oc adm policy add-cluster-role-to-user cluster-admin developer
    ```
-3. deploy
+- Run on a master:
    ```
    OCP_USER=developer \
    OCP_PASS=pass \
@@ -82,21 +88,22 @@ Upon completion you have the components running:
    ovirt-volume-provisioner   1         1         1            1           17m
    ```
 
-# Project pre-requisite
-  - Running ovirt 4.1 instance (support for disk_attachments API)
-  - k8s 1.9 (possibly working on 1.8, untested)
-  - Every k8s minion name should match its VM name
+### Contributing
+**Feedback is most welcome**, if you have and idea, proposal, fix, or want to chat \
+  you'll find the details here: 
+- Patches are usual pull-request, see the pull request template.
+- Upstream bugs: https://github.com/oVirt/ovirt-openshift-extensions/issues
+- Trello Board: ovirt-openshift-extensions (may change to Jira)
+- Bugzilla tracker bug: https://bugzilla.redhat.com/show_bug.cgi?id=1581638 (see the bugzilla tracker for the component under rhev)
+- IRC: upstream: #ovirt @ oftc.net
+- Mailing List: devel@ovirt.org
 
-# Make targets
-There are few make targets for building the artifacts:
-- `make deps`      - get and install the project dependencies
-- `make build`     - build the flexvolume driver and provisioner binaries
-- `make rpm`       - builds and rpm from the previously created binaries
-- `make container` - creates the containers
-- `make apb_*`     - {build, push, docker_push} for the apb container life cycle
+Blog post in ovirt: https://www.ovirt.org/blog/2018/02/your-container-volumes-served-by-ovirt/
+
+Youtube Demo: https://youtu.be/_E9pUVrI0hs
 
 
-# Sources
+### References
 - [flexvolume plugin page on openshift](https://docs.openshift.org/latest/install_config/persistent_storage/persistent_storage_flex_volume.html)
 - [flexvolume spec on kubernetes page](https://github.com/kubernetes/community/blob/master/contributors/devel/flexvolume.md)
 
