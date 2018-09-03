@@ -16,9 +16,10 @@ FROM centos:7
 
 LABEL maintainer="Roy Golan, rgolan@redhat.com"
 
-ARG RPM=ovirt-provisioner*.rpm
+ARG RPM
+ARG RPM_DIR
 
-COPY ${RPM} /root
+COPY ${RPM_DIR}/${RPM} /root/${RPM}
 
 RUN yum install -y /root/${RPM} && yum clean all
 
