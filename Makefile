@@ -17,7 +17,7 @@ AUTOMATION_CONTAINER_NAME=ovirt-openshift-extensions-ci
 CLOUD_PROVIDER_NAME=ovirt-cloud-provider
 
 REGISTRY=rgolangh
-VERSION?=$(shell git describe --tags --always --match "v[0-9]*" | awk -F'-' '{print $$1 }')
+VERSION?=$(shell git describe --tags --always --match "v[0-9]*" | awk -F'-' '{print substr($$1,2) }')
 RELEASE?=$(shell git describe --tags --always --match "v[0-9]*" | awk -F'-' '$$2 != "" {print $$2 "." $$3}')
 VERSION_RELEASE=$(VERSION)$(if $(RELEASE),-$(RELEASE))
 
@@ -25,7 +25,7 @@ COMMIT=$(shell git rev-parse HEAD)
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 
 COMMON_ENV=CGO_ENABLED=0 GOOS=linux GOARCH=amd64
-COMMON_GO_BUILD_FLAGS=-a -ldflags '-extldflags "-static"'
+COMMON_GO_BUILD_FLAGS=-ldflags '-extldflags "-static"'
 
 TARBALL=ovirt-openshift-extensions-$(VERSION_RELEASE).tar.gz
 
@@ -60,24 +60,28 @@ container-flexdriver:
 	docker build \
 		-t $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION_RELEASE) \
 		-t $(REGISTRY)/$(FLEX_CONTAINER_NAME):latest \
-		. \
-		-f deployment/ovirt-flexdriver/container/Dockerfile
+		--build-arg RPM=$(FLEX_CONTAINER_NAME)-$(VERSION_RELEASE).*.rpm \
+		--build-arg RPM_DIR=$(ARTIFACT_DIR)/x86_64 \
+		-f deployment/ovirt-flexdriver/container/Dockerfile \
+		.
 
 container-provisioner:
 	docker build \
 		-t $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION_RELEASE) \
 		-t $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):latest \
-		. \
-		-f deployment/ovirt-provisioner/container/Dockerfile
+		--build-arg RPM=$(PROVISIONER_BINARY_NAME)-$(VERSION_RELEASE).*.rpm \
+		--build-arg RPM_DIR=$(ARTIFACT_DIR)/x86_64 \
+		-f deployment/ovirt-provisioner/container/Dockerfile \
+		.
 
 container-cloud-provider:
 	docker build \
 		-t $(REGISTRY)/$(CLOUD_PROVIDER_NAME):$(VERSION_RELEASE) \
 		-t $(REGISTRY)/$(CLOUD_PROVIDER_NAME):latest \
-		. \
 		--build-arg RPM=$(CLOUD_PROVIDER_NAME)-$(VERSION_RELEASE).*.rpm \
-		--build-arg RPM_DIR="x86_64" \
-		-f deployment/$(CLOUD_PROVIDER_NAME)/container/Dockerfile
+		--build-arg RPM_DIR=$(ARTIFACT_DIR)/x86_64 \
+		-f deployment/$(CLOUD_PROVIDER_NAME)/container/Dockerfile \
+		.
 
 container-ci:
 	docker build \
