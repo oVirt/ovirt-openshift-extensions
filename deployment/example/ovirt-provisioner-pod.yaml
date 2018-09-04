@@ -7,7 +7,7 @@ spec:
   serviceAccount: ovirt-provisioner
   containers:
   - name: ovirt-provisioner
-    image: rgolangh/ovirt-provisioner:v0.2.0
+    image: quay.io/rgolangh/ovirt-provisioner
     securityContext:
     imagePullPolicy: "IfNotPresent"
     volumeMounts:

@@ -16,7 +16,7 @@ PROVISIONER_CONTAINER_NAME=ovirt-volume-provisioner
 AUTOMATION_CONTAINER_NAME=ovirt-openshift-extensions-ci
 CLOUD_PROVIDER_NAME=ovirt-cloud-provider
 
-REGISTRY=rgolangh
+REGISTRY=quay.io/rgolangh
 VERSION?=$(shell git describe --tags --always --match "v[0-9]*" | awk -F'-' '{print substr($$1,2) }')
 RELEASE?=$(shell git describe --tags --always --match "v[0-9]*" | awk -F'-' '{if ($$2 != "") {print $$2 "." $$3} else {print 1}}')
 VERSION_RELEASE=$(VERSION)$(if $(RELEASE),-$(RELEASE))
@@ -91,7 +91,7 @@ container-ci:
 		-f automation/ci/Dockerfile
 
 container-push:
-	@docker login -u rgolangh -p ${DOCKER_BUILDER_API_KEY}
+	@docker login -u rgolangh -p ${QUAY_API_KEY} quay.io
 	docker push $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION_RELEASE)
 	docker push $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION_RELEASE)
 	docker push $(REGISTRY)/$(AUTOMATION_CONTAINER_NAME):$(VERSION_RELEASE)
@@ -103,13 +103,13 @@ container-push:
 	docker push $(REGISTRY)/$(CLOUD_PROVIDER_NAME):latest
 
 apb_build:
-	$(MAKE) -C deployment/ovirt-flexvolume-driver-apb/ apb_build
+	$(MAKE) -C deployment/ovirt-flexvolume-driver-apb/ apb_build REGISTRY=$(REGISTRY)
 
 apb_push:
-	$(MAKE) -C deployment/ovirt-flexvolume-driver-apb/ apb_push
+	$(MAKE) -C deployment/ovirt-flexvolume-driver-apb/ apb_push REGISTRY=$(REGISTRY)
 
 apb_docker_push:
-	$(MAKE) -C deployment/ovirt-flexvolume-driver-apb/ docker_push
+	$(MAKE) -C deployment/ovirt-flexvolume-driver-apb/ docker_push REGISTRY=$(REGISTRY)
 
 build: \
 	build-flex \

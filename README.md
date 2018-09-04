@@ -3,6 +3,13 @@
 [![Build Status](http://jenkins.ovirt.org/buildStatus/icon?job=oVirt_ovirt-openshift-extensions_standard-on-ghpush)](http://jenkins.ovirt.org/job/oVirt_ovirt-openshift-extensions_standard-on-ghpush/)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ovirt/ovirt-openshift-extensions)](https://goreportcard.com/report/github.com/ovirt/ovirt-openshift-extensions)
 
+| container image | status    | 
+| :---            | :---      |
+|ovirt-flexvolume-driver |[![ovirt-flexvolume-driver](https://quay.io/repository/rgolangh/ovirt-flexvolume-driver/status)](https://quay.io/repository/rgolangh/ovirt-flexvolume-driver/status) |
+|ovirt-volume-provisioner|[![ovirt-volume-provisioner](https://quay.io/repository/rgolangh/ovirt-volume-provisioner/status)](https://quay.io/repository/rgolangh/ovirt-volume-provisioner/status) |
+|ovirt-cloud-provider    |[![ovirt-cloud-provider](https://quay.io/repository/rgolangh/ovirt-cloud-provider/status)](https://quay.io/repository/rgolangh/ovirt-cloud-provider/status) |
+|ovirt-openshift-extensions-ci    |[![ovirt-openshift-extensions-ci](https://quay.io/repository/rgolangh/ovirt-openshift-extensions-ci/status)](https://quay.io/repository/rgolangh/ovirt-openshift-extensions-ci/status) |
+
 ## Purpose
 The project purpose is to the best out of openshift installation on top of oVirt.
 It's main components are:
@@ -67,7 +74,7 @@ From the repo:
     --rm \
     --net=host \
     -v $HOME/.kube:/opt/apb/.kube:z \
-    -u $UID docker.io/rgolangh/ovirt-flexvolume-driver-apb \
+    -u $UID quay.io/rgolangh/ovirt-flexvolume-driver-apb \
     provision \
     -e admin_password=$OCP_PASS -e admin_user=$OCP_USER \
     -e cluster=openshift -e namespace=default \
