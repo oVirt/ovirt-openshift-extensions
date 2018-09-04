@@ -18,7 +18,7 @@ CLOUD_PROVIDER_NAME=ovirt-cloud-provider
 
 REGISTRY=rgolangh
 VERSION?=$(shell git describe --tags --always --match "v[0-9]*" | awk -F'-' '{print substr($$1,2) }')
-RELEASE?=$(shell git describe --tags --always --match "v[0-9]*" | awk -F'-' '$$2 != "" {print $$2 "." $$3}')
+RELEASE?=$(shell git describe --tags --always --match "v[0-9]*" | awk -F'-' '{if ($$2 != "") {print $$2 "." $$3} else {print 1}}')
 VERSION_RELEASE=$(VERSION)$(if $(RELEASE),-$(RELEASE))
 
 COMMIT=$(shell git rev-parse HEAD)
