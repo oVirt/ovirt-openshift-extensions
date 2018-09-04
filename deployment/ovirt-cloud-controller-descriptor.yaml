@@ -40,7 +40,7 @@ spec:
         # for in-tree providers we use gcr.io/google_containers/cloud-controller-manager
         # this can be replaced with any other image for out-of-tree providers
         #image: gcr.io/google_containers/cloud-controller-manager:v1.8.0
-        image: docker.io/rgolangh/ovirt-cloud-controller
+        image: quay.io/rgolangh/ovirt-cloud-controller
         command:
         - /usr/local/bin/ovirt-cloud-controller
         - --cloud-provider=ovirt-cloud-provider

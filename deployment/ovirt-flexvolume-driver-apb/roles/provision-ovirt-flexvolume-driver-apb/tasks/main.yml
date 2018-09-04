@@ -42,7 +42,7 @@
       - key: node-role.kubernetes.io/master
         effect: NoSchedule
     containers:
-    - image: docker.io/rgolangh/ovirt-flexvolume-driver
+    - image: quay.io/rgolangh/ovirt-flexvolume-driver
       name: ovirt-flexvolume-driver
       securityContext:
           privileged: true
@@ -144,7 +144,7 @@
       - key: node-role.kubernetes.io/master
         effect: NoSchedule
     containers:
-      - image: rgolangh/ovirt-volume-provisioner
+      - image: quay.io/rgolangh/ovirt-volume-provisioner
         name: ovirt-volume-provisioner
         volumeMounts:
           - name: config-volume

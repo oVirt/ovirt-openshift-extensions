@@ -83,7 +83,7 @@ spec:
   serviceAccount: ovirt-provisioner
   containers:
   - name: ovirt-provisioner
-    image: rgolangh/ovirt-provisioner:{{ provisioner_version }}
+    image: quay.io/rgolangh/ovirt-provisioner:{{ provisioner_version }}
     securityContext:
     imagePullPolicy: "IfNotPresent"
     volumeMounts:
