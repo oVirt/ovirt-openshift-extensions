@@ -75,11 +75,11 @@ From the repo:
     --net=host \
     -v $HOME/.kube:/opt/apb/.kube:z \
     -u $UID quay.io/rgolangh/ovirt-flexvolume-driver-apb \
-    provision \
-    -e admin_password=$OCP_PASS -e admin_user=$OCP_USER \
-    -e cluster=openshift -e namespace=default \
-    -e engine_password=$ENGINE_PASS -e engine_url=$ENGINE_URL \
-    -e engine_username=$ENGINE_USER
+    provision -e \
+    '{"admin_password":"$OCP_PASS", "admin_user":"$OCP_USER", \
+      "cluster":"openshift", "namespace":"default", \
+      "engine_password":"$ENGINE_PASS", "engine_url":"$ENGINE_URL", \
+      "engine_username":"$ENGINE_USER"}'
    ```
 
    - If its the first time deploying the image then it should take few moments to download it.
