@@ -35,11 +35,10 @@ NOTE: ovirt-cloud-provider will be available in v0.3.3
 |\<= v0.3.1 | \>= 4.2      | 3.9,  3.10      |
 |\>= v0.3.2 | \>= 4.2      | 3.10, 3.11      |
 
-### Installation
-There are 2 main deployment methods: using a deployment container(recommended) or manual
+### Deployment
 
-1. Deploy using the deployment container(APB) and service-catalog(recommended)
-
+#### Deploy via service-catalog
+ 
 Pre-requisite:
 - Openshift 3.10.0
 - Running service catalog
@@ -53,7 +52,7 @@ From the repo:
  Here is a demo doing that: \
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=frcehKUk_g4" target="_blank"><img src="http://img.youtube.com/vi/frcehKUk_g4/0.jpg" alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a>
 
-2. Deploy Manually
+#### Deploy via cli
 
 - make sure `oc` command is configured and has access to your cluster, e.g run `oc status`
 
