@@ -62,24 +62,24 @@ From the repo:
    $ oc login -u system:admin
    $ oc adm policy add-cluster-role-to-user cluster-admin developer
    ```
-- Run on a master:
+- Run on a master(replace the input with yours):
    ```console
-   $ OCP_USER=developer \
-     OCP_PASS=pass \
-     ENGINE_URL=https://engine-fqdn/ovirt-engine/api \
-     ENGINE_USER=admin@internal \
-     ENGINE_PASS=123
-   
-   $ docker run \
+    docker run \
+    -it \
     --rm \
     --net=host \
     -v $HOME/.kube:/opt/apb/.kube:z \
     -u $UID quay.io/rgolangh/ovirt-flexvolume-driver-apb \
     provision -e \
-    '{"admin_password":"$OCP_PASS", "admin_user":"$OCP_USER", \
-      "cluster":"openshift", "namespace":"default", \
-      "engine_password":"$ENGINE_PASS", "engine_url":"$ENGINE_URL", \
-      "engine_username":"$ENGINE_USER"}'
+    '{
+      "admin_user":"developer",
+      "admin_password":"YOURPASS",  
+      "cluster":"openshift",
+      "namespace":"default",
+      "engine_username":"admin@internal",
+      "engine_password":"YOURPASS",
+      "engine_url":"https://ENGINE-FQDN/ovirt-engine/api",
+      }'
    ```
 
    - If its the first time deploying the image then it should take few moments to download it.
