@@ -16,11 +16,17 @@ FROM centos:7
 
 LABEL maintainer="Roy Golan, rgolan@redhat.com"
 
-ARG RPM
-ARG RPM_DIR
+ARG VERSION
+ARG RELEASE
 
-COPY ${RPM_DIR}/${RPM} /root/${RPM}
+RUN mkdir -p /root/go/src/github.com/ovirt/ovirt-openshift-extensions
+WORKDIR /root/go/src/github.com/ovirt/ovirt-openshift-extensions
+ADD ovirt-openshift-extensions-$VERSION-$RELEASE.tar.gz .
 
-RUN yum install -y /root/${RPM} && yum clean all
+RUN yum install -y golang make
+RUN make build-provisioner
 
-ENTRYPOINT ["/usr/bin/ovirt-provisioner"]
+#TODO use multi-stage when buildah runs in mock or docker 1.17 is available
+RUN cp -v ovirt-volume-provisioner /usr/bin
+
+ENTRYPOINT ["/usr/bin/ovirt-volume-provisioner"]

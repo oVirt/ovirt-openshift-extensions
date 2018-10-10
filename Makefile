@@ -9,8 +9,8 @@ GODEP=dep
 PREFIX=.
 ARTIFACT_DIR ?= .
 
-FLEX_DRIVER_BINARY_NAME=ovirt-flexdriver
-PROVISIONER_BINARY_NAME=ovirt-provisioner
+FLEX_DRIVER_BINARY_NAME=ovirt-flexvolume-driver
+PROVISIONER_BINARY_NAME=ovirt-volume-provisioner
 FLEX_CONTAINER_NAME=ovirt-flexvolume-driver
 PROVISIONER_CONTAINER_NAME=ovirt-volume-provisioner
 AUTOMATION_CONTAINER_NAME=ovirt-openshift-extensions-ci
@@ -55,31 +55,30 @@ container: \
 	container-cloud-provider \
 	container-ci
 
-container-flexdriver:
-	# place the rpm flat under the repo otherwise dockerignore will mask its directory. TODO make it more flexible
+container-flexdriver: tarball
 	docker build \
 		-t $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION_RELEASE) \
 		-t $(REGISTRY)/$(FLEX_CONTAINER_NAME):latest \
-		--build-arg RPM=$(FLEX_CONTAINER_NAME)-$(VERSION_RELEASE).*.rpm \
-		--build-arg RPM_DIR=$(ARTIFACT_DIR)/x86_64 \
-		-f deployment/ovirt-flexdriver/container/Dockerfile \
+		--build-arg VERSION=$(VERSION) \
+		--build-arg RELEASE=$(RELEASE) \
+		-f deployment/ovirt-flexvolume-driver/container/Dockerfile \
 		.
 
-container-provisioner:
+container-provisioner: tarball
 	docker build \
 		-t $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION_RELEASE) \
 		-t $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):latest \
-		--build-arg RPM=$(PROVISIONER_BINARY_NAME)-$(VERSION_RELEASE).*.rpm \
-		--build-arg RPM_DIR=$(ARTIFACT_DIR)/x86_64 \
-		-f deployment/ovirt-provisioner/container/Dockerfile \
+		--build-arg VERSION=$(VERSION) \
+		--build-arg RELEASE=$(RELEASE) \
+		-f deployment/ovirt-volume-provisioner/container/Dockerfile \
 		.
 
-container-cloud-provider:
+container-cloud-provider: tarball
 	docker build \
 		-t $(REGISTRY)/$(CLOUD_PROVIDER_NAME):$(VERSION_RELEASE) \
 		-t $(REGISTRY)/$(CLOUD_PROVIDER_NAME):latest \
-		--build-arg RPM=$(CLOUD_PROVIDER_NAME)-$(VERSION_RELEASE).*.rpm \
-		--build-arg RPM_DIR=$(ARTIFACT_DIR)/x86_64 \
+		--build-arg VERSION=$(VERSION) \
+		--build-arg RELEASE=$(RELEASE) \
 		-f deployment/$(CLOUD_PROVIDER_NAME)/container/Dockerfile \
 		.
 
@@ -87,8 +86,8 @@ container-ci:
 	docker build \
 		-t $(REGISTRY)/$(AUTOMATION_CONTAINER_NAME):$(VERSION_RELEASE) \
 		-t $(REGISTRY)/$(AUTOMATION_CONTAINER_NAME):latest \
-		automation/ci \
-		-f automation/ci/Dockerfile
+		-f automation/ci/Dockerfile \
+		automation/ci
 
 container-push:
 	@docker login -u rgolangh -p ${QUAY_API_KEY} quay.io
@@ -123,32 +122,10 @@ clean:
 	$(GOCLEAN)
 	git clean -dfx -e .idea*
 
-run: \
-	build \
-	./$(FLEX_DRIVER_BINARY_NAME)
-	./$(PROVISIONER_BINARY_NAME)
-
 deps:
 	dep ensure --update
 
 tarball:
 	/bin/git archive --format=tar.gz HEAD > $(TARBALL)
-
-rpm:
-	$(MAKE) tarball
-	rpmbuild -tb $(TARBALL) \
-		--define "debug_package %{nil}" \
-		--define "_rpmdir $(ARTIFACT_DIR)" \
-		--define "_version $(VERSION)" $(if $(RELEASE), --define "_release $(RELEASE)")
-
-srpm:
-	$(MAKE) tarball
-	rpmbuild -ts $(TARBALL) \
-		--define "debug_package %{nil}" \rm -f $(FLEX_DRIVER_BINARY_NAME)
-	rm -f $(PROVISIONER_BINARY_NAME)
-	rm -f $(CLOUD_PROVIDER_NAME)
-		--define "_rpmdir $(ARTIFACT_DIR)" \
-		--define "_version $(VERSION)" \
-		--define "_version $(VERSION)" $(if $(RELEASE), --define "_release $(RELEASE)")
 
 .PHONY: build-flex build-provisioner build-cloud-provider container container-flexdriver container-provisioner container-cloud-provider container-ci container-push
