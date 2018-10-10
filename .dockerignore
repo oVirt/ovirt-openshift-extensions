@@ -9,6 +9,6 @@
 !deployment/ovirt-provisioner/ovirt-provisioner-manifest.yaml.j2
 !deployment/ovirt-provisioner/deploy.yaml
 !deployment/ovirt-flexdriver/entrypoint.sh
-!**/*.rpm
+!**/*tar.gz
 !exported-artifacts
 !x86_64
