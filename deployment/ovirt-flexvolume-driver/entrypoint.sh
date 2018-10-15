@@ -1,19 +1,19 @@
 #!/bin/sh -ex
 
-#
-# NOTE: The products this containers installats are expected to be in /opt/ovirt-flexvolume-driver/ folder
-#
-# The flexvolume driver entrypoint makes sure that the binary exists in the $dest
+# Expected files location:
+#   - binaries under /usr/bin
+#   - conf loaded into the container under /opt/ovirt-flexvolume-driver
+# 
+# This entrypoint makes sure that the binary is copied to the $dest
 # and is suited to the deploying the driver as a pod only to expose a hostPath. It is
 # form of installing the binary from this container, onto the host that is running it.
-#
-# Install binaries and conf into the exposed hostPath 
 
 src=$(mktemp -d)
-cp -r /opt/ovirt-flexvolume-driver/* $src
-dest=/var/tmp/usr/libexec/kubernetes/kubelet-plugins/volume/exec/
+dest=/usr/libexec/kubernetes/kubelet-plugins/volume/exec/
 
-cp /usr/bin/ovirt-flexvolume-driver $src/
+cp -r /opt/ovirt-flexvolume-driver/* $src
+cp /usr/bin/ovirt-flexvolume-driver $src
+
 # append per node values to the config
 echo "ovirtVmName=$OVIRT_VM_NAME" >> $src/ovirt-flexvolume-driver.conf
 
