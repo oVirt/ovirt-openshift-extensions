@@ -12,8 +12,11 @@
 |ovirt-openshift-extensions-ci    |[![ovirt-openshift-extensions-ci](https://quay.io/repository/rgolangh/ovirt-openshift-extensions-ci/status)](https://quay.io/repository/rgolangh/ovirt-openshift-extensions-ci/status) |
 
 ## Purpose
-The project purpose is to the best out of openshift installation on top of oVirt.
-It's main components are:
+Make oVirt the a prefered platform for openshift installation.
+The main components this project will ship are:
+  - storage integration through plugin - currently flex, CSI in the future
+  - cloud provider
+  - easy deployement of all those components
 
 ### ovirt-volume-provisioner
 A kubernetes controller that creates/deletes persistent volumes, and allocates disks \
