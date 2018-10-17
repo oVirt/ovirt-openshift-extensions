@@ -4,11 +4,10 @@ about: Create a report to help us improve
 
 ---
 
-**Describe the bug**
+**Description**
 A clear and concise description of what the bug is.
 
-**To Reproduce**
-Steps to reproduce the behavior:
+**Steps To Reproduce**
 1. Go to '...'
 2. Click on '....'
 3. Scroll down to '....'
@@ -17,7 +16,7 @@ Steps to reproduce the behavior:
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
-**Versions (please complete the following information):**
+**Versions:**
  - OS: of the nodes, master involved `cat /etc/os-release`
  - Openshift|kubernetes version `oc version` or `kubectl version`
  - oVirt version `rpm -ql ovirt-engine`
