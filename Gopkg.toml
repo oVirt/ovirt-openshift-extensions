@@ -11,10 +11,6 @@
   name = "github.com/golang/glog"
 
 [[constraint]]
-  name = "github.com/op/go-logging"
-  version = "1.0.0"
-
-[[constraint]]
   name = "github.com/kubernetes-incubator/external-storage"
   version = "v4.0.0"
 
