@@ -1,0 +1,10 @@
+
+  [ ] use mini-api in provider struct
+  [ ] use default vmsquery if not provided by config
+  [ ] put vmsquery config section in the deployment
+  [ ] find the right way to deploy using openshift-ansible openshiftr_ovirt playbook
+  [ ] put a lablel on vms if using openshift_ovirt role? in the manifest?
+  [ ]
+
+  
+

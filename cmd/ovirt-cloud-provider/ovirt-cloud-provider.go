@@ -90,7 +90,11 @@ func NewOvirtProvider(providerConfig ProviderConfig) (*CloudProvider, error) {
 	}
 
 	vmsQuery.Path = path.Join(vmsQuery.Path, "vms")
-	vmsQuery.RawQuery = url.Values{"search": {providerConfig.Filters.VmsQuery}}.Encode()
+	s := providerConfig.Filters.VmsQuery
+	if (s == "") {
+		s = "tag:container_node"
+	}
+	vmsQuery.RawQuery = url.Values{"search": {s}}.Encode()
 
 	return &CloudProvider{VmsQuery: vmsQuery}, nil
 

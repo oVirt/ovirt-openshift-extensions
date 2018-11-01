@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var vmsJsonData string
@@ -13,6 +15,35 @@ var vmsJsonData string
 const vm1Id = "0013e1a7-c837-4b7f-8420-6deca9486415"
 const vm2Id = "e47839a3-149b-4405-ba69-3fb20eaa2fed"
 const vm1NodeName = "ovirtNode_1"
+
+var _ = Describe("ovirt-cloud-provider configuration tests", func() {
+	var (
+		underTest *CloudProvider
+		err	error
+	)
+
+	BeforeEach(func() {
+		underTest, _ = NewOvirtProvider(ProviderConfig{})
+	})
+
+	Context("With a default config", func() {
+		It("VMs query should have a default search vms with tag", func() {
+			Expect(underTest.VmsQuery.RawQuery).Should(Equal("search=tag%3Acontainer_node"))
+		})
+
+
+	})
+
+	Context("With invalid config", func() {
+		BeforeEach(func() {
+			conf := ProviderConfig{}
+			underTest, err = NewOvirtProvider(conf)
+		})
+		It("should fails to start", func() {
+			Expect(err).To(HaveOccurred())
+		})
+	})
+})
 
 type HttpHandler struct{}
 
