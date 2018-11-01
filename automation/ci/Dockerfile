@@ -4,6 +4,10 @@ USER root
 
 RUN yum install -y \ 
 	http://resources.ovirt.org/pub/yum-repo/ovirt-release42.rpm	
+
+# Installing pre release of 4.2 till GA of 4.2.7 see github issues/73
+RUN yum install -y ovirt-release42-pre
+
 RUN yum install -y \
 	file \
 	ansible \
