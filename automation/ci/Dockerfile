@@ -30,5 +30,5 @@ ADD deploy_flex.yaml  /root/deploy_flex.yaml
 ADD flex_deployer_job.yaml  /root/flex_deployer_job.yaml
 
 WORKDIR /root
-RUN git clone --branch release-3.11 https://github.com/openshift/openshift-ansible --depth 1
+RUN git clone --branch release-3.10 https://github.com/openshift/openshift-ansible --depth 1
 ENTRYPOINT ansible-playbook -i integ.ini site.yaml
