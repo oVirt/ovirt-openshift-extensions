@@ -49,57 +49,35 @@ build-cloud-provider:
 	-o $(PREFIX)/$(CLOUD_PROVIDER_NAME) \
 	-v cmd/$(CLOUD_PROVIDER_NAME)/*.go
 
-container: \
-	container-flexdriver \
-	container-provisioner \
-	container-cloud-provider \
-	container-ci
+containers = \
+	ovirt-flexvolume-driver \
+	ovirt-volume-provisioner \
+	ovirt-cloud-provider \
+	ovirt-openshift-extensions-ci
 
-container-flexdriver: tarball
+$(containers): tarball
+container-%: DIR=.
+container-%: DOCKERFILE=deployment/$</container/Dockerfile
+container-ovirt-openshift-extensions-ci: DIR=automation/ci
+container-ovirt-openshift-extensions-ci: DOCKERFILE=$(DIR)/Dockerfile
+
+container-%: %
 	docker build \
-		-t $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION_RELEASE) \
-		-t $(REGISTRY)/$(FLEX_CONTAINER_NAME):latest \
+		-t $(REGISTRY)/$<:$(VERSION_RELEASE) \
+		-t $(REGISTRY)/$<:latest \
 		--build-arg VERSION=$(VERSION) \
 		--build-arg RELEASE=$(RELEASE) \
-		-f deployment/ovirt-flexvolume-driver/container/Dockerfile \
-		.
+		-f $(DOCKERFILE) \
+		$(DIR)
 
-container-provisioner: tarball
-	docker build \
-		-t $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION_RELEASE) \
-		-t $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):latest \
-		--build-arg VERSION=$(VERSION) \
-		--build-arg RELEASE=$(RELEASE) \
-		-f deployment/ovirt-volume-provisioner/container/Dockerfile \
-		.
+build-containers: $(addprefix container-, $(containers))
+push-containers: $(addprefix container-push-, $(containers))
 
-container-cloud-provider: tarball
-	docker build \
-		-t $(REGISTRY)/$(CLOUD_PROVIDER_NAME):$(VERSION_RELEASE) \
-		-t $(REGISTRY)/$(CLOUD_PROVIDER_NAME):latest \
-		--build-arg VERSION=$(VERSION) \
-		--build-arg RELEASE=$(RELEASE) \
-		-f deployment/$(CLOUD_PROVIDER_NAME)/container/Dockerfile \
-		.
-
-container-ci:
-	docker build \
-		-t $(REGISTRY)/$(AUTOMATION_CONTAINER_NAME):$(VERSION_RELEASE) \
-		-t $(REGISTRY)/$(AUTOMATION_CONTAINER_NAME):latest \
-		-f automation/ci/Dockerfile \
-		automation/ci
-
-container-push:
+container-push-%: %
 	@docker login -u rgolangh -p ${QUAY_API_KEY} quay.io
-	docker push $(REGISTRY)/$(FLEX_CONTAINER_NAME):$(VERSION_RELEASE)
-	docker push $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):$(VERSION_RELEASE)
-	docker push $(REGISTRY)/$(AUTOMATION_CONTAINER_NAME):$(VERSION_RELEASE)
-	docker push $(REGISTRY)/$(CLOUD_PROVIDER_NAME):$(VERSION_RELEASE)
-	# push latest
-	docker push $(REGISTRY)/$(FLEX_CONTAINER_NAME):latest
-	docker push $(REGISTRY)/$(PROVISIONER_CONTAINER_NAME):latest
-	docker push $(REGISTRY)/$(AUTOMATION_CONTAINER_NAME):latest
-	docker push $(REGISTRY)/$(CLOUD_PROVIDER_NAME):latest
+	docker push $(REGISTRY)/$<:$(VERSION_RELEASE)
+	docker push $(REGISTRY)/$<:latest
+	echo "$(REGISTRY)/$<:$(VERSION_RELEASE)" >> containers-artifacts.list
 
 apb_build:
 	$(MAKE) -C deployment/ovirt-flexvolume-driver-apb/ apb_build REGISTRY=$(REGISTRY)
@@ -125,7 +103,10 @@ clean:
 deps:
 	dep ensure --update
 
-tarball:
+tarball: $(TARBALL)
+	echo making tar
+
+$(TARBALL):
 	/bin/git archive --format=tar.gz HEAD > $(TARBALL)
 
 .PHONY: build-flex build-provisioner build-cloud-provider container container-flexdriver container-provisioner container-cloud-provider container-ci container-push
