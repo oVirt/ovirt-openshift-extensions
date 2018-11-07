@@ -24,7 +24,7 @@ WORKDIR /root/go/src/github.com/ovirt/ovirt-openshift-extensions
 ADD ovirt-openshift-extensions-$VERSION-$RELEASE.tar.gz .
 
 RUN yum install -y golang make
-RUN make build-flex
+RUN make ovirt-flexvolume-driver
 
 #TODO use multi-stage when buildah runs in mock or docker 1.17 is available
 RUN cp -v ovirt-flexvolume-driver /usr/bin/

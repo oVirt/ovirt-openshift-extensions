@@ -1,9 +1,9 @@
 *.ca
 *.retry
 deployment/*.retry
-/ovirt-flexdriver
+/ovirt-flexvolume-driver
 /ovirt-flexdriver.conf
-/ovirt-provisioner
+/ovirt-volume-provisioner
 /ovirt-cloud-provider
 /ovirt-api.conf
 deployment/container/ovirt-provisioner
