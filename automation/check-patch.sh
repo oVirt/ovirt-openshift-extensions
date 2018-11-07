@@ -1,3 +1,3 @@
 #!/bin/bash -ex
 
-make container
+make build-containers
