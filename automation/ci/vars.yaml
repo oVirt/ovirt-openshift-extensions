@@ -67,6 +67,7 @@ cloud_init_script_master: |
       gpgcheck: false
     packages:
     - ovirt-guest-agent
+    - centos-release-openshift-origin
   runcmd:
     - systemctl enable ovirt-guest-agent
     - systemctl start ovirt-guest-agent
