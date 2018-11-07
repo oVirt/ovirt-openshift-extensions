@@ -12,12 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM centos:7
-
-LABEL maintainer="Roy Golan, rgolan@redhat.com"
+FROM centos:7.5.1804
 
 ARG VERSION
 ARG RELEASE
+
+LABEL   com.redhat.component="ovirt-openshift-extensions" \
+        name="ovirt-flexvolume-driver" \
+        version="$VERSION" \
+        release="$RELEASE" \
+        architecture="x86_64" \
+        summary="ovirt-flexvolume-driver for openshift, for dynamic volume provisioning" \
+        maintainer="Roy Golan <rgolan@redhat.com>"
 
 RUN mkdir -p /root/go/src/github.com/ovirt/ovirt-openshift-extensions
 WORKDIR /root/go/src/github.com/ovirt/ovirt-openshift-extensions
