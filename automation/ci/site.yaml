@@ -40,15 +40,15 @@
     - role: oVirt.vm-infra
 
   tasks:
-    - ovirt_nics_facts:
+    - ovirt_nic_facts:
         auth: "{{ ovirt_auth }}"
         vm: master0.example.com
         name: nic*
     - debug:
         msg: '{{ ovirt_nics[0].reported_devices[0].ips | json_query("[?version==`v4`]") | map(attribute="address") | list }}'
 
-    - shell: 'echo {{ item }} master0.example.com >> /etc/hosts'
-      with_items: '{{ ovirt_nics[0].reported_devices[0].ips | json_query("[?version==`v4`]") | map(attribute="address") | list }}'
+    #- shell: 'echo {{ item }} master0.example.com >> /etc/hosts'
+    #  with_items: '{{ ovirt_nics[0].reported_devices[0].ips | json_query("[?version==`v4`]") | map(attribute="address") | list }}'
 
 
   post_tasks:

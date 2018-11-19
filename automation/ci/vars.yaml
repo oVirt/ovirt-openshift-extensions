@@ -40,14 +40,6 @@ master_vm:
       storage_domain: "{{ rhv_data_storage }}"
       name: docker_disk
       interface: virtio
-    - size: 4GiB
-      storage_domain: "{{ rhv_data_storage }}"
-      name: localvol_disk
-      interface: virtio
-    - size: 1GiB
-      storage_domain: "{{ rhv_data_storage }}"
-      name: etcd_disk
-      interface: virtio
   state: running
 
 
@@ -65,22 +57,15 @@ cloud_init_script_master: |
       baseurl: http://mirror.centos.org/centos/7/virt/x86_64/ovirt-4.2
       enabled: true
       gpgcheck: false
-    packages:
+  packages:
     - ovirt-guest-agent
-    - centos-release-openshift-origin
+    - epel-release
+    - centos-release-openshift-origin311
   runcmd:
     - systemctl enable ovirt-guest-agent
     - systemctl start ovirt-guest-agent
-    - mkdir -p '/var/lib/origin/openshift.local.volumes'
-    - mkdir -p '/var/lib/etcd'
-    - /usr/sbin/mkfs.xfs -L localvol /dev/vdc
-    - /usr/sbin/mkfs.xfs -L etcd /dev/vdd
     - sleep "$(($RANDOM % 30))"
     - sync
-    - reboot
-  mounts:
-    - [ '/dev/vdc', '/var/lib/origin/openshift.local.volumes', 'xfs', 'defaults,gquota' ]
-    - [ '/dev/vdd', '/var/lib/etcd', 'xfs', 'defaults' ]
 
 vms:
   # Master VMs
