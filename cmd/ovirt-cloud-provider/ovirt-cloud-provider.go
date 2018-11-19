@@ -78,11 +78,11 @@ func init() {
 			if err != nil {
 				return nil, err
 			}
-			return NewOvirtProvider(providerConfig)
+			return NewOvirtProvider(&providerConfig)
 		})
 }
 
-func NewOvirtProvider(providerConfig ProviderConfig) (*CloudProvider, error) {
+func NewOvirtProvider(providerConfig *ProviderConfig) (*CloudProvider, error) {
 
 	vmsQuery, err := url.Parse(providerConfig.Connection.Url)
 	if err != nil {
@@ -91,7 +91,7 @@ func NewOvirtProvider(providerConfig ProviderConfig) (*CloudProvider, error) {
 
 	vmsQuery.Path = path.Join(vmsQuery.Path, "vms")
 	s := providerConfig.Filters.VmsQuery
-	if (s == "") {
+	if s == "" {
 		s = "tag:container_node"
 	}
 	vmsQuery.RawQuery = url.Values{"search": {s}}.Encode()

@@ -23,7 +23,7 @@ var _ = Describe("ovirt-cloud-provider configuration tests", func() {
 	)
 
 	BeforeEach(func() {
-		underTest, _ = NewOvirtProvider(ProviderConfig{})
+		underTest, _ = NewOvirtProvider(&ProviderConfig{})
 	})
 
 	Context("With a default config", func() {
@@ -37,7 +37,7 @@ var _ = Describe("ovirt-cloud-provider configuration tests", func() {
 	Context("With invalid config", func() {
 		BeforeEach(func() {
 			conf := ProviderConfig{}
-			underTest, err = NewOvirtProvider(conf)
+			underTest, err = NewOvirtProvider(&conf)
 		})
 		It("should fails to start", func() {
 			Expect(err).To(HaveOccurred())
@@ -59,7 +59,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestNewProvider(t *testing.T) {
-	p, err := NewOvirtProvider(ProviderConfig{})
+	p, err := NewOvirtProvider(&ProviderConfig{})
 	if err != nil || p == nil {
 		t.Fatal(err)
 	}
@@ -120,7 +120,7 @@ func getProvider() (*CloudProvider, error) {
 	//defer httpServer.Close()
 	c := ProviderConfig{}
 	c.Connection.Url = httpServer.URL
-	provider, err := NewOvirtProvider(c)
+	provider, err := NewOvirtProvider(&c)
 	return provider, err
 }
 
