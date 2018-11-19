@@ -11,8 +11,8 @@
 src=$(mktemp -d)
 dest=/usr/libexec/kubernetes/kubelet-plugins/volume/exec/
 
-cp -r /opt/ovirt-flexvolume-driver/* $src
-cp /usr/bin/ovirt-flexvolume-driver $src
+cp -v /opt/ovirt-flexvolume-driver/ovirt-flexvolume-driver.conf $src/
+cp -v /usr/bin/ovirt-flexvolume-driver $src/
 
 # append per node values to the config
 echo "ovirtVmName=$OVIRT_VM_NAME" >> $src/ovirt-flexvolume-driver.conf
