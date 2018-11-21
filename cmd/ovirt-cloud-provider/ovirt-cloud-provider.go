@@ -115,20 +115,6 @@ func (p *CloudProvider) NodeAddresses(context context.Context, name types.NodeNa
 	return addresses, nil
 }
 
-// extractNodeAddresses will return all addresses of the reported node
-// TODO how to detect a primary external IP? how to pass hostnames if we have it?
-func extractNodeAddresses(vm internal.VM) []v1.NodeAddress {
-	addresses := make([]v1.NodeAddress,0)
-	for _, nics := range vm.Nics.Nics {
-		for _, dev := range nics.Devices.Devices {
-			for _, ip := range dev.Ips.Ips {
-				addresses = append(addresses, v1.NodeAddress{Address: ip.Address, Type:v1.NodeExternalIP})
-			}
-		}
-	}
-	return addresses
-}
-
 // CloudProvider Instances
 func (p *CloudProvider) InstanceID(context context.Context, nodeName types.NodeName) (string, error) {
 	vms, err := p.getVms()
@@ -161,6 +147,8 @@ func (*CloudProvider) HasClusterID() bool {
 	return false
 }
 
+//AddSSHKeyToAllInstances Not implemented in ovirt - Can be implemented by pushing the keys to
+// cloud-init and rebooting the VM. Don't know if that's needed when bootstraping a node
 func (*CloudProvider) AddSSHKeyToAllInstances(context context.Context, user string, keyData []byte) error {
 	return errors.New("NotImplemented")
 }
@@ -271,4 +259,18 @@ func (p *CloudProvider) getVmsById() (map[string]internal.VM, error) {
 		vmsById[vm.Id] = vm
 	}
 	return vmsById, nil
+}
+
+// extractNodeAddresses will return all addresses of the reported node
+// TODO how to detect a primary external IP? how to pass hostnames if we have it?
+func extractNodeAddresses(vm internal.VM) []v1.NodeAddress {
+	addresses := make([]v1.NodeAddress,0)
+	for _, nics := range vm.Nics.Nics {
+		for _, dev := range nics.Devices.Devices {
+			for _, ip := range dev.Ips.Ips {
+				addresses = append(addresses, v1.NodeAddress{Address: ip.Address, Type:v1.NodeExternalIP})
+			}
+		}
+	}
+	return addresses
 }

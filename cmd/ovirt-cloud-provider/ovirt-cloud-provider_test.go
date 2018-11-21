@@ -152,8 +152,6 @@ var _ = Describe("ovirt-cloud-provider node tests", func() {
 			Expect(vmId).To(Equal(""))
 		})
 
-
-
 	})
 })
 
