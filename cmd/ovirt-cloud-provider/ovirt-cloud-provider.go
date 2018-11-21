@@ -135,17 +135,6 @@ func (p *CloudProvider) InstanceID(context context.Context, nodeName types.NodeN
 	return vms[string(nodeName)].Id, err
 }
 
-func (p *CloudProvider) getVms() (map[string]internal.VM, error) {
-	vms, err := p.GetVMs(p.VmsQuery)
-
-	var vmsMap = make(map[string]internal.VM, len(vms))
-	for _, v := range vms {
-		vmsMap[v.Name] = v
-	}
-
-	return vmsMap, err
-}
-
 // Clusters returns a clusters interface.  Also returns true if the interface is supported, false otherwise.
 func (*CloudProvider) Clusters() (cloudprovider.Clusters, bool) {
 	return nil, false
@@ -185,10 +174,14 @@ func (p *CloudProvider) CurrentNodeName(context context.Context, hostname string
 // Note that if the instance does not exist or is no longer running, we must return ("", cloudprovider.InstanceNotFound)
 func (p *CloudProvider) ExternalID(nodeName types.NodeName) (string, error) {
 	vms, err := p.getVms()
-	if err != nil || vms[string(nodeName)].Id == "" {
-
+	if err != nil  {
+		return "", err
 	}
-	return vms[string(nodeName)].Id, nil
+	vm, ok :=  vms[string(nodeName)]
+	if !ok {
+		return "", cloudprovider.InstanceNotFound
+	}
+	return vm.Id, nil
 }
 
 // InstanceExistsByProviderID returns true if the instance for the given provider id still is running.
@@ -255,6 +248,17 @@ func (p *CloudProvider) NodeAddressesByProviderID(context context.Context, provi
 	// TODO the old provider supplied hostnames - look for fqdn of VM maybe?. Consider implementing.
 	addresses := extractNodeAddresses(vm)
 	return addresses, nil
+}
+
+func (p *CloudProvider) getVms() (map[string]internal.VM, error) {
+	vms, err := p.GetVMs(p.VmsQuery)
+
+	var vmsMap = make(map[string]internal.VM, len(vms))
+	for _, v := range vms {
+		vmsMap[v.Name] = v
+	}
+
+	return vmsMap, err
 }
 
 func (p *CloudProvider) getVmsById() (map[string]internal.VM, error) {

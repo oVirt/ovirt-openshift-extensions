@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"k8s.io/apimachinery/pkg/types"
 	"io/ioutil"
+	"k8s.io/kubernetes/pkg/cloudprovider"
 )
 
 var testOvirtConfig = internal.Connection{
@@ -137,6 +138,18 @@ var _ = Describe("ovirt-cloud-provider node tests", func() {
 			addresses, err := underTest.NodeAddressesByProviderID(nil, vm1Id)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(addresses).Should(HaveLen(3))
+		})
+
+		It("returns the VM ID for the node name (node name should be the vm name)", func() {
+			vmId, err := underTest.ExternalID(vm1NodeName)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(vmId).To(Equal(vm1Id))
+		})
+
+		It("fails when a node ExternalID call can't find the node(node name should be the vm name)", func() {
+			vmId, err := underTest.ExternalID("non-existing-VM")
+			Expect(err).Should(Equal(cloudprovider.InstanceNotFound))
+			Expect(vmId).To(Equal(""))
 		})
 
 
