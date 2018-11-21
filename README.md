@@ -100,7 +100,7 @@ Upon completion you have the components running:
    ```
 
 ### Contributing
-**Feedback is most welcome**, if you have and idea, proposal, fix, or want to chat \
+**Feedback is most welcome**, if you have an idea, proposal, fix, or want to chat \
   you'll find the details here: 
 - Patches are usual pull-request, see the pull request template.
 - Upstream bugs: https://github.com/oVirt/ovirt-openshift-extensions/issues
