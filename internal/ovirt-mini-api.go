@@ -45,7 +45,6 @@ type Ovirt struct {
 	Connection Connection
 	client     http.Client
 	token      Token
-	api        OvirtApi
 }
 
 type Connection struct {
@@ -66,7 +65,7 @@ type Token struct {
 // newDriver creates a new ovirt driver instance from a config reader, to make it
 // easy to pass various config items, either file, string, reading from remote etc.
 // the underlying config format supports properties files (like java)
-func NewOvirt(configReader io.Reader) (*Ovirt, error) {
+func NewOvirt(configReader io.Reader) (OvirtApi, error) {
 	viper.SetConfigType("props")
 	o := Ovirt{}
 	if err := viper.ReadConfig(configReader); err != nil {
@@ -78,6 +77,10 @@ func NewOvirt(configReader io.Reader) (*Ovirt, error) {
 	o.Connection.Insecure = viper.GetBool("insecure")
 	o.Connection.CAFile = viper.GetString("cafile")
 	return &o, nil
+}
+
+func (ovirt *Ovirt) GetConnectionDetails() Connection {
+	return ovirt.Connection
 }
 
 func (ovirt *Ovirt) Authenticate() error {
@@ -318,6 +321,7 @@ func (ovirt *Ovirt) Delete(path string) ([]byte, error) {
 	return b, err
 }
 
+//TODO implement with invocation of the new GetVMs
 func (ovirt *Ovirt) GetVM(name string) (VM, error) {
 	s, err := ovirt.Get("vms?search=name=" + name)
 	vmResult := VMResult{}
@@ -330,8 +334,18 @@ func (ovirt *Ovirt) GetVM(name string) (VM, error) {
 		vm = vmResult.Vms[0]
 	}
 	return vm, err
-
 }
+
+func (ovirt *Ovirt) GetVMs(searchQuery string) ([]VM, error) {
+	s, err := ovirt.Get("vms?search=" + searchQuery)
+	vmResult := VMResult{}
+	if err != nil {
+		return vmResult.Vms, err
+	}
+	err = json.Unmarshal([]byte(s), &vmResult)
+	return vmResult.Vms, err
+}
+
 func (ovirt *Ovirt) GetDiskAttachment(vmId, diskId string) (DiskAttachment, error) {
 	s, err := ovirt.Get("vms/" + vmId + "/diskattachments/" + diskId)
 	d := DiskAttachment{}

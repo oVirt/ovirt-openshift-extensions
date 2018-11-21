@@ -57,8 +57,28 @@ type StorageDomain struct {
 type VM struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
+	Fqdn string `json:"fqdn"`
+	Nics struct { Nics []Nic `json:"nic"` } `json:"nics"`
+	Status string `json:"status"`
+}
+
+type Nic struct {
+	Interface string `json:"interface"`
+	linked bool `json:"linked:string"`
+	Devices struct { Devices []Device `json:"reported_device"` } `json:"reported_devices"`
+}
+
+type Device struct {
+	Ips struct { Ips []Ip `json:"ip"` } `json:"ips"`
+}
+
+type Ip struct {
+	Address string `json:"address"`
+	// v4, v6
+	Version string `json:"version"`
 }
 
 type VMResult struct {
 	Vms []VM `json:"vm"`
 }
+

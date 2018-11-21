@@ -42,17 +42,17 @@ const (
 )
 
 // NewOvirtProvisioner creates a new Ovirt provisioner
-func NewOvirtProvisioner(ovirtClient *internal.Ovirt) controller.Provisioner {
+func NewOvirtProvisioner(ovirtApi internal.OvirtApi) controller.Provisioner {
 	var identity types.UID
 	provisioner := &ovirtProvisioner{
-		ovirtClient: ovirtClient,
+		ovirtApi: ovirtApi,
 		identity:    identity,
 	}
 	return provisioner
 }
 
 type ovirtProvisioner struct {
-	ovirtClient *internal.Ovirt
+	ovirtApi internal.OvirtApi
 	identity    types.UID
 }
 
@@ -76,7 +76,7 @@ func (p ovirtProvisioner) Provision(options controller.VolumeOptions) (*v1.Persi
 		volSizeBytes,
 		options.Parameters["ovirtDiskFormat"],
 	)
-	vol, err := p.ovirtClient.CreateUnattachedDisk(
+	vol, err := p.ovirtApi.CreateUnattachedDisk(
 		options.PVName,
 		options.Parameters["ovirtStorageDomain"],
 		volSizeBytes,
@@ -128,6 +128,6 @@ func (p ovirtProvisioner) Provision(options controller.VolumeOptions) (*v1.Persi
 func (p ovirtProvisioner) Delete(volume *v1.PersistentVolume) error {
 	glog.Infof("About to delete disk %s id %s", volume.Name, volume.Annotations[annVolumeID])
 	// Remove the disk from the storage domain - TODO consider wipe-after-delete and the rest of the options later
-	_, err := p.ovirtClient.Delete("disks/" + volume.Annotations[annVolumeID])
+	_, err := p.ovirtApi.Delete("disks/" + volume.Annotations[annVolumeID])
 	return err
 }

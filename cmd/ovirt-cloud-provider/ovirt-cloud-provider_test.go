@@ -1,20 +1,34 @@
 package main
 
 import (
-	"io"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/ovirt/ovirt-openshift-extensions/internal"
+	"encoding/json"
+	"k8s.io/apimachinery/pkg/types"
+	"io/ioutil"
 )
 
-var vmsJsonData string
+var testOvirtConfig = internal.Connection{
+	"https: //fqdn:8443/ovirt-engine/api",
+	"foo@domain",
+	"123",
+	true,
+	"/dev/null",
+}
 
-const vm1Id = "0013e1a7-c837-4b7f-8420-6deca9486415"
-const vm2Id = "e47839a3-149b-4405-ba69-3fb20eaa2fed"
-const vm1NodeName = "ovirtNode_1"
+var vmsJson string
+
+const vm1Id = "f5fb9df5-19da-4d35-a0c8-f5d7569faacd"
+const vm1NodeName = "master0.example.com"
+
+func init() {
+	parse, err := ioutil.ReadFile("./vms.json")
+	if err != nil {
+		panic(err)
+	}
+	vmsJson = string(parse)
+}
 
 var _ = Describe("ovirt-cloud-provider configuration tests", func() {
 	var (
@@ -23,113 +37,164 @@ var _ = Describe("ovirt-cloud-provider configuration tests", func() {
 	)
 
 	BeforeEach(func() {
-		underTest, _ = NewOvirtProvider(&ProviderConfig{})
+		underTest, _ = NewOvirtProvider(&ProviderConfig{}, MockApi{testOvirtConfig})
 	})
 
 	Context("With a default config", func() {
-		It("VMs query should have a default search vms with tag", func() {
-			Expect(underTest.VmsQuery.RawQuery).Should(Equal("search=tag%3Acontainer_node"))
+		It("VMs query should have a default search vms " + DefaultVMSearchQuery, func() {
+			Expect(underTest).ToNot(Equal(nil))
+			Expect(underTest.VmsQuery).To(Equal(DefaultVMSearchQuery))
 		})
-
 
 	})
 
 	Context("With invalid config", func() {
 		BeforeEach(func() {
 			conf := ProviderConfig{}
-			underTest, err = NewOvirtProvider(&conf)
+			ovirtClient := MockApi{}
+			underTest, err = NewOvirtProvider(&conf, ovirtClient)
 		})
-		It("should fails to start", func() {
+		It("should fail to start", func() {
 			Expect(err).To(HaveOccurred())
 		})
 	})
 })
 
-type HttpHandler struct{}
+var _ = Describe("ovirt-cloud-provider node tests", func() {
 
-func TestMain(m *testing.M) {
-	if vmsJsonData == "" {
-		parse, err := ioutil.ReadFile("./vms.json")
-		if err != nil {
-			panic(err)
-		}
-		vmsJsonData = string(parse)
-	}
-	m.Run()
+	var (
+		underTest *CloudProvider
+	)
+
+	BeforeEach(func() {
+		underTest, _ = NewOvirtProvider(&ProviderConfig{}, MockApi{internal.Connection{Url: "http://foo"}})
+	})
+
+	Context("With a node that exist on ovirt", func() {
+		It("reports the instance exists", func() {
+			exists, _ := underTest.InstanceExistsByProviderID(nil, vm1Id)
+			Expect(exists).To(BeTrue())
+		})
+
+		It("returns the instance ID for a given node name", func() {
+			id, _ := underTest.InstanceID(nil, vm1NodeName)
+			Expect(id).To(Equal(vm1Id))
+		})
+
+		It("returns the instance hostname as the VM name", func() {
+			nodeName, _ := underTest.CurrentNodeName(nil, vm1NodeName)
+			Expect(nodeName).To(Equal(types.NodeName(vm1NodeName)))
+
+		})
+
+		It("returns a list of addresses for as reported by ovirt for the instance", func() {
+			addresses, err := underTest.NodeAddresses(nil, vm1NodeName)
+			Expect(err).Should(Not(HaveOccurred()))
+			Expect(addresses).Should(HaveLen(3))
+		})
+
+		It("returns an empty list of addresses for a node which don't have interfaces", func() {
+			addresses, err := underTest.NodeAddresses(nil, "dtestiso")
+			Expect(err).Should(Not(HaveOccurred()))
+			Expect(addresses).Should(HaveLen(0))
+		})
+
+		It("returns an error for non-existing node", func() {
+			_, err := underTest.NodeAddresses(nil, "nonexistingvm")
+			Expect(err).Should(HaveOccurred())
+		})
+
+	})
+})
+
+var _ = Describe("ovirt-cloud-provider ", func() {
+
+	var (
+		underTest *CloudProvider
+	)
+
+	BeforeEach(func() {
+		underTest, _ = NewOvirtProvider(&ProviderConfig{}, MockApi{internal.Connection{Url:"http://foo"}})
+	})
+
+	Context("With a node that exist on ovirt", func() {
+
+		It("reports the instance exists", func() {
+			exists, _ := underTest.InstanceExistsByProviderID(nil, vm1Id)
+			Expect(exists).To(BeTrue())
+		})
+
+	})
+})
+
+
+
+type MockApi struct {
+	Connection internal.Connection
 }
 
-func TestNewProvider(t *testing.T) {
-	p, err := NewOvirtProvider(&ProviderConfig{})
-	if err != nil || p == nil {
-		t.Fatal(err)
-	}
+func (MockApi) Authenticate() error {
+	panic("implement me")
 }
 
-// TestGetInstanceId test the id returned from the api call
-func TestGetInstanceId(t *testing.T) {
-	// mock the api call to return a json of vms
-	provider, err := getProvider()
-
-	id, err := provider.InstanceID(nil, vm1NodeName)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if id == "" {
-		t.Fatal(err)
-	}
-
-	if id != vm1Id {
-		t.Fatalf("expected id %s is no equal to %s", vm1Id, id)
-	}
+func (MockApi) Get(path string) ([]byte, error) {
+	panic("implement me")
 }
 
-func TestProvider_CurrentNodeName(t *testing.T) {
-	p, _ := getProvider()
-	name, err := p.CurrentNodeName(nil, vm1NodeName)
-	if err != nil || name == "" {
-		t.Fatalf("node name %s was not found. Error was %s", vm1NodeName, err)
-	}
+func (MockApi) Post(path string, data interface{}) (string, error) {
+	panic("implement me")
 }
 
-func TestProvider_InstanceExistsByProviderId(t *testing.T) {
-	p, _ := getProvider()
-	exists, _ := p.InstanceExistsByProviderID(nil, vm1Id)
-	if !exists {
-		t.Fatalf("the instance %s should exist with status which is other than down", vm1Id)
-	}
+func (MockApi) Delete(path string) ([]byte, error) {
+	panic("implement me")
 }
 
-func TestProvider_InstanceByProviderIdNotExists(t *testing.T) {
-	p, _ := getProvider()
-	exists, _ := p.InstanceExistsByProviderID(nil, vm2Id)
-	if exists {
-		t.Fatalf("the instance %s should not exist with status down", vm2Id)
-	}
+func (MockApi) GetVM(name string) (internal.VM, error) {
+	vmResult := internal.VMResult{}
+	err := json.Unmarshal([]byte(vmsJson), &vmResult)
+	return vmResult.Vms[0], err
+}
+func (MockApi) GetVMs(name string) ([]internal.VM, error) {
+	vmResult := internal.VMResult{}
+	err := json.Unmarshal([]byte(vmsJson), &vmResult)
+	return vmResult.Vms, err
 }
 
-func TestProvider_NodeAddressesByProviderID(t *testing.T) {
-	p, _ := getProvider()
-	p.NodeAddresses(nil, vm1NodeName)
+func (MockApi) GetDiskAttachment(vmId, diskId string) (internal.DiskAttachment, error) {
+	panic("implement me")
 }
 
-func getProvider() (*CloudProvider, error) {
-	httpServer := mockGetVms()
-	//TODO How to defer this using some Before-After hooks of tests in go? I can't defer in place otherwise tests will not
-	// be able to use it (it closes before the test actually uses it)
-	//defer httpServer.Close()
-	c := ProviderConfig{}
-	c.Connection.Url = httpServer.URL
-	provider, err := NewOvirtProvider(&c)
-	return provider, err
+func (MockApi) GetDiskAttachments(vmId string) ([]internal.DiskAttachment, error) {
+	panic("implement me")
 }
 
-func (h *HttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	i := string(vmsJsonData)
-	io.WriteString(w, i)
+func (MockApi) DetachDiskFromVM(vmId string, diskId string) error {
+	panic("implement me")
 }
 
-func mockGetVms() *httptest.Server {
-	server := httptest.NewServer(&HttpHandler{})
-	return server
+func (MockApi) Attach(params internal.AttachRequest, nodeName string) (internal.Response, error) {
+	panic("implement me")
+}
+
+func (MockApi) GetDiskByName(diskName string) (internal.DiskResult, error) {
+	panic("implement me")
+}
+
+func (MockApi) CreateUnattachedDisk(diskName string, storageDomainName string, sizeIbBytes int64, readOnly bool, diskFormat string) (internal.Disk, error) {
+	panic("implement me")
+}
+
+func (MockApi) CreateDisk(
+	diskName string,
+	storageDomainName string,
+	readOnly bool,
+	vmId string,
+	diskId string,
+	diskInterface string) (internal.DiskAttachment, error) {
+	panic("implement me")
+}
+
+func (m MockApi) GetConnectionDetails() internal.Connection {
+	return m.Connection
+
 }

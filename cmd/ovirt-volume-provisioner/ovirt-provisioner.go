@@ -46,13 +46,13 @@ func main() {
 	glog.Infof("Provisioner %s specified", provisioner)
 
 	clientSet, serverVersion := getClientSet()
-	ovirtClient, err := newOvirt()
+	ovirtApi, err := newOvirt()
 	if err != nil {
 		glog.Fatalf("Failed to initialize ovirt client: %v", err)
 	}
 	// Create the provisioner: it implements the Provisioner interface expected by
 	// the controller
-	ovirtProvisioner := NewOvirtProvisioner(ovirtClient)
+	ovirtProvisioner := NewOvirtProvisioner(ovirtApi)
 
 	// Start the provision controller which will dynamically provision NFS PVs
 	pc := controller.NewProvisionController(
@@ -92,7 +92,7 @@ func getClientSet() (kubernetes.Interface, version.Info) {
 	return clientset, *serverVersion
 }
 
-func newOvirt() (*internal.Ovirt, error) {
+func newOvirt() (internal.OvirtApi, error) {
 	var conf string
 	value, exist := os.LookupEnv("OVIRT_API_CONF")
 	if exist {

@@ -37,7 +37,25 @@ var (
 
 type OvirtApi interface {
 	Authenticate() error
+	Get(path string) ([]byte, error)
+	Post(path string, data interface{}) (string, error)
+	Delete(path string) ([]byte, error)
+	GetVM(name string) (VM, error)
+	GetVMs(name string) ([]VM, error)
+	GetDiskAttachment(vmId, diskId string) (DiskAttachment, error)
+	GetDiskAttachments(vmId string) ([]DiskAttachment, error)
+	DetachDiskFromVM(vmId string, diskId string) error
 	Attach(params AttachRequest, nodeName string) (Response, error)
+	GetDiskByName(diskName string) (DiskResult, error)
+	CreateUnattachedDisk(diskName string, storageDomainName string, sizeIbBytes int64, readOnly bool, diskFormat string) (Disk, error)
+	CreateDisk(
+		diskName string,
+		storageDomainName string,
+		readOnly bool,
+		vmId string,
+		diskId string,
+		diskInterface string) (DiskAttachment, error)
+	GetConnectionDetails() Connection
 }
 
 type Response struct {

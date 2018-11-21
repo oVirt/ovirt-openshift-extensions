@@ -41,26 +41,26 @@ cafile=
 	if e != nil {
 		t.Error(e)
 	}
-	if ovirt.Connection.Url != "123" {
+	if ovirt.GetConnectionDetails().Url != "123" {
 		t.Errorf("failed parsing url")
 	}
-	if ovirt.Connection.Username != "user@abcde123213" {
+	if ovirt.GetConnectionDetails().Username != "user@abcde123213" {
 		t.Errorf("failed parsing username")
 	}
-	if ovirt.Connection.Password != "123444" {
+	if ovirt.GetConnectionDetails().Password != "123444" {
 		t.Errorf("failed parsing password")
 	}
-	if ovirt.Connection.Insecure != true {
+	if ovirt.GetConnectionDetails().Insecure != true {
 		t.Errorf("failed parsing insecure")
 	}
-	if ovirt.Connection.CAFile != "" {
+	if ovirt.GetConnectionDetails().CAFile != "" {
 		t.Errorf("failed parsing cafile")
 	}
 }
 
 // TestAuthenticateWithUnexpiredToken makes sure we reuse the auth token
 func TestAuthenticateWithUnexpiredToken(t *testing.T) {
-	api := prepareApi(tokenHandlerFunc(10000000))
+	api := CreateMockOvirtClient(tokenHandlerFunc(10000000))
 	err := api.Authenticate()
 	if err != nil {
 		t.Fatalf("failed authentication %s", err)
@@ -73,7 +73,7 @@ func TestFetchToken(t *testing.T) {
 	// expire in 1 month from now
 	expiredIn := time.Now().AddDate(0, 1, 0).UnixNano()
 	// create test server with handler
-	api := prepareApi(tokenHandlerFunc(expiredIn))
+	api := CreateMockOvirtClient(tokenHandlerFunc(expiredIn))
 
 	err := api.Authenticate()
 
@@ -90,22 +90,21 @@ func TestFetchToken(t *testing.T) {
 	}
 }
 
-func prepareApi(handler http.HandlerFunc) Ovirt {
+func CreateMockOvirtClient(handler http.HandlerFunc) Ovirt {
 	ts := httptest.NewServer(handler)
-	api := getApi(http.DefaultClient)
-	api.Connection.Url = ts.URL
-	api.Connection.Insecure = true
-	return api
+	return Ovirt{
+		Connection: Connection{
+			Url:      ts.URL,
+			Insecure: true,
+		},
+		client: *http.DefaultClient,
+	}
 }
 
 func tokenHandlerFunc(expireIn int64) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `{ "access_token": "1234567890", "exp": "%v", "token_type": "Bearer"}`, expireIn)
 	}
-}
-
-func getApi(client *http.Client) Ovirt {
-	return Ovirt{}
 }
 
 var testAttachRequest = `
@@ -159,7 +158,7 @@ func TestOvirt_CreateUnattachedDisk(t *testing.T) {
         "storage_domains": { "storage_domain": [{"name":"iscidomain"}] }
       }
     `
-	api := prepareApi(genericRequestHandlerFunc(createResponse))
+	api := CreateMockOvirtClient(genericRequestHandlerFunc(createResponse))
 	_, e := api.CreateUnattachedDisk(
 		"pvc-d69b93df-7e96-11e8-b3fa-001a4a160100",
 		"iscidomain",
@@ -183,7 +182,7 @@ func TestOvirt_Attach(t *testing.T) {
         "storage_domains": { "storage_domain": [{"name":"iscidomain"}] }
       }
     `
-	api := prepareApi(genericRequestHandlerFunc(attachResponse))
+	api := CreateMockOvirtClient(genericRequestHandlerFunc(attachResponse))
 	_, e := api.CreateDisk(
 		"pvc-d69b93df-7e96-11e8-b3fa-001a4a160100",
 		"iscidomain",
@@ -198,7 +197,7 @@ func TestOvirt_Attach(t *testing.T) {
 
 func TestOvirt_DetachDiskFromVM(t *testing.T) {
 	detachResponse := "{}"
-	api := prepareApi(genericRequestHandlerFunc(detachResponse))
+	api := CreateMockOvirtClient(genericRequestHandlerFunc(detachResponse))
 	e := api.DetachDiskFromVM(vmId, diskId)
 	if e != nil {
 		t.Errorf(e.Error())

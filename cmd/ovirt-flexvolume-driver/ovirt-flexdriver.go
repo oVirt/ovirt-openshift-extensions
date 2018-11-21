@@ -138,7 +138,7 @@ func initialize() (internal.Response, error) {
 	return r, nil
 }
 
-func newOvirt() (*internal.Ovirt, error) {
+func newOvirt() (internal.OvirtApi, error) {
 	value, exist := os.LookupEnv("OVIRT_FLEXDRIVER_CONF")
 	if exist {
 		driverConfigFile = value

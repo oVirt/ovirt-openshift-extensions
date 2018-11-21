@@ -3,31 +3,23 @@ package main
 import (
 	"fmt"
 	"io"
-	"path"
-
-	"encoding/json"
 	"errors"
-	"github.com/go-ini/ini"
 	"gopkg.in/gcfg.v1"
-	"net/http"
-	"net/url"
 
+	"github.com/golang/glog"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/kubernetes/pkg/cloudprovider"
 	"k8s.io/kubernetes/pkg/controller"
-	//"k8s.io/kubernetes/pkg/cloudprovider/providers/ovirt"
-	"net"
-	"unicode"
 
 	"context"
 	"github.com/ovirt/ovirt-openshift-extensions/internal"
 	"k8s.io/api/core/v1"
-	"os"
 )
 
 // ProviderName is the canonical name the plugin will register under. It must be different the the in-tree
 // implementation name, "ovirt". The addition of "ecp" stand for External-Cloud-Provider
 const ProviderName = "ovirt-ecp"
+const DefaultVMSearchQuery = "vms?follow=nics&search="
 
 type OvirtNode struct {
 	UUID      string
@@ -36,97 +28,48 @@ type OvirtNode struct {
 }
 
 type ProviderConfig struct {
-	Connection struct {
-		Url      string `gcfg:"url"`
-		Username string `gcfg:"username"`
-		Password string `gcfg:"password"`
-		Insecure bool   `gcfg:"insecure"`
-		CAFile   string `gcfg:"cafile"`
-	}
 	Filters struct {
 		VmsQuery string `gcfg:"vmsquery"`
 	}
 }
 
 type CloudProvider struct {
-	VmsQuery *url.URL
-	OvirtApi *internal.OvirtApi
-}
-
-type VM struct {
-	Name      string     `json:"name"`
-	Id        string     `json:"id"`
-	Fqdn      string     `json:"fqdn"`
-	Addresses []net.Addr `json:""`
-	Status    string     `json:"status"`
-}
-
-type VMs struct {
-	Vm []VM
+	VmsQuery string
+	internal.OvirtApi
 }
 
 // init will register the cloud provider
 func init() {
+	glog.Info("about to register the ovirt cloud provider to the cluster")
 	cloudprovider.RegisterCloudProvider(
 		ProviderName,
 		func(config io.Reader) (cloudprovider.Interface, error) {
 			if config == nil {
 				return nil, fmt.Errorf("missing configuration file for ovirt cloud provider")
 			}
-			providerConfig := ProviderConfig{}
-			err := gcfg.ReadInto(&providerConfig, config)
+			ovirtClient, err := internal.NewOvirt(config)
 			if err != nil {
 				return nil, err
 			}
-			return NewOvirtProvider(&providerConfig)
+
+			providerConfig := ProviderConfig{}
+			err = gcfg.ReadInto(&providerConfig, config)
+			if err != nil {
+				return nil, err
+			}
+			return NewOvirtProvider(&providerConfig, ovirtClient)
 		})
 }
 
-func NewOvirtProvider(providerConfig *ProviderConfig) (*CloudProvider, error) {
-
-	vmsQuery, err := url.Parse(providerConfig.Connection.Url)
-	if err != nil {
-		return nil, err
+func NewOvirtProvider(providerConfig *ProviderConfig, ovirtApi internal.OvirtApi) (*CloudProvider, error) {
+	// TODO consider some basic validations for the search query although it can be tricky
+	if ovirtApi.GetConnectionDetails().Url == "" {
+		return nil, errors.New("oVirt engine url is empty")
 	}
 
-	vmsQuery.Path = path.Join(vmsQuery.Path, "vms")
-	s := providerConfig.Filters.VmsQuery
-	if s == "" {
-		s = "tag:container_node"
-	}
-	vmsQuery.RawQuery = url.Values{"search": {s}}.Encode()
+	vmsQuery := DefaultVMSearchQuery + providerConfig.Filters.VmsQuery
+	return &CloudProvider{vmsQuery, ovirtApi}, nil
 
-	return &CloudProvider{VmsQuery: vmsQuery}, nil
-
-}
-
-func newOvirt() (*internal.Ovirt, error) {
-	var conf string
-	value, exist := os.LookupEnv("OVIRT_API_CONF")
-	if exist {
-		conf = value
-	} else {
-		conf = "/etc/ovirt/ovirt-api.conf"
-	}
-
-	cfg, err := ini.InsensitiveLoad(conf)
-	if err != nil {
-		return nil, err
-	}
-	connection := internal.Connection{}
-	connection.Url = cfg.Section("").Key("url").String()
-	connection.Username = cfg.Section("").Key("username").String()
-	connection.Password = cfg.Section("").Key("password").String()
-	connection.Insecure = cfg.Section("").Key("insecure").MustBool()
-	connection.CAFile = cfg.Section("").Key("cafile").String()
-
-	ovirt := internal.Ovirt{}
-	ovirt.Connection = connection
-	err = ovirt.Authenticate()
-	if err != nil {
-		return nil, err
-	}
-	return &ovirt, nil
 }
 
 // Initialize provides the cloud with a kubernetes client builder and may spawn goroutines
@@ -152,38 +95,38 @@ func (*CloudProvider) Zones() (cloudprovider.Zones, bool) {
 }
 
 // NodeAddressses returns an hostnames/external-ips of the calling node
+// TODO how to detect a primary external IP? how to pass hostnames if we have it?
 func (p *CloudProvider) NodeAddresses(context context.Context, name types.NodeName) ([]v1.NodeAddress, error) {
 	vms, err := p.getVms()
-	if err == nil {
+	if err != nil {
 		return nil, err
 	}
 
-	var vm VM = vms[string(name)]
+	var vm = vms[string(name)]
 	if vm.Id == "" {
 		return nil, fmt.Errorf(
 			"VM by the name %s does not exist."+
 				" The VM may have been removed, or the search query criteria needs correction",
 			name)
 	}
-	if vm.Addresses == nil || len(vm.Addresses) == 0 {
-		return nil, fmt.Errorf("Missing addresses of instance \n")
-	}
 
-	addresses := make([]v1.NodeAddress, len(vm.Addresses))
-
-	for i, a := range vm.Addresses {
-		var t v1.NodeAddressType
-		if unicode.IsDigit(rune(a.String()[0])) {
-			t = v1.NodeExternalIP
-		} else {
-			t = v1.NodeHostName
-		}
-		addresses[i] = v1.NodeAddress{
-			Address: a.String(),
-			Type:    t,
-		}
-	}
+	// TODO the old provider supplied hostnames - look for fqdn of VM maybe?. Consider implementing.
+	addresses := extractNodeAddresses(vm)
 	return addresses, nil
+}
+
+// extractNodeAddresses will return all addresses of the reported node
+// TODO how to detect a primary external IP? how to pass hostnames if we have it?
+func extractNodeAddresses(vm internal.VM) []v1.NodeAddress {
+	addresses := make([]v1.NodeAddress,0)
+	for _, nics := range vm.Nics.Nics {
+		for _, dev := range nics.Devices.Devices {
+			for _, ip := range dev.Ips.Ips {
+				addresses = append(addresses, v1.NodeAddress{Address: ip.Address, Type:v1.NodeExternalIP})
+			}
+		}
+	}
+	return addresses
 }
 
 func (p *CloudProvider) InstanceID(context context.Context, nodeName types.NodeName) (string, error) {
@@ -191,25 +134,15 @@ func (p *CloudProvider) InstanceID(context context.Context, nodeName types.NodeN
 	return vms[string(nodeName)].Id, err
 }
 
-func (p *CloudProvider) getVms() (map[string]VM, error) {
-	resp, err := http.Get(p.VmsQuery.String())
-	defer resp.Body.Close()
-	if err != nil {
-		return nil, err
-	}
+func (p *CloudProvider) getVms() (map[string]internal.VM, error) {
+	vms, err := p.GetVMs(p.VmsQuery)
 
-	vms := VMs{}
-	err = json.NewDecoder(resp.Body).Decode(&vms)
-	if err != nil {
-		return nil, err
-	}
-	var vmsMap = make(map[string]VM)
-	for i := 0; i < len(vms.Vm); i++ {
-		v := vms.Vm[i]
+	var vmsMap = make(map[string]internal.VM, len(vms))
+	for _, v := range vms {
 		vmsMap[v.Name] = v
 	}
 
-	return vmsMap, nil
+	return vmsMap, err
 }
 
 // Clusters returns a clusters interface.  Also returns true if the interface is supported, false otherwise.
