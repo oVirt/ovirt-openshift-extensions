@@ -1083,7 +1083,7 @@
     "numa_tune_mode" : "interleave",
     "run_once" : "true",
     "start_time" : 1542619837281,
-    "status" : "unknown",
+    "status" : "up",
     "stop_time" : 1542619813340,
     "host" : {
       "href" : "/ovirt-engine/api/hosts/885f288a-0b1a-4447-9bd3-98bd0faa0e0c",

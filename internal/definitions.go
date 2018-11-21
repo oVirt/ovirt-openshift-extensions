@@ -41,7 +41,7 @@ type OvirtApi interface {
 	Post(path string, data interface{}) (string, error)
 	Delete(path string) ([]byte, error)
 	GetVM(name string) (VM, error)
-	GetVMs(name string) ([]VM, error)
+	GetVMs(query string) ([]VM, error)
 	GetDiskAttachment(vmId, diskId string) (DiskAttachment, error)
 	GetDiskAttachments(vmId string) ([]DiskAttachment, error)
 	DetachDiskFromVM(vmId string, diskId string) error

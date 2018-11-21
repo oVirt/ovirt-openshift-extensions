@@ -46,6 +46,10 @@ var _ = Describe("ovirt-cloud-provider configuration tests", func() {
 			Expect(underTest.VmsQuery).To(Equal(DefaultVMSearchQuery))
 		})
 
+		It("Return the cloud provider name", func() {
+			Expect(underTest.ProviderName()).To(Equal(ProviderName))
+		})
+
 	})
 
 	Context("With invalid config", func() {
@@ -81,21 +85,22 @@ var _ = Describe("ovirt-cloud-provider node tests", func() {
 			Expect(id).To(Equal(vm1Id))
 		})
 
-		It("returns the instance hostname as the VM name", func() {
-			nodeName, _ := underTest.CurrentNodeName(nil, vm1NodeName)
-			Expect(nodeName).To(Equal(types.NodeName(vm1NodeName)))
+		It("returns the current nodename VM FQDN", func() {
+			nodeName, err := underTest.CurrentNodeName(nil, vm1NodeName)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(nodeName).To(Equal(types.NodeName("etcd.example.com")))
 
 		})
 
 		It("returns a list of addresses for as reported by ovirt for the instance", func() {
 			addresses, err := underTest.NodeAddresses(nil, vm1NodeName)
-			Expect(err).Should(Not(HaveOccurred()))
+			Expect(err).ShouldNot(HaveOccurred())
 			Expect(addresses).Should(HaveLen(3))
 		})
 
 		It("returns an empty list of addresses for a node which don't have interfaces", func() {
 			addresses, err := underTest.NodeAddresses(nil, "dtestiso")
-			Expect(err).Should(Not(HaveOccurred()))
+			Expect(err).ShouldNot(HaveOccurred())
 			Expect(addresses).Should(HaveLen(0))
 		})
 
@@ -103,6 +108,20 @@ var _ = Describe("ovirt-cloud-provider node tests", func() {
 			_, err := underTest.NodeAddresses(nil, "nonexistingvm")
 			Expect(err).Should(HaveOccurred())
 		})
+
+		It("returns true when instance with status up exists", func() {
+			exists, err := underTest.InstanceExistsByProviderID(nil, vm1Id)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(exists).To(BeTrue())
+		})
+
+		It("returns true when instance is shutdown at oVirt", func() {
+			exists, err := underTest.InstanceShutdownByProviderID(nil, "f85501aa-afbb-46f2-a8d3-3dc299c07fee")
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(exists).To(BeTrue())
+		})
+
+
 
 	})
 })
@@ -119,7 +138,7 @@ var _ = Describe("ovirt-cloud-provider ", func() {
 
 	Context("With a node that exist on ovirt", func() {
 
-		It("reports the instance exists", func() {
+		It("reports ", func() {
 			exists, _ := underTest.InstanceExistsByProviderID(nil, vm1Id)
 			Expect(exists).To(BeTrue())
 		})
@@ -149,12 +168,15 @@ func (MockApi) Delete(path string) ([]byte, error) {
 	panic("implement me")
 }
 
-func (MockApi) GetVM(name string) (internal.VM, error) {
-	vmResult := internal.VMResult{}
-	err := json.Unmarshal([]byte(vmsJson), &vmResult)
-	return vmResult.Vms[0], err
+func (m MockApi) GetVM(name string) (internal.VM, error) {
+	vms, err := m.GetVMs("")
+	vmsMap := make(map[string]internal.VM, len(vms))
+	for _,v := range vms {
+		vmsMap[v.Name] = v
+	}
+	return vmsMap[name], err
 }
-func (MockApi) GetVMs(name string) ([]internal.VM, error) {
+func (MockApi) GetVMs(query string) ([]internal.VM, error) {
 	vmResult := internal.VMResult{}
 	err := json.Unmarshal([]byte(vmsJson), &vmResult)
 	return vmResult.Vms, err

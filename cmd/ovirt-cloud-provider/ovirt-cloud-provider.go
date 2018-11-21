@@ -74,8 +74,8 @@ func NewOvirtProvider(providerConfig *ProviderConfig, ovirtApi internal.OvirtApi
 
 // Initialize provides the cloud with a kubernetes client builder and may spawn goroutines
 // to perform housekeeping activities within the cloud provider.
-func (*CloudProvider) Initialize(clientBuilder controller.ControllerClientBuilder) {
-
+func (p *CloudProvider) Initialize(clientBuilder controller.ControllerClientBuilder) {
+	p.Authenticate()
 }
 
 // LoadBalancer returns a balancer interface. Also returns true if the interface is supported, false otherwise.
@@ -129,6 +129,7 @@ func extractNodeAddresses(vm internal.VM) []v1.NodeAddress {
 	return addresses
 }
 
+// CloudProvider Instances
 func (p *CloudProvider) InstanceID(context context.Context, nodeName types.NodeName) (string, error) {
 	vms, err := p.getVms()
 	return vms[string(nodeName)].Id, err
@@ -175,9 +176,9 @@ func (*CloudProvider) AddSSHKeyToAllInstances(context context.Context, user stri
 	return errors.New("NotImplemented")
 }
 
-func (*CloudProvider) CurrentNodeName(context context.Context, hostname string) (types.NodeName, error) {
-	//var r types.NodeName = ""
-	return types.NodeName(hostname), nil
+func (p *CloudProvider) CurrentNodeName(context context.Context, hostname string) (types.NodeName, error) {
+	vm, err := p.GetVM(hostname)
+	return types.NodeName(vm.Fqdn), err
 }
 
 // ExternalID returns the cloud provider ID of the node with the specified NodeName.
@@ -212,8 +213,18 @@ func (p *CloudProvider) InstanceExistsByProviderID(context context.Context, prov
 }
 
 func (p *CloudProvider) InstanceShutdownByProviderID(context context.Context, providerID string) (bool, error) {
-	// TODO implement
-	return false, nil
+	vmsById, e := p.getVmsById()
+	if e != nil {
+		return false, e
+	}
+
+	vm, ok := vmsById[providerID]
+
+	if  !ok {
+		return false, fmt.Errorf("vm with id %s doesn't exist", providerID)
+	}
+
+	return vm.Status == "down", nil
 }
 
 // InstanceType returns the type of the specified instance.
@@ -228,4 +239,16 @@ func (p *CloudProvider) InstanceTypeByProviderID(context context.Context, provid
 
 func (p *CloudProvider) NodeAddressesByProviderID(context context.Context, providerID string) ([]v1.NodeAddress, error) {
 	return []v1.NodeAddress{}, cloudprovider.NotImplemented
+}
+
+func (p *CloudProvider) getVmsById() (map[string]internal.VM, error) {
+	vms, e := p.getVms()
+	if e != nil {
+		return vms, e
+	}
+	vmsById := make(map[string]internal.VM, len(vms))
+	for _, vm := range vms {
+		vmsById[vm.Id] = vm
+	}
+	return vmsById, nil
 }
