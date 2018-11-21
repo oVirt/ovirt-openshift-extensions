@@ -121,6 +121,24 @@ var _ = Describe("ovirt-cloud-provider node tests", func() {
 			Expect(exists).To(BeTrue())
 		})
 
+		It("returns false when instance is up at oVirt", func() {
+			exists, err := underTest.InstanceShutdownByProviderID(nil, vm1Id)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(exists).To(BeFalse())
+		})
+
+		It("returns false when instance is unknown at oVirt", func() {
+			exists, err := underTest.InstanceShutdownByProviderID(nil, "f9772ed4-2ee4-4386-8a8a-22e3b73add68")
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(exists).To(BeFalse())
+		})
+
+		It("returns node address by ID", func() {
+			addresses, err := underTest.NodeAddressesByProviderID(nil, vm1Id)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(addresses).Should(HaveLen(3))
+		})
+
 
 
 	})
@@ -136,7 +154,7 @@ var _ = Describe("ovirt-cloud-provider ", func() {
 		underTest, _ = NewOvirtProvider(&ProviderConfig{}, MockApi{internal.Connection{Url:"http://foo"}})
 	})
 
-	Context("With a node that exist on ovirt", func() {
+	Context("example", func() {
 
 		It("reports ", func() {
 			exists, _ := underTest.InstanceExistsByProviderID(nil, vm1Id)

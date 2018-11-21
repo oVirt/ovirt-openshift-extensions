@@ -229,7 +229,8 @@ func (p *CloudProvider) InstanceShutdownByProviderID(context context.Context, pr
 
 // InstanceType returns the type of the specified instance.
 func (p *CloudProvider) InstanceType(context context.Context, name types.NodeName) (string, error) {
-	return ProviderName, nil
+	// TODO unclear what this method is needed for
+	return "", cloudprovider.NotImplemented
 }
 
 // InstanceTypeByProviderID returns the type of the specified instance.
@@ -238,7 +239,22 @@ func (p *CloudProvider) InstanceTypeByProviderID(context context.Context, provid
 }
 
 func (p *CloudProvider) NodeAddressesByProviderID(context context.Context, providerID string) ([]v1.NodeAddress, error) {
-	return []v1.NodeAddress{}, cloudprovider.NotImplemented
+	vmsById, err := p.getVmsById()
+	if err != nil {
+		return nil, err
+	}
+
+	vm, ok := vmsById[string(providerID)]
+	if !ok {
+		return nil, fmt.Errorf(
+			"VM by the ID %s does not exist."+
+				" The VM may have been removed, or the search query criteria needs correction",
+			providerID)
+	}
+
+	// TODO the old provider supplied hostnames - look for fqdn of VM maybe?. Consider implementing.
+	addresses := extractNodeAddresses(vm)
+	return addresses, nil
 }
 
 func (p *CloudProvider) getVmsById() (map[string]internal.VM, error) {
