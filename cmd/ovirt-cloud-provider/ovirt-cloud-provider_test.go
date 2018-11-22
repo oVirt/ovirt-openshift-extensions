@@ -20,8 +20,10 @@ var testOvirtConfig = internal.Connection{
 
 var vmsJson string
 
-const vm1Id = "f5fb9df5-19da-4d35-a0c8-f5d7569faacd"
 const vm1NodeName = "master0.example.com"
+const vm1Id = "f5fb9df5-19da-4d35-a0c8-f5d7569faacd"
+const vm2Name = "centos"
+const vm2Id = "f85501aa-afbb-46f2-a8d3-3dc299c07fee"
 
 func init() {
 	parse, err := ioutil.ReadFile("./vms.json")
@@ -81,9 +83,15 @@ var _ = Describe("ovirt-cloud-provider node tests", func() {
 			Expect(exists).To(BeTrue())
 		})
 
-		It("returns the instance ID for a given node name", func() {
+		It("returns the VM ID for for running VM by name", func() {
 			id, _ := underTest.InstanceID(nil, vm1NodeName)
 			Expect(id).To(Equal(vm1Id))
+		})
+
+		It("fails with InstanceNotFound when calling InstanceID for a down VM", func() {
+			id, err := underTest.InstanceID(nil,vm2Name )
+			Expect(err).To(Equal(cloudprovider.InstanceNotFound))
+			Expect(id).To(Equal(""))
 		})
 
 		It("returns the current nodename VM FQDN", func() {

@@ -115,10 +115,15 @@ func (p *CloudProvider) NodeAddresses(context context.Context, name types.NodeNa
 	return addresses, nil
 }
 
-// CloudProvider Instances
+// InstanceID returns the ovirt VM id by the vm name which is nodeName.
+// Note that if the VM does not exist or is no longer running, we must return ("", cloudprovider.InstanceNotFound)
 func (p *CloudProvider) InstanceID(context context.Context, nodeName types.NodeName) (string, error) {
 	vms, err := p.getVms()
-	return vms[string(nodeName)].Id, err
+	vm, ok := vms[string(nodeName)]
+	if !ok || vm.Status == "down" {
+		return "", cloudprovider.InstanceNotFound
+	}
+	return vm.Id, err
 }
 
 // Clusters returns a clusters interface.  Also returns true if the interface is supported, false otherwise.
@@ -137,6 +142,8 @@ func (*CloudProvider) ProviderName() string {
 }
 
 // ScrubDNS provides an opportunity for cloud-provider-specific code to process DNS settings for pods.
+// TODO to be removed - unsed and deprecated in latest cloud provider API
+// See https://github.com/kubernetes/kubernetes/commit/65efeee64f772e0f38037e91a677138a335a7570#diff-449f7e867e01d9cffec053fdd28b6ffc
 func (*CloudProvider) ScrubDNS(nameservers, searches []string) (nsOut, srchOut []string) {
 	return nil, nil
 
