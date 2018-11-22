@@ -18,7 +18,7 @@ import (
 
 // ProviderName is the canonical name the plugin will register under. It must be different the the in-tree
 // implementation name, "ovirt". The addition of "ecp" stand for External-Cloud-Provider
-const ProviderName = "ovirt-ecp"
+const ProviderName = "ovirt-cloud-provider"
 const DefaultVMSearchQuery = "vms?follow=nics&search="
 
 type OvirtNode struct {
