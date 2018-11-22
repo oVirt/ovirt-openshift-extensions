@@ -40,9 +40,9 @@ spec:
         # for in-tree providers we use gcr.io/google_containers/cloud-controller-manager
         # this can be replaced with any other image for out-of-tree providers
         #image: gcr.io/google_containers/cloud-controller-manager:v1.8.0
-        image: quay.io/rgolangh/ovirt-cloud-controller
+        image: quay.io/rgolangh/ovirt-cloud-provider
         command:
-        - /usr/local/bin/ovirt-cloud-controller
+        - /usr/bin/ovirt-cloud-provider
         - --cloud-provider=ovirt-cloud-provider
         - --leader-elect=true
         - --use-service-account-credentials
@@ -62,6 +62,6 @@ spec:
       # this is to restrict CCM to only run on master nodes
       # the node selector may vary depending on your cluster setup
       nodeSelector:
-        node-role.kubernetes.io/master: ""
+        node-role.kubernetes.io/master: "true"
 
 

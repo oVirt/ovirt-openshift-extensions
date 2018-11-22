@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/pflag"
 )
 
-func main() {
+func newControllerManagerCommand() {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	command := app.NewCloudControllerManagerCommand()

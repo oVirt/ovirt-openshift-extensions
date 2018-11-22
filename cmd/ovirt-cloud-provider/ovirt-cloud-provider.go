@@ -38,6 +38,10 @@ type CloudProvider struct {
 	internal.OvirtApi
 }
 
+func main() {
+	newControllerManagerCommand()
+}
+
 // init will register the cloud provider
 func init() {
 	glog.Info("about to register the ovirt cloud provider to the cluster")
@@ -75,7 +79,11 @@ func NewOvirtProvider(providerConfig *ProviderConfig, ovirtApi internal.OvirtApi
 // Initialize provides the cloud with a kubernetes client builder and may spawn goroutines
 // to perform housekeeping activities within the cloud provider.
 func (p *CloudProvider) Initialize(clientBuilder controller.ControllerClientBuilder) {
-	p.Authenticate()
+	glog.Info("about to connect to ovirt api")
+	err := p.Authenticate()
+	if err != nil {
+		glog.Errorf("failed to connecto to ovirt api. Error was %", err)
+	}
 }
 
 // LoadBalancer returns a balancer interface. Also returns true if the interface is supported, false otherwise.
@@ -253,6 +261,8 @@ func (p *CloudProvider) getVms() (map[string]internal.VM, error) {
 		vmsMap[v.Name] = v
 	}
 
+	glog.Infof("fetched vms with query %s", p.VmsQuery)
+	glog.Infof("vms fetched %v", vmsMap)
 	return vmsMap, err
 }
 
