@@ -90,6 +90,29 @@ func TestFetchToken(t *testing.T) {
 	}
 }
 
+func TestFailedFetchToken_move302(t *testing.T) {
+	api := CreateMockOvirtClient(func(writer http.ResponseWriter, request *http.Request) {
+		writer.WriteHeader(302)
+	})
+
+	err := api.Authenticate()
+	if err == nil {
+		t.Fatal("should fail with error")
+	}
+}
+
+func TestFailedFetchToken_404(t *testing.T) {
+	api := CreateMockOvirtClient(func(writer http.ResponseWriter, request *http.Request) {
+		writer.WriteHeader(404)
+	})
+
+	err := api.Authenticate()
+	t.Logf("error is %s", err)
+	if err == nil {
+		t.Fatal("should fail with error")
+	}
+}
+
 func CreateMockOvirtClient(handler http.HandlerFunc) Ovirt {
 	ts := httptest.NewServer(handler)
 	return Ovirt{
