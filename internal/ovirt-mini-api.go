@@ -420,11 +420,12 @@ func fetchToken(ovirtEngineUrl url.URL, username string, password string, client
 	req.Header.Add("Accept", "application/json")
 
 	resp, err := client.Do(req)
-	defer resp.Body.Close()
 
 	if err != nil {
 		return Token{}, err
 	}
+
+	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
 		return Token{}, fmt.Errorf("fail to login and fetching token %s", resp.Status)
