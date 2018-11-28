@@ -17,7 +17,6 @@ limitations under the License.
 package internal
 
 import (
-	"bytes"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
@@ -154,44 +153,6 @@ func isTokenValid(ovirt *Ovirt) bool {
 	return true
 }
 
-// Attach will attach a disk to a VM on ovirt.
-// vmName is ovirt's vm name
-// jsonParams is the volume info
-// Response will include the device path according to the disk interface type
-func (ovirt *Ovirt) Attach(params AttachRequest, vmName string) (Response, error) {
-	// TODO validate params
-	// convert params to json
-	requestJson, err := json.Marshal(
-		DiskAttachment{
-			Bootable:    true,
-			PassDiscard: true,
-			Active:      true,
-			Disk: Disk{
-				Name: params.VolumeName,
-			},
-		})
-
-	if err != nil {
-		return FailedResponse, err
-	}
-
-	// ovirt API call
-	resp, err := ovirt.clientDo(http.MethodPost, "vms/"+vmName+"/diskattachments", bytes.NewReader(requestJson))
-
-	if err != nil {
-		return FailedResponse, err
-	}
-
-	defer resp.Body.Close()
-
-	diskAttachment := DiskAttachment{}
-	jsonResponse, err := ioutil.ReadAll(resp.Body)
-	json.Unmarshal(jsonResponse, &diskAttachment)
-
-	attachResponse := SuccessfulResponse
-
-	return attachResponse, err
-}
 func (ovirt *Ovirt) GetDiskByName(diskName string) (DiskResult, error) {
 	var diskResult DiskResult
 	r, err := ovirt.Get(fmt.Sprintf("disks?search=name=%s", diskName))
