@@ -19,8 +19,11 @@ package internal
 import (
 	"code.cloudfoundry.org/bytefmt"
 	"fmt"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -58,37 +61,87 @@ cafile=
 	}
 }
 
-// TestAuthenticateWithUnexpiredToken makes sure we reuse the auth token
-func TestAuthenticateWithUnexpiredToken(t *testing.T) {
-	api := CreateMockOvirtClient(tokenHandlerFunc(10000000))
-	err := api.Authenticate()
-	if err != nil {
-		t.Fatalf("failed authentication %s", err)
-	}
-}
+var _ = Describe("Authentication tests", func() {
 
-func TestFetchToken(t *testing.T) {
-	// ignore loading the token
-	tokenStore = "/dev/null"
-	// expire in 1 month from now
-	expiredIn := time.Now().AddDate(0, 1, 0).UnixNano()
-	// create test server with handler
-	api := CreateMockOvirtClient(tokenHandlerFunc(expiredIn))
+	Context("token test", func() {
 
-	err := api.Authenticate()
+		AfterEach(func() {
+			os.Remove("/tmp/ovirt-flexdriver.token")
+		})
 
-	if err != nil {
-		t.Fatalf("failed authentication %s", err)
-	}
+		It("fetches a valid token", func() {
+			api := CreateMockOvirtClient(func(w http.ResponseWriter, r *http.Request) {
+				fmt.Fprintf(w, `{ "access_token": "1234567890", "exp": "%v", "token_type": "Bearer"}`, 10000000)
+			})
+			err := api.Authenticate()
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(api.token).NotTo(BeNil())
+			Expect(api.token.ExpireIn).To(BeNumerically("==", 10000000))
+		})
 
-	if api.token.ExpireIn != expiredIn {
-		t.Fatalf("token expiration expected: %v, got: %v", expiredIn, api.token.ExpireIn)
-	}
+		It("persists the token to the token store", func() {
+			api := CreateMockOvirtClient(func(w http.ResponseWriter, r *http.Request) {
+				fmt.Fprintf(w, `{ "access_token": "1234567890", "exp": "%v", "token_type": "Bearer"}`, 10000000)
+			})
+			err := api.Authenticate()
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(api.token.Value).NotTo(Equal(""))
 
-	if api.token.ExpirationTime.Before(time.Now()) {
-		t.Fatalf("token should expire in the future, but expired on on %v ", api.token.ExpirationTime)
-	}
-}
+			_, err = os.Stat("/tmp/ovirt-flexdriver.token")
+			Expect(err).ShouldNot(HaveOccurred())
+
+		})
+
+		It("correctly translate unix time to expiration time", func() {
+			// expire in 1 month from now
+			expiredIn := time.Now().AddDate(0, 1, 0).UnixNano()
+			// create test server with handler
+			api := CreateMockOvirtClient(tokenHandlerFunc(expiredIn))
+			err := api.Authenticate()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(api.token.ExpireIn).To(Equal(expiredIn))
+			Expect(api.token.ExpirationTime.Month()).To(
+				Equal(time.Now().AddDate(0, 1, 0).Month()))
+		})
+
+		It("fails when fetch token moved 302", func() {
+			api := CreateMockOvirtClient(func(writer http.ResponseWriter, request *http.Request) {
+				writer.WriteHeader(302)
+			})
+			err := api.Authenticate()
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
+	Context("when authenticating again", func() {
+		Context("authenticating again when token is valid", func() {
+			It("doesn't need to re authenticate with password", func() {})
+			It("loads the existing token from the token store", func() {})
+		})
+
+		Context("old token loaded from the token store is expired", func() {
+			It("fetches the token again", func() {})
+			It("updates the token value", func() {})
+			It("serializes the token to store", func() {})
+			It("successfully authenticate", func() {})
+		})
+
+		Context("old token file doesn't exists", func() {
+			It("authenticate using user and pass", func() {})
+			It("stores the token to the store", func() {})
+		})
+	})
+
+	Context("when using the token and error occurs", func() {
+		Context("on 302 moved error", func() {
+			It("returns a proper error", func() {})
+		})
+
+		Context("on 401 unauthorized", func() {
+			It("catches it and reauthenticate", func() {})
+		})
+	})
+})
 
 func TestFailedFetchToken_move302(t *testing.T) {
 	api := CreateMockOvirtClient(func(writer http.ResponseWriter, request *http.Request) {

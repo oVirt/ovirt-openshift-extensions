@@ -141,11 +141,13 @@ func persistToken(ovirt *Ovirt) {
 // returns true for 200 ok, otherwise false
 func isTokenValid(ovirt *Ovirt) bool {
 	resp, err := ovirt.clientDo(http.MethodGet, ovirt.Connection.Url, strings.NewReader(""))
-	defer resp.Body.Close()
 
 	if err != nil {
 		return false
 	}
+
+	defer resp.Body.Close()
+
 	if resp.StatusCode > 200 {
 		return false
 	}
@@ -175,11 +177,12 @@ func (ovirt *Ovirt) Attach(params AttachRequest, vmName string) (Response, error
 
 	// ovirt API call
 	resp, err := ovirt.clientDo(http.MethodPost, "vms/"+vmName+"/diskattachments", bytes.NewReader(requestJson))
-	defer resp.Body.Close()
 
 	if err != nil {
 		return FailedResponse, err
 	}
+
+	defer resp.Body.Close()
 
 	diskAttachment := DiskAttachment{}
 	jsonResponse, err := ioutil.ReadAll(resp.Body)
@@ -256,11 +259,13 @@ func (ovirt *Ovirt) CreateDisk(
 
 func (ovirt *Ovirt) Get(path string) ([]byte, error) {
 	resp, err := ovirt.clientDo(http.MethodGet, path, strings.NewReader(""))
-	defer resp.Body.Close()
 
 	if err != nil {
 		return nil, err
 	}
+
+	defer resp.Body.Close()
+
 	if resp.StatusCode > 200 {
 		return nil, translateError(*resp)
 	}
@@ -293,11 +298,13 @@ func (ovirt *Ovirt) Post(path string, data interface{}) (string, error) {
 	}
 	fmt.Println(string(d))
 	resp, err := ovirt.clientDo(http.MethodPost, path, strings.NewReader(string(d)))
-	defer resp.Body.Close()
 
 	if err != nil {
 		return "", err
 	}
+
+	defer resp.Body.Close()
+
 	if resp.StatusCode > 300 {
 		return "", errors.New(resp.Status)
 	}
@@ -308,11 +315,13 @@ func (ovirt *Ovirt) Post(path string, data interface{}) (string, error) {
 
 func (ovirt *Ovirt) Delete(path string) ([]byte, error) {
 	resp, err := ovirt.clientDo(http.MethodDelete, path, strings.NewReader(""))
-	defer resp.Body.Close()
 
 	if err != nil {
 		return nil, err
 	}
+
+	defer resp.Body.Close()
+
 	if resp.StatusCode > 200 {
 		return nil, errors.New(resp.Status)
 	}
@@ -456,7 +465,12 @@ func (ovirt *Ovirt) clientDo(method string, url string, payload io.Reader) (*htt
 
 	resp, err := ovirt.client.Do(r)
 
-	if err != nil || resp.StatusCode >= 300 {
+	if err != nil {
+		logErrorf("failed to call ovirt api: %s", err)
+		return resp, err
+	}
+
+	if resp.StatusCode >= 300 {
 		logInfof("failed to call ovirt api with response: %s", resp.Body)
 		if resp.StatusCode == 401 {
 			// invalid token, probably expired due to inactivity or
