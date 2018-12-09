@@ -33,11 +33,16 @@ containers = \
 	$(binaries) \
 	ovirt-openshift-extensions-ci
 
-$(binaries):
+$(binaries): internal
+	go vet ./cmd/$@ && \
 	$(COMMON_ENV) $(GOBUILD) \
     	$(COMMON_GO_BUILD_FLAGS) \
     	-o $(PREFIX)/$@ \
     	-v cmd/$@/*.go
+
+.PHONY: internal
+internal:
+	go vet ./internal
 
 
 container-%: DIR=.
