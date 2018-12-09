@@ -77,7 +77,7 @@ func (p *CloudProvider) Initialize(clientBuilder controller.ControllerClientBuil
 	glog.Info("about to connect to ovirt api")
 	err := p.Authenticate()
 	if err != nil {
-		glog.Errorf("failed to connecto to ovirt api. Error was %", err)
+		glog.Errorf("failed to connecto to ovirt api. Error was %s", err)
 	}
 }
 
