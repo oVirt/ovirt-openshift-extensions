@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM centos:7.5.1804
+FROM centos:7.6.1810
 
 ARG VERSION
 ARG RELEASE
@@ -29,7 +29,10 @@ RUN mkdir -p /root/go/src/github.com/ovirt/ovirt-openshift-extensions
 WORKDIR /root/go/src/github.com/ovirt/ovirt-openshift-extensions
 ADD ovirt-openshift-extensions-$VERSION-$RELEASE.tar.gz .
 
-RUN yum install -y golang make
+RUN yum install -y epel-release --enablerepo=extras && \
+    yum install -y --enablerepo=extras golang make &&  \
+    yum clean all && rm -rf /var/cache/yum
+
 RUN make ovirt-volume-provisioner
 
 #TODO use multi-stage when buildah runs in mock or docker 1.17 is available
