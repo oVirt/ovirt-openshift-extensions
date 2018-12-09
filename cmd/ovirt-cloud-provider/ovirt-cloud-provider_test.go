@@ -231,10 +231,6 @@ func (MockApi) DetachDiskFromVM(vmId string, diskId string) error {
 	panic("implement me")
 }
 
-func (MockApi) Attach(params internal.AttachRequest, nodeName string) (internal.Response, error) {
-	panic("implement me")
-}
-
 func (MockApi) GetDiskByName(diskName string) (internal.DiskResult, error) {
 	panic("implement me")
 }
