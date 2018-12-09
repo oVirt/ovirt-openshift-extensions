@@ -357,12 +357,13 @@ func fetchCafile(ovirt *Ovirt, hostname string, origPort string) error {
 		port = "8080"
 	}
 	resp, err := http.Get(fmt.Sprintf("http://%s:%s/%s", hostname, port, caUrl))
-	defer resp.Body.Close()
 
 	if err != nil {
 		fmt.Println("Error while downloading CA", err)
 		return err
 	}
+
+	defer resp.Body.Close()
 
 	output, err := os.Create("ovirt.ca")
 	if err != nil {
@@ -452,12 +453,12 @@ func (ovirt *Ovirt) clientDo(method string, url string, payload io.Reader) (*htt
 
 func logInfof(format string, message ...interface{}) {
 	if log != nil && logError == nil {
-		log.Info(fmt.Sprintf(format, message))
+		log.Info(fmt.Sprintf(format, message...))
 	}
 }
 
 func logErrorf(format string, message ...interface{}) {
 	if log != nil && logError == nil {
-		log.Err(fmt.Sprintf(format, message))
+		log.Err(fmt.Sprintf(format, message...))
 	}
 }

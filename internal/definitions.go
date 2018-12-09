@@ -78,7 +78,7 @@ type AttchResponse struct {
 type AttachRequest struct {
 	StorageDomain string `json:"ovirtStorageDomain"`
 	VolumeName    string `json:"kubernetes.io/pvOrVolumeName,omitempty"`
-	Size          string `json:"capacity, omitempty"`
+	Size          string `json:"capacity,omitempty"`
 	FsType        string `json:"kubernetes.io/fsType"`
 	Mode          string `json:"kubernetes.io/readwrite"`
 	// TODO use k8s secret?

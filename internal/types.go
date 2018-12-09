@@ -20,7 +20,7 @@ type DiskAttachment struct {
 	Id          string `json:"id,omitempty"`
 	Bootable    bool   `json:"bootable,string"`
 	PassDiscard bool   `json:"pass_discard,string"`
-	Interface   string `json:"interface, omitempty"`
+	Interface   string `json:"interface,omitempty"`
 	Active      bool   `json:"active,string"`
 	Disk        Disk   `json:"disk"`
 	ReadOnly    bool   `json:"read_only,string"`
@@ -64,7 +64,7 @@ type VM struct {
 
 type Nic struct {
 	Interface string `json:"interface"`
-	linked bool `json:"linked:string"`
+	Linked bool `json:"linked:string"`
 	Devices struct { Devices []Device `json:"reported_device"` } `json:"reported_devices"`
 }
 
