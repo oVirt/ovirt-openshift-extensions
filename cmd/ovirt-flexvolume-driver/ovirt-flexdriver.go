@@ -22,8 +22,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ovirt/ovirt-openshift-extensions/internal"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"log/syslog"
 	"os"
@@ -31,6 +29,10 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/spf13/viper"
+
+	"github.com/ovirt/ovirt-openshift-extensions/internal"
 )
 
 const usage = `Usage:
@@ -268,11 +270,11 @@ func IsAttached(jsonOpts string, nodeName string) (internal.Response, error) {
 // nodeName - the hostname with the volume attached. Needs to be converted to ovirt's VM. See #internal.GetOvirtNodeName
 func Detach(volumeName string, nodeName string) (internal.Response, error) {
 	if nodeName == "" {
-		e := fmt.Errorf("Invalid node name '%s'", nodeName)
+		e := fmt.Errorf("invalid node name '%s'", nodeName)
 		return internal.FailedResponseFromError(e), e
 	}
 	if volumeName == "" {
-		e := fmt.Errorf("Invalid volume name '%s'", volumeName)
+		e := fmt.Errorf("invalid volume name '%s'", volumeName)
 		return internal.FailedResponseFromError(e), e
 	}
 
@@ -295,7 +297,7 @@ func Detach(volumeName string, nodeName string) (internal.Response, error) {
 
 	if len(diskResult.Disks) == 0 {
 		//TODO is this an error or ok state for detach?
-		err = fmt.Errorf("Disk by name %s does not exist", ovirtDiskName)
+		err = fmt.Errorf("disk by name %s does not exist", ovirtDiskName)
 		return internal.FailedResponseFromError(err), err
 	}
 
@@ -335,7 +337,7 @@ func WaitForAttach(deviceName string, _ string) (internal.Response, error) {
 		}
 	}
 	if attachment.Id == "" {
-		err = fmt.Errorf("Disk with id '%s' was not found", id)
+		err = fmt.Errorf("disk with id '%s' was not found", id)
 		return internal.FailedResponseFromError(err), err
 	}
 

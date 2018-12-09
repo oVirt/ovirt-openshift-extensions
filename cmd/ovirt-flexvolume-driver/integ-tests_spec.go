@@ -18,6 +18,7 @@ package main
 
 import (
 	"encoding/json"
+
 	"github.com/ovirt/ovirt-openshift-extensions/internal"
 )
 

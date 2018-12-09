@@ -1,31 +1,26 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io"
-	"errors"
-	"gopkg.in/gcfg.v1"
 
 	"github.com/golang/glog"
+	"gopkg.in/gcfg.v1"
+	"k8s.io/api/core/v1"
+
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/kubernetes/pkg/cloudprovider"
 	"k8s.io/kubernetes/pkg/controller"
 
-	"context"
 	"github.com/ovirt/ovirt-openshift-extensions/internal"
-	"k8s.io/api/core/v1"
 )
 
 // ProviderName is the canonical name the plugin will register under. It must be different the the in-tree
 // implementation name, "ovirt". The addition of "ecp" stand for External-Cloud-Provider
 const ProviderName = "ovirt-cloud-provider"
 const DefaultVMSearchQuery = "vms?follow=nics&search="
-
-type OvirtNode struct {
-	UUID      string
-	Name      string
-	IPAddress string
-}
 
 type ProviderConfig struct {
 	Filters struct {
@@ -177,10 +172,10 @@ func (p *CloudProvider) CurrentNodeName(context context.Context, hostname string
 // Note that if the instance does not exist or is no longer running, we must return ("", cloudprovider.InstanceNotFound)
 func (p *CloudProvider) ExternalID(nodeName types.NodeName) (string, error) {
 	vms, err := p.getVms()
-	if err != nil  {
+	if err != nil {
 		return "", err
 	}
-	vm, ok :=  vms[string(nodeName)]
+	vm, ok := vms[string(nodeName)]
 	if !ok {
 		return "", cloudprovider.InstanceNotFound
 	}
@@ -216,7 +211,7 @@ func (p *CloudProvider) InstanceShutdownByProviderID(context context.Context, pr
 
 	vm, ok := vmsById[providerID]
 
-	if  !ok {
+	if !ok {
 		return false, fmt.Errorf("vm with id %s doesn't exist", providerID)
 	}
 
@@ -281,11 +276,11 @@ func (p *CloudProvider) getVmsById() (map[string]internal.VM, error) {
 // extractNodeAddresses will return all addresses of the reported node
 // TODO how to detect a primary external IP? how to pass hostnames if we have it?
 func extractNodeAddresses(vm internal.VM) []v1.NodeAddress {
-	addresses := make([]v1.NodeAddress,0)
+	addresses := make([]v1.NodeAddress, 0)
 	for _, nics := range vm.Nics.Nics {
 		for _, dev := range nics.Devices.Devices {
 			for _, ip := range dev.Ips.Ips {
-				addresses = append(addresses, v1.NodeAddress{Address: ip.Address, Type:v1.NodeExternalIP})
+				addresses = append(addresses, v1.NodeAddress{Address: ip.Address, Type: v1.NodeExternalIP})
 			}
 		}
 	}

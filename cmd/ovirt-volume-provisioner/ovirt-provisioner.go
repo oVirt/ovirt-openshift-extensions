@@ -18,19 +18,20 @@ package main
 
 import (
 	"flag"
+	"os"
+
 	"github.com/golang/glog"
 	"github.com/kubernetes-incubator/external-storage/lib/controller"
-	"github.com/ovirt/ovirt-openshift-extensions/internal"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"os"
+
+	"github.com/ovirt/ovirt-openshift-extensions/internal"
 )
 
 var (
-
 	// Name of the provisioner.
 	// The provisioner will only provision volumes for claims that
 	// request a StorageClass with a provisioner field set equal to this name.

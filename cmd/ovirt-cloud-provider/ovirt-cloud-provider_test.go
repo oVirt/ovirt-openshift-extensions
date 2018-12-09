@@ -1,21 +1,23 @@
 package main
 
 import (
+	"encoding/json"
+	"io/ioutil"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/ovirt/ovirt-openshift-extensions/internal"
-	"encoding/json"
 	"k8s.io/apimachinery/pkg/types"
-	"io/ioutil"
 	"k8s.io/kubernetes/pkg/cloudprovider"
+
+	"github.com/ovirt/ovirt-openshift-extensions/internal"
 )
 
 var testOvirtConfig = internal.Connection{
-	"https: //fqdn:8443/ovirt-engine/api",
-	"foo@domain",
-	"123",
-	true,
-	"/dev/null",
+	Url:      "https: //fqdn:8443/ovirt-engine/api",
+	Username: "foo@domain",
+	Password: "123",
+	Insecure: true,
+	CAFile:   "/dev/null",
 }
 
 var vmsJson string
@@ -23,7 +25,6 @@ var vmsJson string
 const vm1NodeName = "master0.example.com"
 const vm1Id = "f5fb9df5-19da-4d35-a0c8-f5d7569faacd"
 const vm2Name = "centos"
-const vm2Id = "f85501aa-afbb-46f2-a8d3-3dc299c07fee"
 
 func init() {
 	parse, err := ioutil.ReadFile("./vms.json")
@@ -36,7 +37,7 @@ func init() {
 var _ = Describe("ovirt-cloud-provider configuration tests", func() {
 	var (
 		underTest *CloudProvider
-		err	error
+		err       error
 	)
 
 	BeforeEach(func() {
@@ -89,7 +90,7 @@ var _ = Describe("ovirt-cloud-provider node tests", func() {
 		})
 
 		It("fails with InstanceNotFound when calling InstanceID for a down VM", func() {
-			id, err := underTest.InstanceID(nil,vm2Name )
+			id, err := underTest.InstanceID(nil, vm2Name)
 			Expect(err).To(Equal(cloudprovider.InstanceNotFound))
 			Expect(id).To(Equal(""))
 		})
@@ -170,7 +171,7 @@ var _ = Describe("ovirt-cloud-provider ", func() {
 	)
 
 	BeforeEach(func() {
-		underTest, _ = NewOvirtProvider(&ProviderConfig{}, MockApi{internal.Connection{Url:"http://foo"}})
+		underTest, _ = NewOvirtProvider(&ProviderConfig{}, MockApi{internal.Connection{Url: "http://foo"}})
 	})
 
 	Context("example", func() {
@@ -182,8 +183,6 @@ var _ = Describe("ovirt-cloud-provider ", func() {
 
 	})
 })
-
-
 
 type MockApi struct {
 	Connection internal.Connection
@@ -208,7 +207,7 @@ func (MockApi) Delete(path string) ([]byte, error) {
 func (m MockApi) GetVM(name string) (internal.VM, error) {
 	vms, err := m.GetVMs("")
 	vmsMap := make(map[string]internal.VM, len(vms))
-	for _,v := range vms {
+	for _, v := range vms {
 		vmsMap[v.Name] = v
 	}
 	return vmsMap[name], err

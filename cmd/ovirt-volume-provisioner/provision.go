@@ -18,14 +18,16 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/golang/glog"
 	"github.com/kubernetes-incubator/external-storage/lib/controller"
-	"github.com/ovirt/ovirt-openshift-extensions/internal"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/kubernetes/pkg/kubelet/apis"
+
+	"github.com/ovirt/ovirt-openshift-extensions/internal"
 )
 
 const (
@@ -46,14 +48,14 @@ func NewOvirtProvisioner(ovirtApi internal.OvirtApi) controller.Provisioner {
 	var identity types.UID
 	provisioner := &ovirtProvisioner{
 		ovirtApi: ovirtApi,
-		identity:    identity,
+		identity: identity,
 	}
 	return provisioner
 }
 
 type ovirtProvisioner struct {
 	ovirtApi internal.OvirtApi
-	identity    types.UID
+	identity types.UID
 }
 
 //func (p *ovirtProvisioner) getAccessModes() []v1.PersistentVolumeAccessMode {
