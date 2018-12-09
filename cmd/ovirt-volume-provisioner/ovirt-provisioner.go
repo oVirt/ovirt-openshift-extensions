@@ -31,11 +31,12 @@ import (
 	"github.com/ovirt/ovirt-openshift-extensions/internal"
 )
 
+// Name of the provisioner.
+// The provisioner will only provision volumes for claims that
+// request a StorageClass with a 'provisioner' field set equal to this name.
+const ProvisionerName = "ovirt-volume-provisioner"
+
 var (
-	// Name of the provisioner.
-	// The provisioner will only provision volumes for claims that
-	// request a StorageClass with a provisioner field set equal to this name.
-	provisioner = "external/ovirt"
 	master      = flag.String("master", "", "Master URL to build a client config from. Either this or kubeconfig needs to be set if the provisioner is being run out of cluster.")
 	kubeconfig  = flag.String("kubeconfig", "", "Absolute path to the kubeconfig file. Either this or master needs to be set if the provisioner is being run out of cluster.")
 )
@@ -44,7 +45,7 @@ func main() {
 	flag.Set("logtostderr", "true")
 	flag.Parse()
 
-	glog.Infof("Provisioner %s specified", provisioner)
+	glog.Infof("Provisioner %s specified", ProvisionerName)
 
 	clientSet, serverVersion := getClientSet()
 	ovirtApi, err := newOvirt()
@@ -58,7 +59,7 @@ func main() {
 	// Start the provision controller which will dynamically provision NFS PVs
 	pc := controller.NewProvisionController(
 		clientSet,
-		provisioner,
+		ProvisionerName,
 		ovirtProvisioner,
 		serverVersion.GitVersion,
 	)
