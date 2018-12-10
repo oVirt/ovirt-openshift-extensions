@@ -17,16 +17,17 @@ limitations under the License.
 package internal
 
 import (
-	"code.cloudfoundry.org/bytefmt"
 	"fmt"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
 	"time"
+
+	"code.cloudfoundry.org/bytefmt"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 const vmId = "12345678-1234-1234-1234-123456789101"
