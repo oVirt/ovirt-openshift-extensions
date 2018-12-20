@@ -163,12 +163,17 @@ func (ovirt *Ovirt) GetDiskByName(diskName string) (DiskResult, error) {
 	return diskResult, err
 }
 
-func (ovirt *Ovirt) CreateUnattachedDisk(diskName string, storageDomainName string, sizeIbBytes int64, readOnly bool, diskFormat string) (Disk, error) {
+func (ovirt *Ovirt) CreateUnattachedDisk(diskName string, storageDomainName string, sizeIbBytes int64, readOnly bool, thinProvisioning bool) (Disk, error) {
+	format, sparse, err := ovirt.DefaultDiskParamsBy(storageDomainName, thinProvisioning)
+	if err != nil {
+		return Disk{}, err
+	}
 	disk := Disk{
 		Name:            diskName,
 		ProvisionedSize: uint64(sizeIbBytes),
-		Format:          DiskFormat(diskFormat),
+		Format:          format,
 		StorageDomains:  StorageDomains{[]StorageDomain{{Name: storageDomainName}}},
+		Sparse:          sparse,
 	}
 
 	post, err := ovirt.Post("disks", disk)
@@ -178,6 +183,29 @@ func (ovirt *Ovirt) CreateUnattachedDisk(diskName string, storageDomainName stri
 	result := Disk{}
 	err = json.Unmarshal([]byte(post), &result)
 	return result, err
+}
+
+// this logic is aligned with oVirt logic for determining disk format and spareness
+// the combination are determined by the type of the storage domain.
+func (ovirt *Ovirt) DefaultDiskParamsBy(storageDomainName string, thinProvisioned bool) (DiskFormat, Sparse, error){
+
+	if !thinProvisioned {
+		// default no matter what the disk is - raw disk, no sparseness
+		return "raw", false, nil
+	}
+
+	domain, e := ovirt.GetStorageDomainBy(storageDomainName)
+	if e != nil {
+		return "", false, e
+	}
+
+	// thin provisioned
+	// block (iscsi/fc)    - cow + sparse
+	// file  (nfs/gluster) - raw + sparse
+	if domain.Storage.Type == "iscsi" || domain.Storage.Type == "fc" {
+		return "cow", true, nil
+	}
+	return "raw", true, nil
 }
 
 func (ovirt *Ovirt) CreateDisk(
@@ -449,6 +477,26 @@ func (ovirt *Ovirt) clientDo(method string, url string, payload io.Reader) (*htt
 	}
 
 	return resp, err
+}
+
+// GetStorageDomainBy returns a storage domain type by name
+func (ovirt *Ovirt) GetStorageDomainBy(name string) (StorageDomain, error){
+
+	s, err := ovirt.Get("storagedomains?search=name=" + name)
+	domains := StorageDomains{}
+	if err != nil {
+		return StorageDomain{}, err
+	}
+	err = json.Unmarshal([]byte(s), &domains)
+	if err != nil {
+		return StorageDomain{}, err
+	}
+	if len(domains.Domains) > 0 {
+		return domains.Domains[0], nil
+	}
+
+	return StorageDomain{}, ErrNotExist
+
 }
 
 func logInfof(format string, message ...interface{}) {

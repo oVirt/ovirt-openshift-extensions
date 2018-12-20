@@ -142,6 +142,113 @@ var _ = Describe("Authentication tests", func() {
 			It("catches it and reauthenticate", func() {})
 		})
 	})
+
+})
+
+var _ = Describe("API calls on resources", func() {
+	Context("Get Storage Domain by name that exists", func() {
+		api := CreateMockOvirtClient(func(writer http.ResponseWriter, request *http.Request) {
+			writer.Write([]byte(`{"storage_domain": [{"name":"foo", "storage": {"type":"iscsi"}}] }`))
+		})
+		d, err := api.GetStorageDomainBy("foo")
+
+		It("returns with no error", func() {
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+		It("returns a storage domain", func() {
+			Expect(d).NotTo(BeZero())
+		})
+		It("has the right name", func() {
+			Expect(d.Name).To(Equal("foo"))
+		})
+		It("has the right domain type", func() {
+			Expect(d.Storage.Type).To(Equal("iscsi"))
+		})
+	})
+	Context("Search Storage Domain by name that doesn't exist", func() {
+		api := CreateMockOvirtClient(func(writer http.ResponseWriter, request *http.Request) {
+			writer.Write([]byte(`{ }`))
+		})
+		d, err := api.GetStorageDomainBy("non-existing")
+
+		It("returns error 'not exist'", func() {
+			Expect(err).Should(Equal(ErrNotExist))
+		})
+		It("returns a zero-valued domain", func() {
+			Expect(d).To(BeZero())
+		})
+		It("has no name", func() {
+			Expect(d.Name).To(Equal(""))
+		})
+		It("has no storage type", func() {
+			Expect(d.Storage.Type).To(Equal(""))
+		})
+	})
+	Context("Default storage params", func() {
+		Context("For thick provisioning", func() {
+			api := CreateMockOvirtClient(func(writer http.ResponseWriter, request *http.Request) {
+				writer.Write([]byte(`{ }`))
+			})
+			format, sparse, err := api.DefaultDiskParamsBy("", false)
+			It("returns with no error", func() {
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+			Specify("disk format is raw", func() {
+				Expect(format).To(Equal(DiskFormat("raw")))
+			})
+			Specify("not sparse", func() {
+				Expect(sparse).To(Equal(Sparse(false)))
+			})
+		})
+		Context("For thin provisioning", func() {
+			Context("for block domain (iscsi/fc)", func() {
+				api := CreateMockOvirtClient(func(writer http.ResponseWriter, request *http.Request) {
+					writer.Write([]byte(`{ "storage_domain": [{"name": "data", "storage": {"type": "iscsi"}}]}`))
+				})
+				format, sparse, err := api.DefaultDiskParamsBy("data", true)
+				It("returns with no error", func() {
+					Expect(err).ShouldNot(HaveOccurred())
+				})
+				Specify("disk format is cow", func() {
+					Expect(format).To(Equal(DiskFormat("cow")))
+				})
+				Specify("use sparse", func() {
+					Expect(sparse).To(Equal(Sparse(true)))
+				})
+			})
+			Context("for file domain nfs", func() {
+				api := CreateMockOvirtClient(func(writer http.ResponseWriter, request *http.Request) {
+					writer.Write([]byte(`{ "storage_domain": [{"name": "data", "storage": {"type": "gluster"}}]}`))
+				})
+				format, sparse, err := api.DefaultDiskParamsBy("data", true)
+				It("returns with no error", func() {
+					Expect(err).ShouldNot(HaveOccurred())
+				})
+
+				Specify("disk format is raw", func() {
+					Expect(format).To(Equal(DiskFormat("raw")))
+				})
+				Specify("use sparse", func() {
+					Expect(sparse).To(Equal(Sparse(true)))
+				})
+			})
+			Context("for file domain gluster", func() {
+				api := CreateMockOvirtClient(func(writer http.ResponseWriter, request *http.Request) {
+					writer.Write([]byte(`{ "storage_domain": [{"name": "data", "storage": {"type": "nfs"}}]}`))
+				})
+				format, sparse, err := api.DefaultDiskParamsBy("data", true)
+				It("returns with no error", func() {
+					Expect(err).ShouldNot(HaveOccurred())
+				})
+				Specify("disk format is raw", func() {
+					Expect(format).To(Equal(DiskFormat("raw")))
+				})
+				Specify("use sparse", func() {
+					Expect(sparse).To(Equal(Sparse(true)))
+				})
+			})
+		})
+	})
 })
 
 func TestFailedFetchToken_move302(t *testing.T) {
@@ -241,7 +348,7 @@ func TestOvirt_CreateUnattachedDisk(t *testing.T) {
 		"iscidomain",
 		1073741824,
 		false,
-		"cow")
+		false)
 	if e != nil {
 		t.Errorf(e.Error())
 	}

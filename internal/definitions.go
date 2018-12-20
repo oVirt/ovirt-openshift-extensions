@@ -46,7 +46,7 @@ type OvirtApi interface {
 	GetDiskAttachments(vmId string) ([]DiskAttachment, error)
 	DetachDiskFromVM(vmId string, diskId string) error
 	GetDiskByName(diskName string) (DiskResult, error)
-	CreateUnattachedDisk(diskName string, storageDomainName string, sizeIbBytes int64, readOnly bool, diskFormat string) (Disk, error)
+	CreateUnattachedDisk(diskName string, storageDomainName string, sizeIbBytes int64, readOnly bool, thinProvisioning bool) (Disk, error)
 	CreateDisk(
 		diskName string,
 		storageDomainName string,

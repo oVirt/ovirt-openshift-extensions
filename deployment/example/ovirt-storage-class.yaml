@@ -4,12 +4,11 @@ metadata:
   name: ovirt
 provisioner: ovirt-volume-provisioner
 parameters:
-  type: io1
-  iopsPerGB: "10"
+  # oVirt target storage domain name for the created disks.
   ovirtStorageDomain: "nfs"
-  # specifing a disk format is a must and depends on
-  # the type of the domain - block-storage(iscsi/FC) or file(NFS/gluster...)
-  ovirtDiskFormat: "cow"
+  # Specify thin provisioning or not (default true)
+  # The provisioner will figure out the disk type for you
+  ovirtThinProvisioning: true
+  # The file system to create on the disk prior to attaching it to the container.
+  # If the filesystem already exists, don't re-recreate.
   fsType: ext4
-
-
