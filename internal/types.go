@@ -16,6 +16,13 @@ limitations under the License.
 
 package internal
 
+import "errors"
+
+// ovirt api common errors
+var (
+	ErrNotExist = errors.New("resource does not exists")
+)
+
 type DiskAttachment struct {
 	Id          string `json:"id,omitempty"`
 	Bootable    bool   `json:"bootable,string"`
@@ -31,6 +38,7 @@ type DiskAttachmentResult struct {
 }
 
 type DiskFormat string
+type Sparse		bool
 
 type Disk struct {
 	Id              string         `json:"id,omitempty"`
@@ -40,6 +48,8 @@ type Disk struct {
 	Status          string         `json:"status,omitempty"`
 	Format          DiskFormat     `json:"format"`
 	StorageDomains  StorageDomains `json:"storage_domains"`
+	Sparse  		Sparse         `json:"sparse"`
+
 }
 
 type DiskResult struct {
@@ -52,6 +62,7 @@ type StorageDomains struct {
 
 type StorageDomain struct {
 	Name string `json:"name"`
+	Storage struct{  Type string `json:"type"`} `json:"storage"`
 }
 
 type VM struct {

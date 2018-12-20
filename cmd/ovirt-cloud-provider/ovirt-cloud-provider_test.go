@@ -234,7 +234,7 @@ func (MockApi) GetDiskByName(diskName string) (internal.DiskResult, error) {
 	panic("implement me")
 }
 
-func (MockApi) CreateUnattachedDisk(diskName string, storageDomainName string, sizeIbBytes int64, readOnly bool, diskFormat string) (internal.Disk, error) {
+func (MockApi) CreateUnattachedDisk(diskName string, storageDomainName string, sizeIbBytes int64, readOnly bool, thinProvisioning bool) (internal.Disk, error) {
 	panic("implement me")
 }
 

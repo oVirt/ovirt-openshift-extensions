@@ -18,6 +18,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/golang/glog"
 	"github.com/kubernetes-incubator/external-storage/lib/controller"
@@ -37,10 +38,12 @@ const (
 	// are we allowed to set this? else make up our own
 	annCreatedBy = "kubernetes.io/createdby"
 	createdBy    = "ovirt-provisioner"
-
 	annVolumeID = "ovirt.external-storage.incubator.kubernetes.io/VolumeID"
-
 	annProvisionerID = "Provisioner_Id"
+
+	parameterStorageDomainName = "ovirtStorageDomain"
+	parameterDiskThinProvisioning = "ovirtDiskThinProvisioning"
+	parameterFsType = "fsType"
 )
 
 // NewOvirtProvisioner creates a new Ovirt provisioner
@@ -58,42 +61,57 @@ type ovirtProvisioner struct {
 	identity types.UID
 }
 
-//func (p *ovirtProvisioner) getAccessModes() []v1.PersistentVolumeAccessMode {
-//	return []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
-//}
-
 // Provision creates a volume i.e. the storage asset and returns a PV object for
 // the volume.
 func (p ovirtProvisioner) Provision(options controller.VolumeOptions) (*v1.PersistentVolume, error) {
 	// call ovirt api, create an unattached disk
 	capacity := options.PVC.Spec.Resources.Requests[v1.ResourceName(v1.ResourceStorage)]
 	volSizeBytes := capacity.Value()
-	fsType, exists := options.Parameters["fsType"]
+	fsType, exists := options.Parameters[parameterFsType]
 	if !exists || fsType == "" {
 		fsType = "ext4"
 	}
-	glog.Infof("About to provision a disk name: %s domain: %s size: %v format: %s ",
+
+	glog.Infof("About to provision a disk name: %s domain: %s size: %v thin provisioned: %s file system: %s",
 		options.PVName,
-		options.Parameters["ovirtStorageDomain"],
+		options.Parameters[parameterStorageDomainName],
 		volSizeBytes,
-		options.Parameters["ovirtDiskFormat"],
+		options.Parameters[parameterDiskThinProvisioning],
+		fsType,
 	)
+
+	thinProvisioning := true
+	val, ok := options.Parameters[parameterDiskThinProvisioning]
+	if ok {
+		b, e := strconv.ParseBool(val)
+		if e != nil {
+			glog.Warningf("wrong value for parameter %s. Using default %v", parameterDiskThinProvisioning, thinProvisioning)
+		} else {
+			thinProvisioning = b
+		}
+	}
+
 	vol, err := p.ovirtApi.CreateUnattachedDisk(
 		options.PVName,
-		options.Parameters["ovirtStorageDomain"],
+		options.Parameters[parameterStorageDomainName],
 		volSizeBytes,
 		false, // TODO support the PV Spec access mode?
-		options.Parameters["ovirtDiskFormat"],
+		thinProvisioning,
 	)
 	if err != nil {
 		return nil, err
 	}
 
+	pv := pvFromDisk(p.identity, vol, options, fsType)
+	return pv, nil
+}
+
+// pvFromDisk takes an ovirt disk details and created a PersistentVolume object
+func pvFromDisk(provisionerId types.UID, disk internal.Disk, options controller.VolumeOptions, fsType string) *v1.PersistentVolume {
 	annotations := make(map[string]string)
 	annotations[annCreatedBy] = createdBy
-	annotations[annProvisionerID] = string(p.identity)
-	annotations[annVolumeID] = vol.Id
-
+	annotations[annProvisionerID] = string(provisionerId)
+	annotations[annVolumeID] = disk.Id
 	labels := make(map[string]string)
 	labels[apis.LabelZoneFailureDomain] = "" // TODO A Zone is ovirt cluster?
 
@@ -108,7 +126,7 @@ func (p ovirtProvisioner) Provision(options controller.VolumeOptions) (*v1.Persi
 			PersistentVolumeReclaimPolicy: options.PersistentVolumeReclaimPolicy,
 			AccessModes:                   options.PVC.Spec.AccessModes,
 			Capacity: v1.ResourceList{
-				v1.ResourceName(v1.ResourceStorage): *resource.NewQuantity(int64(vol.ProvisionedSize), "gi"),
+				v1.ResourceName(v1.ResourceStorage): *resource.NewQuantity(int64(disk.ProvisionedSize), "gi"),
 			},
 			PersistentVolumeSource: v1.PersistentVolumeSource{
 
@@ -121,8 +139,7 @@ func (p ovirtProvisioner) Provision(options controller.VolumeOptions) (*v1.Persi
 			},
 		},
 	}
-
-	return pv, nil
+	return pv
 }
 
 // Provision creates a volume i.e. the storage asset and returns a PV object for
