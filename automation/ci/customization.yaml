@@ -1,0 +1,4 @@
+#engine_url: https://ovirt-engine-fqdn/ovirt-engine/api
+#openshift_disable_check: memory_availability,disk_availability,docker_image_availability
+#public_hosted_zone: example.com
+#debug_level: 2
