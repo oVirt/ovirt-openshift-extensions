@@ -2,5 +2,4 @@
   strategy: free
   tasks:
     - shell: 'echo {{ ansible_default_ipv4.address }} etcd.example.com openshift-master.example.com openshift-public-master.example.com master0.example.com docker-registry-default.apps.example.com webconsole.openshift-web-console.svc registry-console-default.apps.example.com >> /etc/hosts'
-    - shell: 'echo {{ engine_ip }} engine >> /etc/hosts'
 

@@ -9,8 +9,6 @@ spec:
       restartPolicy: Never
       containers:
         - env:
-            - name: ENGINE_IP
-              value: "{{ engine_ip }}"
             - name: ENGINE_URL
               value: "{{ engine_url }}"
             - name: ENGINE_USER
@@ -29,10 +27,6 @@ spec:
           imagePullPolicy: Always
           name: ovirt-flexvolume-deployer
           restartPolicy: Never
-          hostAliases:
-            - ip: "{{ engine_ip }}"
-              hostnames:
-                - "engine"
           securityContext:
             allowPriviligedEscalation: true
           volumeMount:

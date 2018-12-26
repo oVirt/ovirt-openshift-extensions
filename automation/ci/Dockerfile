@@ -1,34 +1,28 @@
-From centos:7.5.1804
+FROM openshift/origin-ansible:v3.11
 
 USER root
-
-RUN yum install -y \ 
+RUN yum install -y \
 	http://resources.ovirt.org/pub/yum-repo/ovirt-release42.rpm	
 
 # Installing pre release of 4.2 till GA of 4.2.7 see github issues/73
 RUN yum install -y ovirt-release42-pre
 
-RUN yum install -y \
-	file \
-	ansible \
-	git \
-	python-ovirt-engine-sdk4 \
-	ovirt-ansible-roles \
-	&& yum clean all
+ARG PKGS='python-ovirt-engine-sdk4 ovirt-ansible-roles'
 
-RUN rm -rf /var/run/cache
+RUN yum install -y ${PKGS} && yum clean all && rm -rf /var/run/cache
 
-RUN ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa
+RUN ssh-keygen -t rsa -N '' -f id_rsa
 
-ADD ansible.cfg /root/ansible.cfg
-ADD integ.ini /root/integ.ini
-ADD vars.yaml /root/vars.yaml
-RUN touch /root/user_vars.yaml
-ADD site.yaml  /root/site.yaml
-ADD setup_dns.yaml  /root/setup_dns.yaml
-ADD deploy_flex.yaml  /root/deploy_flex.yaml
-ADD flex_deployer_job.yaml  /root/flex_deployer_job.yaml
+ADD integ.ini integ.ini
+ADD vars.yaml vars.yaml
+ADD install_okd.yaml  install_okd.yaml
+ADD install_extensions.yaml  install_extensions.yaml
+ADD setup_dns.yaml  setup_dns.yaml
+ADD deploy_ovirt_storage_driver.yaml deploy_ovirt_storage_driver.yaml
+ADD flex_deployer_job.yaml flex_deployer_job.yaml
 
-WORKDIR /root
-RUN git clone --branch release-3.11 https://github.com/openshift/openshift-ansible --depth 1
-ENTRYPOINT ansible-playbook -i integ.ini site.yaml
+ENV OPTS="-v "
+ENV ANSIBLE_ROLES_PATH="/usr/share/ansible/roles/"
+ENV ANSIBLE_JINJA2_EXTENSIONS="jinja2.ext.do"
+ENV INVENTORY_FILE="integ.ini"
+ENV PLAYBOOK_FILE="install_okd.yaml"

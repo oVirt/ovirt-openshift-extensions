@@ -5,7 +5,6 @@
   
   vars_files:
     - vars.yaml
-    - user_vars.yaml
   tasks:
     - name: copy the deployer spec
       template: src=flex_deployer_job.yaml dest=/root/flex_deployer_job.yaml
