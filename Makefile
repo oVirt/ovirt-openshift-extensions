@@ -87,12 +87,22 @@ $(TARBALL):
 	/bin/git archive --format=tar.gz HEAD > $(TARBALL)
 
 apb_build:
-	$(MAKE) -C deployment/ovirt-flexvolume-driver-apb/ apb_build REGISTRY=$(REGISTRY)
+	$(MAKE) -C deployment/ovirt-flexvolume-driver-apb/ \
+		REGISTRY=$(REGISTRY) \
+		VERSION=$(VERSION) \
+		RELEASE=$(RELEASE) \
+		VERSION_RELEASE=$(VERSION_RELEASE) \
+		apb_build
 
 apb_push:
 	$(MAKE) -C deployment/ovirt-flexvolume-driver-apb/ apb_push REGISTRY=$(REGISTRY)
 
 apb_docker_push:
-	$(MAKE) -C deployment/ovirt-flexvolume-driver-apb/ docker_push REGISTRY=$(REGISTRY)
+	$(MAKE) -C deployment/ovirt-flexvolume-driver-apb/ \
+		REGISTRY=$(REGISTRY) \
+		VERSION=$(VERSION) \
+		RELEASE=$(RELEASE) \
+		VERSION_RELEASE=$(VERSION_RELEASE) \
+		docker_push
 
 .PHONY: all tarball test build build-containers push-containers apb_build apb_docker_push apb_push

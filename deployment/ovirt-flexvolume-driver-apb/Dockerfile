@@ -1,5 +1,8 @@
 FROM ansibleplaybookbundle/apb-base
 
+ARG VERSION
+ARG RELEASE
+
 LABEL "com.redhat.apb.spec"=\
 "dmVyc2lvbjogMS4wCm5hbWU6IG92aXJ0LWZsZXh2b2x1bWUtZHJpdmVyLWFwYgpkZXNjcmlwdGlv\
 bjogRGVwbG95IG9WaXJ0J3MgZmxleHZvbHVtZS1kcml2ZXIgYW5kIHZvbHVtZS1wcm92aXNpb25l\
@@ -26,14 +29,13 @@ cGFzc3dvcmQKICAgICAgICB0aXRsZTogb1ZpcnQgQWRtaW4gUGFzc3dvcmQKICAgICAgICB0eXBl\
 OiBzdHJpbmcKICAgICAgICBkaXNwbGF5X3R5cGU6IHBhc3N3b3JkCiAgICAgICAgcmVxdWlyZWQ6\
 IFRydWUK"
 
-
-
-
-
-
-
-
-
+LABEL   com.redhat.component="ovirt-openshift-extensions" \
+        name="ovirt-flexvolume-driver-apb" \
+        version="$VERSION" \
+        release="$RELEASE" \
+        architecture="x86_64" \
+        summary="APB to deploy ovirt-volume-provisioner and ovirt-flexvolume-driver" \
+        maintainer="Roy Golan <rgolan@redhat.com>"
 
 COPY playbooks /opt/apb/project
 COPY roles /opt/apb/project
