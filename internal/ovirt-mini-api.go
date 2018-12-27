@@ -285,7 +285,6 @@ func (ovirt *Ovirt) Post(path string, data interface{}) (string, error) {
 		// failed json conversion
 		return "", err
 	}
-	fmt.Println(string(d))
 	resp, err := ovirt.clientDo(http.MethodPost, path, strings.NewReader(string(d)))
 
 	if err != nil {

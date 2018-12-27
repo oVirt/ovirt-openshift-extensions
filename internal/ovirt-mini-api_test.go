@@ -17,7 +17,9 @@ limitations under the License.
 package internal
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -146,6 +148,89 @@ var _ = Describe("Authentication tests", func() {
 })
 
 var _ = Describe("API calls on resources", func() {
+
+	Context("Create Unattached Disk, thick provisioning ", func() {
+		Context("test the sent request", func() {
+			var underTest []byte
+			var errRead error
+			api := NewMockOvirt()
+
+			api.Handle("/disks", func(writer http.ResponseWriter, request *http.Request) {
+				underTest, errRead = ioutil.ReadAll(request.Body)
+			})
+
+			_, _ = api.CreateUnattachedDisk(
+				"disk1",
+				"data1",
+				19999,
+				false,
+				false)
+
+			req := make(map[string]interface{})
+			err := json.Unmarshal(underTest, &req)
+
+			It("a valid json", func() {
+				Expect(errRead).ShouldNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("has the disk name", func() {
+				Expect(req["name"]).To(Equal("disk1"))
+			})
+			It("has disk type raw", func() {
+				Expect(req["format"]).To(Equal("raw"))
+			})
+			Specify("sparse is false", func() {
+				Expect(req["sparse"]).To(Equal("false"))
+			})
+		})
+	})
+
+	Context("Create Unattached Disk, thin provisioning (the default) isci", func() {
+		Context("test the sent request", func() {
+			var underTest []byte
+			var errRead error
+			api := NewMockOvirt()
+
+			api.Handle("/storagedomains", func(writer http.ResponseWriter, request *http.Request) {
+				writer.Write([]byte(`{"storage_domain": [{"name": "data1", "storage": {"type": "iscsi"}}] }`))
+			})
+
+			api.Handle("/disks", func(writer http.ResponseWriter, request *http.Request) {
+				underTest, errRead = ioutil.ReadAll(request.Body)
+			})
+
+			_, _ = api.CreateUnattachedDisk(
+				"disk1",
+				"data1",
+				19999,
+				false,
+				true)
+
+			req := make(map[string]interface{})
+			err := json.Unmarshal(underTest, &req)
+
+			It("a valid json", func() {
+				Expect(errRead).ShouldNot(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("must provide storage type if set ", func() {
+				Expect(req["storage_domains"]).To(HaveKey("storage_domain", ))
+				Expect(req["storage_domains"]).To(HaveLen(1))
+			})
+			It("has the disk name", func() {
+				Expect(req["name"]).To(Equal("disk1"))
+			})
+			It("has disk type raw", func() {
+				Expect(req["format"]).To(Equal("cow"))
+			})
+			Specify("sparse is false", func() {
+				Expect(req["sparse"]).To(Equal("true"))
+			})
+		})
+	})
+
 	Context("Get Storage Domain by name that exists", func() {
 		api := CreateMockOvirtClient(func(writer http.ResponseWriter, request *http.Request) {
 			writer.Write([]byte(`{"storage_domain": [{"name":"foo", "storage": {"type":"iscsi"}}] }`))
@@ -283,6 +368,33 @@ func CreateMockOvirtClient(handler http.HandlerFunc) Ovirt {
 		},
 		client: *http.DefaultClient,
 	}
+}
+
+// MockOvirt has a multiplexer inside to register multi request handler during
+// a test which performs few request
+type MockOvirt struct {
+	*Ovirt
+	ServeMux *http.ServeMux
+}
+
+func NewMockOvirt() MockOvirt {
+	mux := http.NewServeMux()
+	ts := httptest.NewServer(mux)
+	ovirt := Ovirt{
+		Connection: Connection{
+			Url:      ts.URL,
+			Insecure: true,
+		},
+		client: *http.DefaultClient,
+	}
+	return MockOvirt{
+		Ovirt:    &ovirt,
+		ServeMux: mux,
+	}
+}
+
+func (mockOvirt *MockOvirt) Handle(path string, handler http.HandlerFunc){
+	mockOvirt.ServeMux.HandleFunc(path, handler)
 }
 
 func tokenHandlerFunc(expireIn int64) http.HandlerFunc {

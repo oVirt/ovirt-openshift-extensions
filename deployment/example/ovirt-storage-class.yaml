@@ -8,7 +8,7 @@ parameters:
   ovirtStorageDomain: "nfs"
   # Specify thin provisioning or not (default true)
   # The provisioner will figure out the disk type for you
-  ovirtThinProvisioning: true
+  ovirtDiskThinProvisioning: true
   # The file system to create on the disk prior to attaching it to the container.
   # If the filesystem already exists, don't re-recreate.
   fsType: ext4

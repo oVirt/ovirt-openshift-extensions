@@ -5,12 +5,8 @@ metadata:
   name: ovirt
 provisioner: ovirt-volume-provisioner
 parameters:
-  type: io1
-  iopsPerGB: "10"
   ovirtStorageDomain: "nfs"
-  # specifing a disk format is a must and depends on
-  # the type of the domain - block-storage(iscsi/FC) or file(NFS/gluster...)
-  ovirtDiskFormat: "cow"
+  ovirtDiskThinProvisioning: "true"
 fsType: ext4
 ---
 kind: PersistentVolumeClaim

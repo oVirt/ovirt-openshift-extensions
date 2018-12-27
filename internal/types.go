@@ -48,7 +48,7 @@ type Disk struct {
 	Status          string         `json:"status,omitempty"`
 	Format          DiskFormat     `json:"format"`
 	StorageDomains  StorageDomains `json:"storage_domains"`
-	Sparse  		Sparse         `json:"sparse"`
+	Sparse  		Sparse         `json:"sparse,string"`
 
 }
 
@@ -62,7 +62,7 @@ type StorageDomains struct {
 
 type StorageDomain struct {
 	Name string `json:"name"`
-	Storage struct{  Type string `json:"type"`} `json:"storage"`
+	Storage struct{  Type string `json:"type,omitempty"`} `json:"storage,omitempty,"`
 }
 
 type VM struct {
