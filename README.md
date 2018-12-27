@@ -9,7 +9,7 @@
 |ovirt-volume-provisioner|[![ovirt-volume-provisioner](https://quay.io/repository/rgolangh/ovirt-volume-provisioner/status)](https://quay.io/repository/rgolangh/ovirt-volume-provisioner/status) |
 |ovirt-cloud-provider    |[![ovirt-cloud-provider](https://quay.io/repository/rgolangh/ovirt-cloud-provider/status)](https://quay.io/repository/rgolangh/ovirt-cloud-provider/status) |
 |ovirt-flexvolume-driver-apb | [![Docker Repository on Quay](https://quay.io/repository/rgolangh/ovirt-flexvolume-driver-apb/status "Docker Repository on Quay")](https://quay.io/repository/rgolangh/ovirt-flexvolume-driver-apb) |
-|ovirt-openshift-extensions-ci    |[![ovirt-openshift-extensions-ci](https://quay.io/repository/rgolangh/ovirt-openshift-extensions-ci/status)](https://quay.io/repository/rgolangh/ovirt-openshift-extensions-ci/status) |
+|ovirt-openshift-installer    | [![Docker Repository on Quay](https://quay.io/repository/rgolangh/ovirt-openshift-installer/status "Docker Repository on Quay")](https://quay.io/repository/rgolangh/ovirt-openshift-installer)
 
 ## Purpose
 Make oVirt the a prefered platform for openshift installation.
