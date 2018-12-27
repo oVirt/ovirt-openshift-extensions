@@ -31,7 +31,7 @@ binaries = \
 
 containers = \
 	$(binaries) \
-	ovirt-openshift-extensions-ci
+	ovirt-openshift-installer
 
 $(binaries): internal
 	go vet ./cmd/$@ && \
@@ -47,8 +47,8 @@ internal:
 
 container-%: DIR=.
 container-%: DOCKERFILE=deployment/$*/container/Dockerfile
-container-ovirt-openshift-extensions-ci: DIR=automation/ci
-container-ovirt-openshift-extensions-ci: DOCKERFILE=$(DIR)/Dockerfile
+container-ovirt-openshift-installer: DIR=automation/ci
+container-ovirt-openshift-installer: DOCKERFILE=$(DIR)/Dockerfile
 
 container-%: tarball
 	docker build \
