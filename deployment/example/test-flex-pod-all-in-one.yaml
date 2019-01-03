@@ -7,7 +7,7 @@ provisioner: ovirt-volume-provisioner
 parameters:
   ovirtStorageDomain: "nfs"
   ovirtDiskThinProvisioning: "true"
-fsType: ext4
+  fsType: ext4
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
