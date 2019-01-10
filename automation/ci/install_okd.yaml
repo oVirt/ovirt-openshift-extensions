@@ -36,7 +36,6 @@
         - always
 
 - import_playbook: setup_dns.yaml
-  when: openshift_ovirt_all_in_one | default(false)
 - import_playbook: playbooks/prerequisites.yml
 - import_playbook: playbooks/openshift-node/network_manager.yml
 - import_playbook: playbooks/deploy_cluster.yml

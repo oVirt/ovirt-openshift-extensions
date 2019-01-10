@@ -10,8 +10,6 @@ openshift_ovirt_vm_manifest:
     count: 0
     profile: 'node_vm'
 
-openshift_ovirt_all_in_one: true
-
 compatibility_version: 4.2
 engine_url: https://ovirt-engine-fqdn/ovirt-engine/api
 engine_user: admin@internal
