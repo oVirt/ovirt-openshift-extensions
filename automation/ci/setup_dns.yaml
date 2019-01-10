@@ -1,5 +1,5 @@
 - hosts: masters
   strategy: free
   tasks:
-    - shell: 'echo {{ ansible_default_ipv4.address }} etcd.example.com openshift-master.example.com openshift-public-master.example.com master0.example.com docker-registry-default.apps.example.com webconsole.openshift-web-console.svc registry-console-default.apps.example.com >> /etc/hosts'
+    - shell: "echo {{ ansible_default_ipv4.address }} etcd.{{ public_hosted_zone }} openshift-master.{{ public_hosted_zone }} openshift-public-master.{{ public_hosted_zone }} {{ inventory_hostname }}.{{ public_hosted_zone }} docker-registry-default.apps.{{ public_hosted_zone }} webconsole.openshift-web-console.svc registry-console-default.apps.{{ public_hosted_zone }} >> /etc/hosts"
 
