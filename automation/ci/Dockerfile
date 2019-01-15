@@ -18,7 +18,6 @@ ADD vars.yaml vars.yaml
 ADD install_okd.yaml  install_okd.yaml
 ADD install_extensions.yaml  install_extensions.yaml
 ADD setup_dns.yaml  setup_dns.yaml
-ADD deploy_ovirt_storage_driver.yaml deploy_ovirt_storage_driver.yaml
 ADD flex_deployer_job.yaml flex_deployer_job.yaml
 
 ENV OPTS="-v "

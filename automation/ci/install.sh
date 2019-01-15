@@ -6,8 +6,8 @@ if [ "$INSTALL_OKD" == "1" ]; then
   podman run \
     -it \
     --rm \
-    -v $(pwd)/customization.yaml:/usr/share/ansible/openshift-ansible/customization.yaml:Z \
-    -e OPTS="-e @customization.yaml" \
+    -v $(pwd)/vars.yaml:/usr/share/ansible/openshift-ansible/vars.yaml:Z \
+    -e OPTS="-e @vars.yaml" \
     quay.io/rgolangh/ovirt-openshift-installer
 fi
 
@@ -16,8 +16,8 @@ if [ "$INSTALL_EXTENSIONS" == "1" ]; then
   podman run \
     -it \
     --rm \
-    -v $(pwd)/customization.yaml:/usr/share/ansible/openshift-ansible/customization.yaml:Z \
-    -e OPTS="-e @customization.yaml" \
+    -v $(pwd)/vars.yaml:/usr/share/ansible/openshift-ansible/vars.yaml:Z \
+    -e OPTS="-e @vars.yaml" \
     -e PLAYBOOK_FILE="install_extensions.yaml" \
     quay.io/rgolangh/ovirt-openshift-installer
 fi

@@ -7,8 +7,86 @@
   vars_files:
     - vars.yaml
 
+  pre_tasks:
+    - ovirt_auth:
+        url:      "{{ engine_url }}"
+        username: "{{ engine_user }}"
+        password: "{{ engine_password }}"
+        insecure: "{{ engine_insecure }}"
+        ca_file:  "{{ engine_username | default(omit) }}"
+
   roles:
     - role: openshift_ovirt
 
 - import_playbook: setup_dns.yaml
-- import_playbook: deploy_ovirt_storage_driver.yaml
+
+- hosts: masters
+  remote_user: root
+  strategy: free
+  
+  vars_files:
+    - vars.yaml
+
+  tasks:
+    - name: copy the deployer spec
+      template: src=flex_deployer_job.yaml dest=/root/flex_deployer_job.yaml
+
+    - name: login as system
+      shell: oc login -u system:admin
+
+    - name: add cluster role to developer user
+      shell: oc adm policy add-cluster-role-to-user cluster-admin developer
+
+    - name: allow hostaccess
+      shell: oc adm policy add-scc-to-user hostaccess -z default
+
+    - name: create the flex deployer job
+      shell: oc create -f /root/flex_deployer_job.yaml
+
+    - name: verify that the flex driver pod is running
+      shell: oc get pods -l name=ovirt-flexvolume-driver -o jsonpath='{.items[0].status.phase}'
+      register: result
+      until: result.stdout == "Running"
+      retries: 120
+      delay: 5
+
+    - name: verify that the volume provisioner pod is running
+      shell: oc get pods -l name=ovirt-volume-provisioner -o jsonpath='{.items[0].status.phase}'
+      register: result
+      until: result.stdout == "Running"
+      retries: 60
+      delay: 5
+
+    - name: deploy a test pod that uses flex
+      shell: oc create -f https://raw.githubusercontent.com/oVirt/ovirt-openshift-extensions/master/deployment/example/test-flex-pod-all-in-one.yaml 
+
+    - name: wait fot the test pod with flex to run
+      shell: oc get pods testpodwithflex -o jsonpath='{.status.phase}'
+      register: result
+      until: result.stdout == "Running"
+      retries: 60
+      delay: 10
+
+    - name: verify the test pod sees the flex mounted file system
+      shell: oc exec -it testpodwithflex ls /opt
+      register: result
+      until: result.rc == 0
+      retries: 10
+      delay: 1
+
+    - name: shutdown the testpodwithflex container
+      shell: oc delete -f https://raw.githubusercontent.com/oVirt/ovirt-openshift-extensions/master/deployment/example/test-flex-pod-all-in-one.yaml
+
+    - name: wait for the pod to be down
+      shell: oc get pods testpodwithflex --ignore-not-found
+      register: result
+      until: result.rc == 0 and result.stdout == ""
+      retries: 60
+      delay: 5
+
+    - name: verify ovirt disks are detached
+      shell: oc get pvc/1g-ovirt-cow-disk --ignore-not-found
+      register: result
+      until: result.rc == 0 and result.stdout == ""
+      retries: 60
+      delay: 5

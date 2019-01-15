@@ -7,6 +7,14 @@
   vars_files:
     - vars.yaml
 
+  pre_tasks:
+    - ovirt_auth:
+        url:      "{{ engine_url }}"
+        username: "{{ engine_user }}"
+        password: "{{ engine_password }}"
+        insecure: "{{ engine_insecure }}"
+        ca_file:  "{{ engine_username | default(omit) }}"
+
   roles:
     - role: openshift_ovirt
 
