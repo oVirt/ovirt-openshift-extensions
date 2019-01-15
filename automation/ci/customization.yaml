@@ -8,7 +8,7 @@ engine_insecure:
 #openshift_ovirt_data_store: 
 
 #debug_level: 2
-#public_hosted_zone: sradco-zone-example.com
+#public_hosted_zone: example.com
 #openshift_disable_check: memory_availability,disk_availability,docker_image_availability
 
 ### oVirt Metrics ###
