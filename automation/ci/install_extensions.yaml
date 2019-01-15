@@ -4,36 +4,11 @@
   connection: local
   gather_facts: false
 
-
   vars_files:
     - vars.yaml
 
-  pre_tasks:
-    - name: Log in to oVirt
-      ovirt_auth:
-        url: "{{ engine_url }}"
-        username: "{{ engine_user }}"
-        password: "{{ engine_password }}"
-        ca_file: "{{ engine_cafile | default(omit) }}"
-        insecure: "{{ engine_insecure | default(true) }}"
-      tags:
-        - always
-    - name: check template existence, to spare the download and upload of the qcow image
-      ovirt_template_facts:
-        auth: "{{ ovirt_auth }}"
-        pattern: "name={{ template_name }} and storage.name={{ openshift_ovirt_data_store }}"
-      tags: always
-
   roles:
     - role: openshift_ovirt
-
-  post_tasks:
-    - name: Logout from oVirt
-      ovirt_auth:
-        state: absent
-        ovirt_auth: "{{ ovirt_auth }}"
-      tags:
-        - always
 
 - import_playbook: setup_dns.yaml
 - import_playbook: deploy_ovirt_storage_driver.yaml
