@@ -1,5 +1,5 @@
 - hosts: masters
   strategy: free
   tasks:
-    - shell: "echo {{ ansible_default_ipv4.address }} {{ inventory_hostname }} etcd.{{ public_hosted_zone }} openshift-master.{{ public_hosted_zone }} openshift-public-master.{{ public_hosted_zone }} docker-registry-default.apps.{{ public_hosted_zone }} webconsole.openshift-web-console.svc registry-console-default.apps.{{ public_hosted_zone }} >> /etc/hosts"
+    - shell: "echo {{ ansible_default_ipv4.address }} {{ inventory_hostname }} etcd.{{ inventory_hostname.split('.', 1)[1] }} openshift-master.{{ inventory_hostname.split('.', 1)[1] }} openshift-public-master.{{ inventory_hostname.split('.', 1)[1] }} docker-registry-default.apps.{{ inventory_hostname.split('.', 1)[1] }} webconsole.openshift-web-console.svc registry-console-default.apps.{{ inventory_hostname.split('.', 1)[1] }} >> /etc/hosts"
       when: openshift_ovirt_all_in_one is defined | ternary((openshift_ovirt_all_in_one | bool), false)
