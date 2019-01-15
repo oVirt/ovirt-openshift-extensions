@@ -19,9 +19,9 @@
       tags:
         - always
     - name: check template existence, to spare the download and upload of the qcow image
-      ovirt_templates_facts:
+      ovirt_template_facts:
         auth: "{{ ovirt_auth }}"
-        pattern: "name={{ template_name }} and storage.name={{ rhv_data_storage }}"
+        pattern: "name={{ template_name }} and storage.name={{ openshift_ovirt_data_store }}"
       tags: always
 
   roles:
