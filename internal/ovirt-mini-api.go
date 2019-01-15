@@ -333,8 +333,18 @@ func (ovirt *Ovirt) GetVM(name string) (VM, error) {
 	return vm, err
 }
 
+func (ovirt *Ovirt) GetVMById(id string) (VM, error) {
+	s, err := ovirt.Get("vms/" + id)
+	vm := VM{}
+	if err != nil {
+		return VM{}, err
+	}
+	err = json.Unmarshal([]byte(s), &vm)
+	return vm, err
+}
+
 func (ovirt *Ovirt) GetVMs(searchQuery string) ([]VM, error) {
-	s, err := ovirt.Get("vms?search=" + searchQuery)
+	s, err := ovirt.Get(searchQuery)
 	vmResult := VMResult{}
 	if err != nil {
 		return vmResult.Vms, err

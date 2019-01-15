@@ -14,8 +14,14 @@ dest=/usr/libexec/kubernetes/kubelet-plugins/volume/exec/
 cp -v /opt/ovirt-flexvolume-driver/ovirt-flexvolume-driver.conf $src/
 cp -v /usr/bin/ovirt-flexvolume-driver $src/
 
+vmId=$(cat /sys/devices/virtual/dmi/id/product_uuid)
+if [[ "$vmId" == "" ]]; then
+  echo "failed to extract the VM id. Attach actions will fail. Exiting"
+  exit 1
+fi
+
 # append per node values to the config
-echo "ovirtVmName=$OVIRT_VM_NAME" >> $src/ovirt-flexvolume-driver.conf
+echo "ovirtVmId=${vmId}" >> $src/ovirt-flexvolume-driver.conf
 
 # to prevent half-baked initialization do an atomic move into $dest
 # the 'ovirt~' prefix is added per flex specification

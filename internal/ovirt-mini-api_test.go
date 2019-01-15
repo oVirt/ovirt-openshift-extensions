@@ -334,6 +334,40 @@ var _ = Describe("API calls on resources", func() {
 			})
 		})
 	})
+	Context("VMs Get actions", func() {
+		Context("Get Vm By Id", func() {
+			Context("Vm exists", func() {
+				api := CreateMockOvirtClient(func(writer http.ResponseWriter, request *http.Request) {
+					writer.Write([]byte(`{ "name" : "centos",  "id": "f85501aa-afbb-46f2-a8d3-3dc299c07fee"}`))
+				})
+				vm, e := api.GetVMById("f85501aa-afbb-46f2-a8d3-3dc299c07fee")
+
+				It("returns a VM instance", func() {
+					Expect(vm.Id).To(Equal("f85501aa-afbb-46f2-a8d3-3dc299c07fee"))
+				})
+
+				It("returns with no error", func() {
+					Expect(e).NotTo(HaveOccurred())
+				})
+			})
+			Context("Vm does not exist", func() {
+				api := CreateMockOvirtClient(func(writer http.ResponseWriter, request *http.Request) {
+					http.NotFound(writer, request)
+				})
+				vm, e := api.GetVMById("f85501aa-afbb-46f2-a8d3-3dc299c07fee")
+
+				It("returns a VM with no id", func() {
+					Expect(vm.Id).To(Equal(""))
+				})
+
+				It("returns with a 404 error", func() {
+					Expect(e).To(HaveOccurred())
+					Expect(e).To(BeAssignableToTypeOf(NotFound{}))
+				})
+			})
+
+		})
+	})
 })
 
 func TestFailedFetchToken_move302(t *testing.T) {

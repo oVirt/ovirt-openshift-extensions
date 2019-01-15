@@ -47,7 +47,7 @@ const usage = `Usage:
 `
 
 var driverConfigFile string
-var ovirtVmName string
+var ovirtVmId string
 
 func main() {
 	writer, e := syslog.New(syslog.LOG_INFO, os.Args[0])
@@ -160,7 +160,7 @@ func newOvirt() (internal.OvirtApi, error) {
 	//additional settings to read
 	viper.SetConfigType("props")
 	viper.ReadConfig(bytes.NewReader(file))
-	ovirtVmName = viper.GetString("ovirtVmName")
+	ovirtVmId = viper.GetString("ovirtVmId")
 
 	err = driver.Authenticate()
 	if err != nil {
@@ -184,7 +184,7 @@ func Attach(jsonOpts string, nodeName string) (internal.Response, error) {
 		return internal.FailedResponse, e
 	}
 
-	vm, err := ovirt.GetVM(nodeName)
+	vm, err := ovirt.GetVMById(ovirtVmId)
 	// 0. validation - Attach size is legal?
 	// 1. query if the disk exists
 	// 2. if it exist, is it already attached to a VM (perhaps a detach is in progress)
@@ -238,7 +238,7 @@ func IsAttached(jsonOpts string, nodeName string) (internal.Response, error) {
 		return internal.FailedResponse, e
 	}
 
-	vm, err := ovirt.GetVM(nodeName)
+	vm, err := ovirt.GetVMById(ovirtVmId)
 	if err != nil {
 		return internal.FailedResponseFromError(err), err
 	}
@@ -285,7 +285,7 @@ func Detach(volumeName string, nodeName string) (internal.Response, error) {
 
 	ovirtDiskName := fromk8sNameToOvirt(volumeName)
 
-	vm, err := ovirt.GetVM(nodeName)
+	vm, err := ovirt.GetVMById(ovirtVmId)
 	if err != nil {
 		return internal.FailedResponseFromError(err), err
 	}
@@ -320,7 +320,7 @@ func WaitForAttach(deviceName string, _ string) (internal.Response, error) {
 
 	//device name is a path on the os - get the id from it
 	id := extractDeviceId(deviceName)
-	vm, e := ovirt.GetVM(ovirtVmName)
+	vm, e := ovirt.GetVMById(ovirtVmId)
 	if e != nil {
 		return internal.FailedResponseFromError(e), e
 	}
@@ -345,7 +345,7 @@ func WaitForAttach(deviceName string, _ string) (internal.Response, error) {
 	timeout := time.Second * 10
 	for retries > 0 && !attachment.Active {
 		time.Sleep(timeout)
-		attachment, err = ovirt.GetDiskAttachment(ovirtVmName, attachment.Id)
+		attachment, err = ovirt.GetDiskAttachment(ovirtVmId, attachment.Id)
 		if err != nil {
 			return internal.FailedResponseFromError(err), err
 		}
@@ -507,13 +507,13 @@ func GetVolumeName(jsonOpts string) (internal.Response, error) {
 		return internal.FailedResponse, e
 	}
 
-	vm, err := ovirt.GetVM(ovirtVmName)
+	vm, err := ovirt.GetVMById(ovirtVmId)
 	if err != nil {
 		return internal.FailedResponseFromError(err), err
 	}
 	// vm exist?
 	if vm.Id == "" {
-		e := fmt.Errorf("VM %s doesn't exist", ovirtVmName)
+		e := fmt.Errorf("VM %s doesn't exist", ovirtVmId)
 		return internal.FailedResponseFromError(e), e
 	}
 	diskResult, err := ovirt.GetDiskByName(fromk8sNameToOvirt(jsonArgs.VolumeName))
@@ -531,7 +531,7 @@ func GetVolumeName(jsonOpts string) (internal.Response, error) {
 	// fetch the disk attachment on the VM
 	attachment, err := ovirt.GetDiskAttachment(vm.Id, diskResult.Disks[0].Id)
 	if err != nil {
-		err = fmt.Errorf("the volume %s is not attached to the node %s", jsonArgs.VolumeName, ovirtVmName)
+		err = fmt.Errorf("the volume %s is not attached to the node %s", jsonArgs.VolumeName, ovirtVmId)
 		return internal.FailedResponseFromError(err), err
 	}
 	return responseFromDiskAttachment(attachment.Id, attachment.Interface), err

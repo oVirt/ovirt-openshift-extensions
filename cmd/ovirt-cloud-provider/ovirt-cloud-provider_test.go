@@ -188,6 +188,16 @@ type MockApi struct {
 	Connection internal.Connection
 }
 
+func (m MockApi) GetVMById(id string) (internal.VM, error) {
+	vms, err := m.GetVMs("")
+	for _, v := range vms {
+		if v.Id == id {
+			return v, nil
+		}
+	}
+	return internal.VM{}, err
+}
+
 func (MockApi) Authenticate() error {
 	panic("implement me")
 }
