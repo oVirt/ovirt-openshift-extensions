@@ -33,7 +33,7 @@ containers = \
 	$(binaries) \
 	ovirt-openshift-installer
 
-$(binaries): internal
+$(binaries): test internal
 	go vet ./cmd/$@ && \
 	$(COMMON_ENV) $(GOBUILD) \
     	$(COMMON_GO_BUILD_FLAGS) \
