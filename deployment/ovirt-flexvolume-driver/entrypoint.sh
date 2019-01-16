@@ -23,9 +23,13 @@ fi
 # append per node values to the config
 echo "ovirtVmId=${vmId}" >> $src/ovirt-flexvolume-driver.conf
 
+# remove the old config directory
+rm -v -rf $dest/ovirt~ovirt-flexvolume-driver
+
 # to prevent half-baked initialization do an atomic move into $dest
 # the 'ovirt~' prefix is added per flex specification
-mv $src $dest/ovirt~ovirt-flexvolume-driver
+mv -v $src $dest/ovirt~ovirt-flexvolume-driver
 
 # Now that we have it we can just sleep
 while true;do sleep 1d;done
+
