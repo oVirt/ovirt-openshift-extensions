@@ -20,18 +20,16 @@ The main components this project will ship are:
 
 ### ovirt-volume-provisioner
 A kubernetes controller that creates/deletes persistent volumes, and allocates disks \
-in ovirt as a result. This is the first part for providing volumes from ovirt.
+in ovirt as a result. This is the first part for providing volumes from oVirt.
 
 ### ovirt-flexvolume-driver
 A kubernetes node plugin that attaches/detaches a volume to a container. \
-It attaches the ovirt disk to the kube node(which is an ovirt vm). It identifies the disk device on the os, \
-prepares a filesystem, then mounts it so it is ready as a volume mount into a container.
+It attaches the oVirt disk to the kube node (which is an oVirt VM). It identifies the disk device on the os, \
+prepares a filesystem, then mounts it so it is ready as a volume mount for a container.
 
 ### ovirt-cloud-provider
 An out-of-tree implementation of a cloudprovider. \
-A controller that manages the admission of new nodes for openshift, from ovirt vms. \
-Merging this code is work in progress here: https://github.com/oVirt/ovirt-openshift-extensions/pull/59 \
-NOTE: ovirt-cloud-provider will be available in v0.3.3
+A controller that manages the admission of new nodes for openshift, from oVirt VMs. \
 
 ### Versions
 | version   |ovirt version |openshift version|
@@ -44,7 +42,7 @@ NOTE: ovirt-cloud-provider will be available in v0.3.3
 #### Deploy via service-catalog
  
 Pre-requisite:
-- Openshift 3.10.0
+- Openshift 3.10.0 or higher
 - Running service catalog
 
 From the repo:
@@ -58,14 +56,14 @@ From the repo:
 
 #### Deploy via cli
 
-- make sure `oc` command is configured and has access to your cluster, e.g run `oc status`
+- make sure `oc` command is configured and has access to your cluster, e.g. run `oc status`
 
 - use a cluster admin user to deploy, or grant permission to one
    ```console
    $ oc login -u system:admin
    $ oc adm policy add-cluster-role-to-user cluster-admin developer
    ```
-- Run on a master(replace the input with yours):
+- Run on a master (replace the input with yours):
    ```console
     docker run \
     -it \
@@ -85,9 +83,9 @@ From the repo:
       }'
    ```
 
-   - If its the first time deploying the image then it should take few moments to download it.
+   If its the first time deploying the image then it should take few moments to download it.
 
-Upon completion you have the components running:
+Upon completion you have these components running:
 
    ```console
    $ oc get ds -n default ovirt-flexvolume-driver 
@@ -98,6 +96,9 @@ Upon completion you have the components running:
    NAME                       DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
    ovirt-volume-provisioner   1         1         1            1           17m
    ```
+
+### Documentation
+For topics not covered in this Readme, see the project [documentation](https://github.com/oVirt/ovirt-openshift-extensions/tree/master/docs).
 
 ### Contributing
 **Feedback is most welcome**, if you have an idea, proposal, fix, or want to chat \
