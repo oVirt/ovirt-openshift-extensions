@@ -72,7 +72,8 @@ build-containers: $(addprefix container-, $(containers))
 push-containers: $(addprefix container-push-, $(containers))
 
 test:
-	$(GOTEST) -v ./...
+	$(GOTEST) -v ./... -coverprofile=coverage.out
+	go tool cover -html=coverage.out -o /tmp/coverage.html
 
 clean:
 	$(GOCLEAN)
