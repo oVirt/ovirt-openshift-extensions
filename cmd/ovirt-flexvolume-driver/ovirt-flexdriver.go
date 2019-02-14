@@ -47,6 +47,11 @@ const usage = `Usage:
 `
 
 var driverConfigFile string
+
+/*
+Use the vmId extracted from the OS only for api interaction which doesn't include the nodeName.
+For example Attach/Detach uses the node name, which waitForAttach does not.
+ */
 var ovirtVmId string
 
 func main() {
@@ -184,7 +189,12 @@ func Attach(jsonOpts string, nodeName string) (internal.Response, error) {
 		return internal.FailedResponse, e
 	}
 
-	vm, err := ovirt.GetVMById(ovirtVmId)
+	vmId, err := getSystemUUIDByNodeName(nodeName)
+	if err != nil {
+		return internal.FailedResponseFromError(err), err
+	}
+
+	vm, err := ovirt.GetVMById(vmId)
 	// 0. validation - Attach size is legal?
 	// 1. query if the disk exists
 	// 2. if it exist, is it already attached to a VM (perhaps a detach is in progress)
@@ -238,7 +248,12 @@ func IsAttached(jsonOpts string, nodeName string) (internal.Response, error) {
 		return internal.FailedResponse, e
 	}
 
-	vm, err := ovirt.GetVMById(ovirtVmId)
+	vmId, err := getSystemUUIDByNodeName(nodeName)
+	if err != nil {
+		return internal.FailedResponseFromError(err), err
+	}
+
+	vm, err := ovirt.GetVMById(vmId)
 	if err != nil {
 		return internal.FailedResponseFromError(err), err
 	}
@@ -285,7 +300,12 @@ func Detach(volumeName string, nodeName string) (internal.Response, error) {
 
 	ovirtDiskName := fromk8sNameToOvirt(volumeName)
 
-	vm, err := ovirt.GetVMById(ovirtVmId)
+	vmId, err := getSystemUUIDByNodeName(nodeName)
+	if err != nil {
+		return internal.FailedResponseFromError(err), err
+	}
+
+	vm, err := ovirt.GetVMById(vmId)
 	if err != nil {
 		return internal.FailedResponseFromError(err), err
 	}
