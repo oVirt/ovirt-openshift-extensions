@@ -23,7 +23,7 @@ COMMON_GO_BUILD_FLAGS=-ldflags '-extldflags "-static"'
 TARBALL=ovirt-openshift-extensions-$(VERSION_RELEASE).tar.gz
 PUSH_LATEST=1
 
-all: clean deps build test container container-push
+all: clean deps build test build-containers
 
 binaries = \
 	ovirt-flexvolume-driver \
@@ -41,7 +41,6 @@ $(binaries): test internal
     	-o $(PREFIX)/$@ \
     	-v cmd/$@/*.go
 
-.PHONY: internal
 internal:
 	go vet ./internal
 
@@ -109,4 +108,4 @@ apb_docker_push:
 		VERSION_RELEASE=$(VERSION_RELEASE) \
 		docker_push
 
-.PHONY: all tarball test build build-containers push-containers apb_build apb_docker_push apb_push
+.PHONY: all internal tarball test build build-containers push-containers apb_build apb_docker_push apb_push
