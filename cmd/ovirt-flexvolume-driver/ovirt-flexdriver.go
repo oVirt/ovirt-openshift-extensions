@@ -282,7 +282,7 @@ func IsAttached(jsonOpts string, nodeName string) (internal.Response, error) {
 
 // Detach will detach the disk from the VM.
 // volumeName is a cluster wide unique name of the volume and needs to be converted to ovirt's disk name/id
-// nodeName - the hostname with the volume attached. Needs to be converted to ovirt's VM. See #internal.GetOvirtNodeName
+// nodeName - the hostname with the volume attached.
 func Detach(volumeName string, nodeName string) (internal.Response, error) {
 	if nodeName == "" {
 		e := fmt.Errorf("invalid node name '%s'", nodeName)
