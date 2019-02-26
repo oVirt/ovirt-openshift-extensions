@@ -1,5 +1,5 @@
-- [Create an oVirt user HowTo](1)
-- [Installation of OKD on oVirt](2)
+- [Create an oVirt user HowTo][1]
+- [Installation of OKD on oVirt][2]
 
 
 [1]: Creating-an-oVirt-user-how-to.md
