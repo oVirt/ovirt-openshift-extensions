@@ -22,6 +22,7 @@ A clear and concise description of what you expected to happen.
  - oVirt version `rpm -ql ovirt-engine`
 
 **Logs:**
- - Openshift master and node: `journalctrl --since "-2h"`
- - volume-provisioner pod: `oc logs pods/ovirt-volume-provisioner-XYZ`
+ - kube-controller-master: `[kubectl|oc] logs  -n kube-system -l component=kube-controller-manager --since=2h`
+ - master and node: `journalctrl --since "-2h"`
+ - volume-provisioner pod: `[kubectl|oc] logs pods/ovirt-volume-provisioner-XYZ`
  - ovirt-engine: `/var/log/ovirt-engine/engine.log`
