@@ -6,7 +6,7 @@ on the designated data center.
 
 Here is a small playbook to create a user `'theAdmin`' in ovirt and grant it the `'StorageAdmin'` permission on the data center `'Default'`:
 
-```
+```yaml
 - hosts: localhost
   connection: local
   gather_facts: false
