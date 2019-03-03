@@ -1,4 +1,4 @@
-# Createing an oVirt user - how to
+# Creating an oVirt user - how to
 
 The oVirt user needed to perform various provisioning actions needs to have the 'StorageAdmin' role in ovirt.
 Using the super user admin@internal is discouraged. Instead create a dedicated user, with the role above mentioned
