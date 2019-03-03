@@ -1,4 +1,7 @@
 ---
+# For more comprehensive list of arguments please see
+# openshift_ovirt role args   - https://github.com/openshift/openshift-ansible/tree/master/roles/openshift_ovirt#role-variables
+# openshift installation args - https://github.com/openshift/openshift-ansible/tree/master/inventory
 engine_url: https://ovirt-engine-fqdn/ovirt-engine/api
 engine_user: admin@internal
 engine_password: 123
@@ -20,6 +23,10 @@ openshift_ovirt_all_in_one: true
 openshift_ovirt_cluster: Default
 openshift_ovirt_data_store: data
 openshift_ovirt_ssh_key: "{{ lookup('file', 'id_rsa.pub') }}"
+
+public_hosted_zone:
+# Uncomment to disable install-time checks, for smaller scale installations
+#openshift_disable_check: memory_availability,disk_availability,docker_image_availability
 
 qcow_url: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2c
 image_path: /var/tmp 
