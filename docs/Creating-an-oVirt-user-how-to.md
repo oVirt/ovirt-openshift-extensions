@@ -35,6 +35,13 @@ Here is a small playbook to create a user `'theAdmin`' in ovirt and grant it the
         object_type: data_center
         object_name: Default
 
+      - state: present
+        user_name: theAdmin
+        authz_name: internal-authz
+        role: UserVmManager
+        object_type: data_center
+        object_name: Default
+
   pre_tasks:
     - name: Login to oVirt
       ovirt_auth:
