@@ -10,4 +10,4 @@ RESULT \
 The outcome of the change and how it solved the problem
 
 
-Fixes: ### - a header with number of the github issue this fixes - autowires to github issue.
+Fixes: https://github.com/oVirt/ovirt-openshift-extensions/issues/###
