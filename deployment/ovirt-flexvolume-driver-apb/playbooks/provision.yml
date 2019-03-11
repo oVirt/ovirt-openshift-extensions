@@ -2,6 +2,14 @@
   hosts: localhost
   gather_facts: false
   connection: local
+  vars:
+    version: latest
+    flex_registry: "{{ lookup('env', 'FLEX_REGISTRY') | default('quay.io', true) }}"
+    flex_repository: "{{ lookup('env', 'FLEX_REPOSITORY') | default('rgolangh/ovirt-flexvolume-driver', true) }}"
+    flex_version: "{{ lookup('env', 'FLEX_VERSION') | default(version, true) }}"
+    provisioner_registry: "{{ lookup('env', 'PROVISIONER_REGISTRY') | default('quay.io', true) }}"
+    provisioner_repository: "{{ lookup('env', 'PROVISIONER_REPOSITORY') | default('rgolangh/ovirt-volume-provisioner', true) }}"
+    provisioner_version: "{{ lookup('env', 'PROVISIONER_VERSION') | default(version, true) }}"
   roles:
   - role: ansible.kubernetes-modules
     install_python_requirements: no
