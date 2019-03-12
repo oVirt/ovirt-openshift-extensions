@@ -83,7 +83,16 @@ From the repo:
       }'
    ```
 
-   If its the first time deploying the image then it should take few moments to download it.
+  If it's the first time deploying the image then it should take few moments to download it. To customize the images to be deployed, provide these environment variables to the container invocation:
+   * FLEX_REGISTRY
+   * FLEX_REPOSITORY
+   * FLEX_VERSION
+   * PROVISIONER_REGISTRY
+   * PROVISIONER_REPOSITORY
+   * PROVISIONER_VERSION
+
+  Example: `docker run -e FLEX_REGISTRY=registry.example.com ...`
+
 
 Upon completion you have these components running:
 
