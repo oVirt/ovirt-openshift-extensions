@@ -1,4 +1,21 @@
 
+v0.3.3.2 / 2019-03-13
+=====================
+
+  * apb: Use env variables to compoes the image name
+  * Include full link to the github issue in commits
+  * Add missing permissions to ovirt's user
+  * Update Creating-an-oVirt-user-how-to.md
+  * Update Creating-an-oVirt-user-how-to.md
+  * Update vars.yaml
+  * Update README.md (#111)
+  * Creating kubernetes deployment instruction
+  * Update bug_report.md
+  * docs: Fix links
+  * Query the api server to extract node info
+  * Delete a mistakenly added Dockerfile
+  * Generate code coverage report
+
 v0.3.2.2 / 2019-02-11
 =====================
 
