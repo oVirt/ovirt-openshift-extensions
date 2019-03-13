@@ -1,3 +1,5 @@
 ---
-distro:
-  - el7
+runtime_requirements:
+  support_nesting_level: 2
+  isolation_level: container
+...

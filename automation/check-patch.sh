@@ -3,6 +3,8 @@
 EXPORTED_ARTIFACTS=exported-artifacts
 mkdir -p $EXPORTED_ARTIFACTS
 
+docker version
+
 make build-containers
 
 # get the build outputs

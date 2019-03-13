@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM centos:7.6.1810
+FROM registry.fedoraproject.org/f29/golang AS builder
 
 ARG VERSION
 ARG RELEASE
@@ -25,18 +25,14 @@ LABEL   com.redhat.component="ovirt-openshift-extensions" \
         summary="ovirt-flexvolume-driver for openshift, for dynamic volume provisioning" \
         maintainer="Roy Golan <rgolan@redhat.com>"
 
-RUN mkdir -p /root/go/src/github.com/ovirt/ovirt-openshift-extensions
-WORKDIR /root/go/src/github.com/ovirt/ovirt-openshift-extensions
+WORKDIR /opt/app-root/src/go/src/github.com/ovirt/ovirt-openshift-extensions
 ADD ovirt-openshift-extensions-$VERSION-$RELEASE.tar.gz .
-
-RUN yum install -y epel-release --enablerepo=extras && \
-    yum install -y --enablerepo=extras golang make &&  \
-    yum clean all && rm -rf /var/cache/yum
 
 RUN make ovirt-flexvolume-driver
 
-#TODO use multi-stage when buildah runs in mock or docker 1.17 is available
-RUN cp -v ovirt-flexvolume-driver /usr/bin/
-RUN cp -v deployment/ovirt-flexvolume-driver/entrypoint.sh /
+FROM centos:7.6.1810
+
+COPY --from=builder /opt/app-root/src/go/src/github.com/ovirt/ovirt-openshift-extensions/ovirt-flexvolume-driver /usr/bin/
+COPY --from=builder /opt/app-root/src/go/src/github.com/ovirt/ovirt-openshift-extensions/deployment/ovirt-flexvolume-driver/entrypoint.sh /
 
 ENTRYPOINT ["/entrypoint.sh"]
