@@ -64,14 +64,14 @@
       shell: oc get pods testpodwithflex -o jsonpath='{.status.phase}'
       register: result
       until: result.stdout == "Running"
-      retries: 60
+      retries: "{{ flexdeploy_retries | default(120) }}"
       delay: 10
 
     - name: verify the test pod sees the flex mounted file system
       shell: oc exec -it testpodwithflex ls /opt
       register: result
       until: result.rc == 0
-      retries: 10
+      retries: "{{ flexdeploy_retries | default(120) }}"
       delay: 1
 
     - name: shutdown the testpodwithflex container
@@ -81,7 +81,7 @@
       shell: oc get pods testpodwithflex --ignore-not-found
       register: result
       until: result.rc == 0 and result.stdout == ""
-      retries: 60
+      retries: "{{ flexdeploy_retries | default(120) }}"
       delay: 5
 
     - name: verify ovirt disks are detached
