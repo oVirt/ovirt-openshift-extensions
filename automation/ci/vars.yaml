@@ -128,7 +128,7 @@ cloud_init_script_node: &cloud_init_script_node
     condition: True
 
 cloud_init_script_master:
-  <<: *cloud_init_base
+  <<: *cloud_init_script_node
   runcmd:
     - sed -i 's/# ignored_nics =.*/ignored_nics = docker0, tun0 /' /etc/ovirt-guest-agent.conf
     - systemctl enable ovirt-guest-agent
