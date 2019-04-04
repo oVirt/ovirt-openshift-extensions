@@ -4,7 +4,7 @@ EXPORTED_ARTIFACTS=exported-artifacts
 mkdir -p $EXPORTED_ARTIFACTS
 
 make build-containers ARTIFACT_DIR=$EXPORTED_ARTIFACTS
-make push-containers
+make push-containers PUSH_LATEST=$([ $(basename $0) == "build-artifacts.sh" ] && echo 0)
 make apb_build apb_docker_push
 
 cp containers-artifacts.list $EXPORTED_ARTIFACTS || true
