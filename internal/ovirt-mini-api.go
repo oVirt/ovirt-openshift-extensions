@@ -200,9 +200,9 @@ func (ovirt *Ovirt) DefaultDiskParamsBy(storageDomainName string, thinProvisione
 	}
 
 	// thin provisioned
-	// block (iscsi/fc)    - cow + sparse
+	// block (iscsi/fcp)    - cow + sparse
 	// file  (nfs/gluster) - raw + sparse
-	if domain.Storage.Type == "iscsi" || domain.Storage.Type == "fc" {
+	if domain.Storage.Type == "iscsi" || domain.Storage.Type == "fcp" {
 		return "cow", true, nil
 	}
 	return "raw", true, nil
