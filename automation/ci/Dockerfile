@@ -21,7 +21,7 @@ ADD setup_dns.yaml  setup_dns.yaml
 ADD flex_deployer_job.yaml flex_deployer_job.yaml
 
 ENV OPTS="-v "
-ENV ANSIBLE_ROLES_PATH="/usr/share/ansible/roles/"
+ENV ANSIBLE_ROLES_PATH="/usr/share/ansible/roles:/usr/share/ansible/openshift-ansible/roles/"
 ENV ANSIBLE_JINJA2_EXTENSIONS="jinja2.ext.do"
 ENV INVENTORY_FILE="integ.ini"
 ENV PLAYBOOK_FILE="install_okd.yaml"
