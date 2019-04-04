@@ -21,6 +21,7 @@ COMMON_ENV=CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 COMMON_GO_BUILD_FLAGS=-ldflags '-extldflags "-static"'
 
 TARBALL=ovirt-openshift-extensions-$(VERSION_RELEASE).tar.gz
+PUSH_LATEST=1
 
 all: clean deps build test container container-push
 
@@ -62,7 +63,9 @@ container-%: tarball
 container-push-%:
 	@docker login -u rgolangh -p ${QUAY_API_KEY} quay.io
 	docker push $(REGISTRY)/$*:$(VERSION_RELEASE)
+ifneq ($(PUSH_LATEST),0)
 	docker push $(REGISTRY)/$*:latest
+endif
 	echo "$(REGISTRY)/$*:$(VERSION_RELEASE)" >> containers-artifacts.list
 
 build: $(binaries)
