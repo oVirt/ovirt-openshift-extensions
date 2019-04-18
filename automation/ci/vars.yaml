@@ -9,18 +9,21 @@ engine_insecure: true
 engine_cafile:
 
 openshift_ovirt_vm_manifest:
-  - name: 'master'
+  - name: master
     count: 1
-    profile: 'master_vm'
-  - name: 'node'
+    profile: master_vm
+  - name: compute
     count: 0
-    profile: 'node_vm'
-  - name: 'etcd'
+    profile: node_vm
+  - name: infra
     count: 0
-    profile: 'node_vm'
-  - name: 'lb'
+    profile: node_vm
+  - name: etcd
     count: 0
-    profile: 'node_vm'
+    profile: node_vm
+  - name: lb
+    count: 0
+    profile: node_vm
 
 openshift_ovirt_all_in_one: true
 openshift_ovirt_cluster: Default
