@@ -36,7 +36,6 @@ RUN yum install -y epel-release --enablerepo=extras && \
     yum history -y rollback 2 && \ 
     yum clean all && rm -rf /var/cache/yum
 
-RUN make ovirt-flexvolume-driver
 
 #TODO use multi-stage when buildah runs in mock or docker 1.17 is available
 RUN cp -v deployment/ovirt-flexvolume-driver/entrypoint.sh /
