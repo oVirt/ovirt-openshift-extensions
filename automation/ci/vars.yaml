@@ -97,6 +97,8 @@ openshift_ovirt_vm_profile:
       custom_script: "{{ cloud_init_script_master | to_nice_yaml }}"
   node_vm:
     <<: *node_item
+  infra_vm:
+    <<: *node_item
   etcd_vm:
     <<: *node_item
   lb_vm:
