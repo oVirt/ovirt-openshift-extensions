@@ -12,30 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM centos:7.6.1810
+FROM registry.svc.ci.openshift.org/openshift/release:golang-1.11 AS builder
 
-ARG VERSION
-ARG RELEASE
+ARG version
+ARG release
 
 LABEL   com.redhat.component="ovirt-openshift-extensions" \
         name="ovirt-cloud-provider" \
-        version="$VERSION" \
-        release="$RELEASE" \
+        version="$version" \
+        release="$release" \
         architecture="x86_64" \
         summary="ovirt-cloud-provider for openshift, for a deployment on top of ovirt" \
         maintainer="Roy Golan <rgolan@redhat.com>"
 
-RUN mkdir -p /root/go/src/github.com/ovirt/ovirt-openshift-extensions
-WORKDIR /root/go/src/github.com/ovirt/ovirt-openshift-extensions
-ADD ovirt-openshift-extensions-$VERSION-$RELEASE.tar.gz .
-
-RUN yum install -y epel-release --enablerepo=extras && \
-    yum install -y --enablerepo=extras golang make &&  \
-    yum clean all && rm -rf /var/cache/yum
+WORKDIR /go/src/github.com/ovirt/ovirt-openshift-extensions
+ADD ovirt-openshift-extensions-$version-$release.tar.gz .
 
 RUN make ovirt-cloud-provider
 
-#TODO use multi-stage when buildah runs in mock or docker 1.17 is available
-RUN cp -v ovirt-cloud-provider /usr/bin
+FROM registry.svc.ci.openshift.org/origin/4.1:base
+
+COPY --from=builder /go/src/github.com/ovirt/ovirt-openshift-extensions/ovirt-cloud-provider /usr/bin/
 
 ENTRYPOINT ["/usr/bin/ovirt-cloud-provider"]
