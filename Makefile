@@ -55,13 +55,13 @@ container-%: tarball
 	docker build \
 		-t $(REGISTRY)/$*:$(VERSION_RELEASE) \
 		-t $(REGISTRY)/$*:latest \
-		--build-arg VERSION=$(VERSION) \
-		--build-arg RELEASE=$(RELEASE) \
+		--build-arg version=$(VERSION) \
+		--build-arg release=$(RELEASE) \
 		-f $(DOCKERFILE) \
 		$(DIR)
 
 container-push-%:
-	@docker login -u rgolangh -p ${QUAY_API_KEY} quay.io
+	@docker login -u rgolangh+ovirtci -p ${QUAY_API_KEY} quay.io
 	docker push $(REGISTRY)/$*:$(VERSION_RELEASE)
 ifneq ($(PUSH_LATEST),0)
 	docker push $(REGISTRY)/$*:latest

@@ -1,4 +1,7 @@
 archs: 
   - x86_64
 distros:
-  - el7
+  - fc29 
+runtime-requirements:
+  support-nesting-level: 2
+  isolation_level: container
