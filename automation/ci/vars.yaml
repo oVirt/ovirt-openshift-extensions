@@ -117,7 +117,7 @@ cloud_init_script_node: &cloud_init_script_node
     - epel-release
     - centos-release-openshift-origin311
   runcmd:
-    - sed -i 's/# ignored_nics =.*/ignored_nics = docker0, tun0 /' /etc/ovirt-guest-agent.conf
+    - sed -i 's/# ignored_nics =.*/ignored_nics = docker0 tun0/' /etc/ovirt-guest-agent.conf
     - systemctl enable ovirt-guest-agent
     - systemctl start ovirt-guest-agent
     - mkdir -p /var/lib/docker
@@ -135,7 +135,7 @@ cloud_init_script_node: &cloud_init_script_node
 cloud_init_script_master:
   <<: *cloud_init_script_node
   runcmd:
-    - sed -i 's/# ignored_nics =.*/ignored_nics = docker0, tun0 /' /etc/ovirt-guest-agent.conf
+    - sed -i 's/# ignored_nics =.*/ignored_nics = docker0 tun0/' /etc/ovirt-guest-agent.conf
     - systemctl enable ovirt-guest-agent
     - systemctl start ovirt-guest-agent
     - mkdir -p /var/lib/docker
