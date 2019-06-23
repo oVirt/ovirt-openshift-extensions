@@ -1,4 +1,4 @@
-FROM openshift/origin-ansible:v3.11
+FROM openshift/origin-ansible@sha256:030adfc1b9bc8b1ad0722632ecf469018c20a4aeaed0672f9466e433003e666c
 
 USER root
 RUN yum install -y \
