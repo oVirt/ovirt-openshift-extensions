@@ -30,7 +30,7 @@ ADD ovirt-openshift-extensions-$version-$release.tar.gz .
 
 RUN make ovirt-volume-provisioner
 
-FROM registry.svc.ci.openshift.org/origin/4.1:base
+FROM registry.access.redhat.com/ubi8/ubi-minimal
 
 COPY --from=builder /go/src/github.com/ovirt/ovirt-openshift-extensions/ovirt-volume-provisioner /usr/bin/
 
