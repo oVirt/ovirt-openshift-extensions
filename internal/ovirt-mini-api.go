@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/spf13/viper"
 	"io"
 	"io/ioutil"
 	"log/syslog"
@@ -31,6 +30,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/spf13/viper"
 )
 
 const caUrl = "ovirt-engine/services/pki-resource?resource=ca-certificate&format=X509-PEM-CA"
@@ -139,7 +140,7 @@ func persistToken(ovirt *Ovirt) {
 // isTokenValid tries a simple GET / with the oauth token
 // returns true for 200 ok, otherwise false
 func isTokenValid(ovirt *Ovirt) bool {
-	resp, err := ovirt.clientDo(http.MethodGet, ovirt.Connection.Url, strings.NewReader(""))
+	resp, err := ovirt.clientDo(http.MethodGet, "", strings.NewReader(""))
 
 	if err != nil {
 		return false
@@ -187,7 +188,7 @@ func (ovirt *Ovirt) CreateUnattachedDisk(diskName string, storageDomainName stri
 
 // this logic is aligned with oVirt logic for determining disk format and spareness
 // the combination are determined by the type of the storage domain.
-func (ovirt *Ovirt) DefaultDiskParamsBy(storageDomainName string, thinProvisioned bool) (DiskFormat, Sparse, error){
+func (ovirt *Ovirt) DefaultDiskParamsBy(storageDomainName string, thinProvisioned bool) (DiskFormat, Sparse, error) {
 
 	if !thinProvisioned {
 		// default no matter what the disk is - raw disk, no sparseness
@@ -454,10 +455,10 @@ func fetchToken(ovirtEngineUrl url.URL, username string, password string, client
 	return t, nil
 }
 
-func (ovirt *Ovirt) clientDo(method string, url string, payload io.Reader) (*http.Response, error) {
-	url = fmt.Sprintf("%s/%s", ovirt.Connection.Url, url)
-	logInfof("calling ovirt api url: %s", url)
-	r, _ := http.NewRequest(method, url, payload)
+func (ovirt *Ovirt) clientDo(method string, path string, payload io.Reader) (*http.Response, error) {
+	requestUrl := fmt.Sprintf("%s/%s", ovirt.Connection.Url, path)
+	logInfof("calling ovirt api url: %s", requestUrl)
+	r, _ := http.NewRequest(method, requestUrl, payload)
 	r.Header.Set("Accept", "application/json")
 	r.Header.Add("Content-Type", "application/json")
 	r.Header.Set("Authorization", "Bearer "+ovirt.token.Value)
@@ -489,7 +490,7 @@ func (ovirt *Ovirt) clientDo(method string, url string, payload io.Reader) (*htt
 }
 
 // GetStorageDomainBy returns a storage domain type by name
-func (ovirt *Ovirt) GetStorageDomainBy(name string) (StorageDomain, error){
+func (ovirt *Ovirt) GetStorageDomainBy(name string) (StorageDomain, error) {
 
 	s, err := ovirt.Get("storagedomains?search=name=" + name)
 	domains := StorageDomains{}
