@@ -17,11 +17,13 @@ limitations under the License.
 package internal
 
 import (
+	"bytes"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/golang/glog"
 	"github.com/spf13/viper"
 	"io"
 	"io/ioutil"
@@ -75,8 +77,40 @@ func NewOvirt(configReader io.Reader) (OvirtApi, error) {
 	o.Connection.Password = viper.GetString("password")
 	o.Connection.Insecure = viper.GetBool("insecure")
 	o.Connection.CAFile = viper.GetString("cafile")
+
+	username, password := loadCredentials()
+	if username != "" {
+		o.Connection.Username = username
+	}
+	if password != "" {
+		o.Connection.Password = password
+	}
+
 	return &o, nil
 }
+
+func loadCredentials() (string, string) {
+	cred, exist := os.LookupEnv("OVIRT_CONNECTION_CREDENTIAL_FILE")
+	if exist {
+		file, err := ioutil.ReadFile(cred)
+		if err != nil {
+			glog.Warningf("Failed reading connection credential file from" +
+					"OVIRT_CONNECTION_CREDENTIAL_FILE: %s", cred)
+		} else {
+			viper.SetConfigType("props")
+			viper.ReadConfig(bytes.NewReader(file))
+			username := viper.GetString("username")
+			password := viper.GetString("password")
+			return username, password
+		}
+	}
+
+	username, exist := os.LookupEnv("OVIRT_CONNECTION_USERNAME")
+	password, exist := os.LookupEnv("OVIRT_CONNECTION_PASSWORD")
+
+	return username, password
+}
+
 
 func (ovirt *Ovirt) GetConnectionDetails() Connection {
 	return ovirt.Connection

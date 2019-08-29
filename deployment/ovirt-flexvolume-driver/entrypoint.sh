@@ -14,6 +14,28 @@ dest=/usr/libexec/kubernetes/kubelet-plugins/volume/exec/
 cp -v /opt/ovirt-flexvolume-driver/ovirt-flexvolume-driver.conf $src/
 cp -v /usr/bin/ovirt-flexvolume-driver $src/
 
+# Inject credentials into config file
+if [ ! -z "$OVIRT_CONNECTION_CREDENTIAL_FILE" ] && [ -f "$OVIRT_CONNECTION_CREDENTIAL_FILE" ] ; then
+    grep -q '^username=' "$OVIRT_CONNECTION_CREDENTIAL_FILE" && sed -i '/^username=.*/d' $src/ovirt-flexvolume-driver.conf
+    grep -q '^password=' "$OVIRT_CONNECTION_CREDENTIAL_FILE" && sed -i '/^password=.*/d' $src/ovirt-flexvolume-driver.conf
+    cat $OVIRT_CONNECTION_CREDENTIAL_FILE >> $src/ovirt-flexvolume-driver.conf
+else
+    set +x
+    if [ ! -z "$OVIRT_CONNECTION_USERNAME" ] ; then
+        echo "Applying username from OVIRT_CONNECTION_USERNAME to ovirt-flexvolume-driver.conf"
+        grep -q '^username=' $src/ovirt-flexvolume-driver.conf \
+            && sed -i "s/^username=.*/username=$OVIRT_CONNECTION_USERNAME/" $src/ovirt-flexvolume-driver.conf \
+            || echo "username=$OVIRT_CONNECTION_USERNAME" >> $src/ovirt-flexvolume-driver.conf
+    fi
+    if [ ! -z "$OVIRT_CONNECTION_PASSWORD" ] ; then
+        echo "Applying password from OVIRT_CONNECTION_PASSWORD to ovirt-flexvolume-driver.conf"
+        grep -q '^password=' $src/ovirt-flexvolume-driver.conf \
+            && sed -i "s/^password=.*/password=$OVIRT_CONNECTION_PASSWORD/" $src/ovirt-flexvolume-driver.conf \
+            || echo "password=$OVIRT_CONNECTION_PASSWORD" >> $src/ovirt-flexvolume-driver.conf
+    fi
+    set -x
+fi
+
 vmId=$(cat /sys/devices/virtual/dmi/id/product_uuid)
 if [[ "$vmId" == "" ]]; then
   echo "failed to extract the VM id. Attach actions will fail. Exiting"
