@@ -94,7 +94,7 @@ func loadCredentials() (string, string) {
 	if exist {
 		file, err := ioutil.ReadFile(cred)
 		if err != nil {
-			glog.Warningf("Failed reading connection credential file from" +
+			fmt.Fprintf(log, "Failed reading connection credential file from" +
 					"OVIRT_CONNECTION_CREDENTIAL_FILE: %s", cred)
 		} else {
 			viper.SetConfigType("props")
