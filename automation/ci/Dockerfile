@@ -2,7 +2,7 @@ FROM openshift/origin-ansible@sha256:030adfc1b9bc8b1ad0722632ecf469018c20a4aeaed
 
 USER root
 RUN yum install -y \
-	http://resources.ovirt.org/pub/yum-repo/ovirt-release42.rpm	
+	http://resources.ovirt.org/pub/yum-repo/ovirt-release43.rpm
 
 ARG PKGS='file python-ovirt-engine-sdk4 ovirt-ansible-roles'
 
