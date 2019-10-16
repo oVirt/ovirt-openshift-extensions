@@ -59,6 +59,23 @@
   source = "https://github.com/fsnotify/fsnotify/archive/v1.4.7.tar.gz"
   name = "gopkg.in/fsnotify.v1"
 
+# CSI driver dependencies
+[[constraint]]
+  name = "github.com/container-storage-interface/spec"
+  version = "1.1.0"
+
+[[override]]
+  name = "google.golang.org/grpc"
+  version = "1.10.0"
+
+[[override]]
+  name = "github.com/golang/protobuf"
+  version = "1.1.0"
+
+[[constraint]]
+  name = "github.com/kubernetes-csi/csi-lib-utils"
+  version = "0.6.1"
+
 [prune]
   go-tests = true
   unused-packages = true

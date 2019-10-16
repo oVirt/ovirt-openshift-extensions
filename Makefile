@@ -18,7 +18,7 @@ COMMIT=$(shell git rev-parse HEAD)
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 
 COMMON_ENV=CGO_ENABLED=0 GOOS=linux GOARCH=amd64
-COMMON_GO_BUILD_FLAGS=-ldflags '-extldflags "-static"'
+COMMON_GO_BUILD_FLAGS=-ldflags '-X github.com/ovirt/ovirt-openshift-extensions/pkg/service.VendorVersion=$(VERSION_RELEASE) -extldflags "-static"'
 
 TARBALL=ovirt-openshift-extensions-$(VERSION_RELEASE).tar.gz
 PUSH_LATEST=1
@@ -28,7 +28,8 @@ all: clean deps build test build-containers
 binaries = \
 	ovirt-flexvolume-driver \
 	ovirt-volume-provisioner \
-	ovirt-cloud-provider
+	ovirt-cloud-provider \
+	ovirt-csi-driver
 
 containers = \
 	$(binaries) \
@@ -77,6 +78,8 @@ test:
 	$(GOTEST) -v ./... -coverprofile=coverage.out
 	go tool cover -html=coverage.out -o /tmp/coverage.html
 
+test-sanity: ovirt-csi-driver
+	go test -timeout 30s github.com/ovirt/ovirt-openshift-extensions/test/ovirt-csi-driver -run ^TestSanity$
 clean:
 	$(GOCLEAN)
 	git clean -dfx -e .idea*
